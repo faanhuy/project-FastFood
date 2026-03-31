@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SmartShop.Application": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

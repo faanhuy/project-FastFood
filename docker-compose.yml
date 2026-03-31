@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+
+  # SQL Server
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: smartshop-sqlserver
+    environment:
+      SA_PASSWORD: "SmartShop@123"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P SmartShop@123 -Q 'SELECT 1'
+      interval: 10s
+      retries: 10
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: smartshop-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redisdata:/data
+
+volumes:
+  sqldata: {}
+  redisdata: {}

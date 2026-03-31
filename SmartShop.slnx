@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SmartShop.Application/SmartShop.Application.csproj" />
+    <Project Path="src/SmartShop.Domain/SmartShop.Domain.csproj" />
+    <Project Path="src/SmartShop.Infrastructure/SmartShop.Infrastructure.csproj" />
+    <Project Path="src/SmartShop.WebAPI/SmartShop.WebAPI.csproj" />
+  </Folder>
+</Solution>

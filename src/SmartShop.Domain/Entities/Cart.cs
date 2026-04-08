@@ -1,0 +1,64 @@
+using SmartShop.Domain.Common;
+
+namespace SmartShop.Domain.Entities;
+
+public class Cart : BaseAuditableEntity
+{
+    public Guid UserId { get; private set; }
+
+    public User? User { get; private set; }
+
+    private readonly List<CartItem> _items = [];
+    public IReadOnlyCollection<CartItem> Items => _items.AsReadOnly();
+
+    public decimal TotalAmount => _items.Sum(i => i.UnitPrice * i.Quantity);
+
+    private Cart() { }
+
+    public static Cart Create(Guid userId)
+    {
+        return new Cart
+        {
+            UserId = userId,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
+    public void AddItem(Guid productId, int quantity, decimal unitPrice)
+    {
+        var existing = _items.FirstOrDefault(i => i.ProductId == productId);
+        if (existing != null)
+        {
+            existing.IncreaseQuantity(quantity);
+        }
+        else
+        {
+            _items.Add(CartItem.Create(Id, productId, quantity, unitPrice));
+        }
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void RemoveItem(Guid productId)
+    {
+        var item = _items.FirstOrDefault(i => i.ProductId == productId);
+        if (item != null)
+        {
+            _items.Remove(item);
+            UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    public void UpdateItemQuantity(Guid productId, int quantity)
+    {
+        var item = _items.FirstOrDefault(i => i.ProductId == productId)
+            ?? throw new InvalidOperationException("Sản phẩm không có trong giỏ hàng.");
+        item.UpdateQuantity(quantity);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Clear()
+    {
+        _items.Clear();
+        UpdatedAt = DateTime.UtcNow;
+    }
+}

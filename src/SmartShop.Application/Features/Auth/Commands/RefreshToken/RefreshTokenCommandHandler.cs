@@ -22,7 +22,7 @@ public class RefreshTokenCommandHandler(
 
         var newAccessToken = jwtTokenService.GenerateToken(user);
         var newRefreshToken = jwtTokenService.GenerateRefreshToken();
-        var newExpiry = DateTime.UtcNow.AddDays(7);
+        var newExpiry = DateTime.UtcNow.AddDays(1);
 
         user.SetRefreshToken(newRefreshToken, newExpiry);
         await unitOfWork.SaveChangesAsync(cancellationToken);

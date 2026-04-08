@@ -14,6 +14,11 @@ public class Product : BaseAuditableEntity
     public bool IsActive { get; private set; } = true;
     public Guid CategoryId { get; private set; }
 
+    public Category? Category { get; private set; }
+
+    private readonly List<Review> _reviews = [];
+    public IReadOnlyCollection<Review> Reviews => _reviews.AsReadOnly();
+
     public static Product Create(string name, string description,
         decimal price, int stock, Guid categoryId, string slug)
     {

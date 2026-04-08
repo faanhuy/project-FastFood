@@ -9,71 +9,20 @@ public class ApplicationDbContext : DbContext
     {
     }
 
-    public DbSet<Product> Products { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<Product> Products { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Cart> Carts { get; set; }
+    public DbSet<CartItem> CartItems { get; set; }
+    public DbSet<Review> Reviews { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Product>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Name)
-                .IsRequired()
-                .HasMaxLength(255);
-
-            entity.Property(e => e.Description)
-                .HasMaxLength(1000);
-
-            entity.Property(e => e.Price)
-                .HasPrecision(18, 2);
-
-            entity.Property(e => e.OriginalPrice)
-                .HasPrecision(18, 2);
-
-            entity.Property(e => e.Slug)
-                .IsRequired()
-                .HasMaxLength(255);
-
-            entity.Property(e => e.ImageUrl)
-                .HasMaxLength(500);
-
-            entity.HasIndex(e => e.Slug)
-                .IsUnique();
-        });
-
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Email)
-                .IsRequired()
-                .HasMaxLength(256);
-
-            entity.HasIndex(e => e.Email)
-                .IsUnique();
-
-            entity.Property(e => e.PasswordHash)
-                .IsRequired();
-
-            entity.Property(e => e.FirstName)
-                .IsRequired()
-                .HasMaxLength(100);
-
-            entity.Property(e => e.LastName)
-                .IsRequired()
-                .HasMaxLength(100);
-
-            entity.Property(e => e.Role)
-                .IsRequired()
-                .HasMaxLength(50);
-
-            entity.Property(e => e.RefreshToken)
-                .HasMaxLength(500);
-
-            entity.Property(e => e.RefreshTokenExpiry);
-        });
+        // Auto-discover all IEntityTypeConfiguration<T> in this assembly
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 }

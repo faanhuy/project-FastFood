@@ -2,6 +2,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug React Frontend",
+            "type": "msedge",
+            "request": "launch",
+            "runtimeExecutable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/smartshop-frontend",
+            "sourceMapPathOverrides": {
+                "/@fs/*": "/*",
+                "/src/*": "${workspaceFolder}/smartshop-frontend/src/*"
+            }
+        },
+        {
             "name": "Launch SmartShop WebAPI",
             "type": "coreclr",
             "request": "launch",
@@ -9,6 +21,7 @@
             "program": "${workspaceFolder}/src/SmartShop.WebAPI/bin/Debug/net8.0/SmartShop.WebAPI.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/SmartShop.WebAPI",
+            "launchSettingsProfile": "https",
             "stopAtEntry": false,
             "serverReadyAction": {
                 "action": "openExternally",
@@ -18,6 +31,14 @@
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
             }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Run Full Stack (BE + FE)",
+            "configurations": ["Launch SmartShop WebAPI", "Debug React Frontend"],
+            "preLaunchTask": "start-react",
+            "stopAll": true
         }
     ]
 }

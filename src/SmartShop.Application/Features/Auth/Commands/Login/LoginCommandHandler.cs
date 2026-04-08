@@ -23,7 +23,7 @@ public class LoginCommandHandler(
 
         var token = jwtTokenService.GenerateToken(user);
         var refreshToken = jwtTokenService.GenerateRefreshToken();
-        var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+        var refreshTokenExpiry = DateTime.UtcNow.AddDays(1);
 
         user.SetRefreshToken(refreshToken, refreshTokenExpiry);
         await unitOfWork.SaveChangesAsync(cancellationToken);

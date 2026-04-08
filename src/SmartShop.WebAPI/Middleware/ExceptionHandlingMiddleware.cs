@@ -6,7 +6,7 @@ using SmartShop.Application.Common.Models;
 
 namespace SmartShop.WebAPI.Middleware;
 
-public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger, IWebHostEnvironment env)
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -22,13 +22,18 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         catch (Exception ex)
         {
             logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
-            await HandleExceptionAsync(context, ex);
+            await HandleExceptionAsync(context, ex, env.IsDevelopment());
         }
     }
 
-    private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private static async Task HandleExceptionAsync(HttpContext context, Exception exception, bool isDevelopment)
     {
         context.Response.ContentType = "application/json";
+
+        List<string> internalErrors = isDevelopment
+            ? new[] { $"{exception.GetType().Name}: {exception.Message}", exception.InnerException?.Message ?? "" }
+                .Where(s => !string.IsNullOrEmpty(s)).ToList()
+            : new List<string> { "Đã xảy ra lỗi hệ thống." };
 
         var (statusCode, errors) = exception switch
         {
@@ -36,9 +41,10 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
                 HttpStatusCode.BadRequest,
                 ve.Errors.Select(e => e.ErrorMessage).ToList()
             ),
+            NotFoundException nfe => (HttpStatusCode.NotFound, new List<string> { nfe.Message }),
             ConflictException ce => (HttpStatusCode.Conflict, new List<string> { ce.Message }),
             UnauthorizedException ue => (HttpStatusCode.Unauthorized, new List<string> { ue.Message }),
-            _ => (HttpStatusCode.InternalServerError, new List<string> { "Đã xảy ra lỗi hệ thống." })
+            _ => (HttpStatusCode.InternalServerError, internalErrors)
         };
 
         context.Response.StatusCode = (int)statusCode;

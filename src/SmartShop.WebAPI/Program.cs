@@ -1,6 +1,7 @@
 using Microsoft.OpenApi.Models;
 using SmartShop.Application;
 using SmartShop.Infrastructure;
+using SmartShop.Infrastructure.Data;
 using SmartShop.WebAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,14 +38,27 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    await DbSeeder.SeedAsync(app.Services);
 }
 
+app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();

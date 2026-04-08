@@ -29,13 +29,13 @@ const DEFAULT_DATA = {
       id: 'sp1', name: 'Sprint 1 — Auth & Domain Entities',
       status: 'active', date: '30/03/2026', color: '#6c63ff',
       tasks: [
-        { id: 'sp1-t1', name: 'Domain Entities: Order, OrderItem, Cart, Category, Review (User ✅ Product ✅)', status: 'partial', notes: 'User và Product xong. Còn 5 entities chưa làm.' },
-        { id: 'sp1-t2', name: 'EF Core DbContext + Migrations cho Order, Cart, Category, Review',              status: 'partial', notes: 'InitialCreate + AddUserEntity + AddRefreshTokenToUser. Thiếu Order/Cart/Category.' },
+        { id: 'sp1-t1', name: 'Domain Entities: Order, OrderItem, Cart, CartItem, Category, Review (User ✅ Product ✅)', status: 'done', notes: 'Tất cả 8 entities xong. Bonus: CartItem. OrderStatus enum 7 trạng thái. Đủ navigation properties + business methods.' },
+        { id: 'sp1-t2', name: 'EF Core DbContext + Migrations cho Order, Cart, Category, Review',              status: 'partial', notes: '4 migrations: InitialCreate → AddUserEntity → AddRefreshTokenToUser → AddFullSchema. 8 IEntityTypeConfiguration files. Còn thiếu seed data.' },
         { id: 'sp1-t3', name: 'IUserRepository + UserRepository (GetByRefreshTokenAsync)',                     status: 'done',    notes: '' },
         { id: 'sp1-t4', name: 'RegisterCommand + Handler + FluentValidation + BCrypt hash',                    status: 'done',    notes: '' },
         { id: 'sp1-t5', name: 'LoginCommand + JWT AccessToken (15m) + RefreshToken rotation',                  status: 'done',    notes: '' },
         { id: 'sp1-t6', name: 'AuthController: POST register / login / refresh / revoke',                     status: 'done',    notes: '' },
-        { id: 'sp1-t7', name: 'Global Exception Handler + ApiResponse<T> standard wrapper',                    status: 'partial', notes: 'ExceptionHandlingMiddleware xong. Thiếu ApiResponse<T> envelope.' },
+        { id: 'sp1-t7', name: 'Global Exception Handler + ApiResponse<T> standard wrapper',                    status: 'done',    notes: 'ExceptionHandlingMiddleware xử lý 400/401/409/500. ApiResponse<T> implement đầy đủ. AuthController và Middleware đều dùng wrapper.' },
         { id: 'sp1-t8', name: 'React: LoginPage + RegisterPage + authStore Zustand + axios interceptor',       status: 'todo',    notes: '' },
       ],
     },
@@ -423,7 +423,7 @@ function renderSprintCard(sp) {
         </div>
         ${ring(pct, 50, 5, sp.color)}
         ${statusBadge(sp.status)}
-        <div class="sprint-head-actions" onclick="event.stopPropagation()">
+        <div class="sprint-head-actions">
           <button class="btn ghost icon sm" title="Chỉnh sửa sprint" data-action="edit-sprint" data-sid="${sp.id}">✏️</button>
           <button class="btn ghost icon sm" title="Xóa sprint" data-action="del-sprint" data-sid="${sp.id}">🗑️</button>
         </div>

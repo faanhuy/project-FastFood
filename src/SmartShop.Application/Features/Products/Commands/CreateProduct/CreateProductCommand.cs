@@ -9,5 +9,7 @@ public record CreateProductCommand(
     decimal Price,
     int Stock,
     Guid CategoryId,
-    string Slug
+    string Slug,
+    string? ImageUrl = null,
+    decimal? OriginalPrice = null
 ) : IRequest<ProductDto>;

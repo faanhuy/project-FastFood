@@ -19,7 +19,7 @@ public class UpdateProductCommandHandler(
         var product = await repository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(Product), request.Id);
 
-        product.Update(request.Name, request.Description, request.Price, request.ImageUrl);
+        product.Update(request.Name, request.Description, request.Price, request.ImageUrl, request.OriginalPrice);
         repository.Update(product);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

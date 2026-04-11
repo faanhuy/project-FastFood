@@ -5,40 +5,24 @@ import AdminLayout from '../components/AdminLayout';
 import { orderService } from '../services/orderService';
 import type { OrderDto, OrderStatusValue } from '../types/order';
 import { ORDER_STATUSES, resolveOrderStatus } from '../types/order';
-
-const formatPrice = (price: number) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
-
-// Màu badge theo trạng thái
-const STATUS_STYLES: Record<number, string> = {
-  1: 'bg-yellow-100 text-yellow-700',
-  2: 'bg-blue-100   text-blue-700',
-  3: 'bg-purple-100 text-purple-700',
-  4: 'bg-orange-100 text-orange-700',
-  5: 'bg-green-100  text-green-700',
-  6: 'bg-red-100    text-red-600',
-  7: 'bg-gray-100   text-gray-600',
-};
-
+import { formatPrice, formatDateTime } from '../utils/formatters';
+import Pagination from '../components/common/Pagination';
 
 const PAGE_SIZE = 20;
 
 export default function AdminOrderPage() {
-  const [allOrders,   setAllOrders]   = useState<OrderDto[]>([]);
-  const [totalCount,  setTotalCount]  = useState(0);
-  const [loading,     setLoading]     = useState(true);
-  const [page,        setPage]        = useState(1);
-  const [statusFilter, setStatusFilter] = useState<number>(0); // 0 = tất cả
-  const [updatingId,  setUpdatingId]  = useState<string | null>(null);
-  const [expandedId,  setExpandedId]  = useState<string | null>(null);
+  const [allOrders,    setAllOrders]    = useState<OrderDto[]>([]);
+  const [totalCount,   setTotalCount]   = useState(0);
+  const [loading,      setLoading]      = useState(true);
+  const [page,         setPage]         = useState(1);
+  const [statusFilter, setStatusFilter] = useState<number>(0);
+  const [updatingId,   setUpdatingId]   = useState<string | null>(null);
+  const [expandedId,   setExpandedId]   = useState<string | null>(null);
 
-  const loadOrders = async (p: number) => {
+  const loadOrders = async (p: number, sf: number) => {
     setLoading(true);
     try {
-      const result = await orderService.getAllOrders(p, PAGE_SIZE);
+      const result = await orderService.getAllOrders(p, PAGE_SIZE, sf || undefined);
       setAllOrders(result.items);
       setTotalCount(result.totalCount);
     } catch {
@@ -48,24 +32,19 @@ export default function AdminOrderPage() {
     }
   };
 
-  useEffect(() => { loadOrders(page); }, [page]);
+  useEffect(() => { loadOrders(page, statusFilter); }, [page, statusFilter]);
 
-  // Đổi filter → reset về trang 1
   const handleFilterChange = (value: number) => {
     setStatusFilter(value);
+    setPage(1);
     setExpandedId(null);
   };
-
-  // Client-side filter trong trang hiện tại
-  const filtered = statusFilter === 0
-    ? allOrders
-    : allOrders.filter((o) => resolveOrderStatus(o.status) === statusFilter);
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatusValue) => {
     setUpdatingId(orderId);
     try {
       await orderService.updateOrderStatus(orderId, newStatus);
-      await loadOrders(page); // re-fetch từ DB — đảm bảo đồng nhất
+      await loadOrders(page, statusFilter);
       toast.success('Đã cập nhật trạng thái.');
     } catch {
       toast.error('Cập nhật thất bại.');
@@ -78,7 +57,7 @@ export default function AdminOrderPage() {
 
   return (
     <AdminLayout title="Quản lý đơn hàng">
-      {/* ── Bộ lọc trạng thái ── */}
+      {/* Bộ lọc trạng thái */}
       <div className="flex gap-1.5 flex-wrap mb-4">
         <button
           onClick={() => handleFilterChange(0)}
@@ -90,39 +69,33 @@ export default function AdminOrderPage() {
         >
           Tất cả
         </button>
-        {ORDER_STATUSES.map((s) => {
-          const count = allOrders.filter((o) => resolveOrderStatus(o.status) === s.value).length;
-          return (
-            <button
-              key={s.value}
-              onClick={() => handleFilterChange(s.value)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                statusFilter === s.value
-                  ? 'bg-gray-900 text-white border-gray-900'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
-              }`}
-            >
-              {s.label}
-              {!loading && count > 0 && (
-                <span className="ml-1.5 opacity-60">({count})</span>
-              )}
-            </button>
-          );
-        })}
+        {ORDER_STATUSES.map((s) => (
+          <button
+            key={s.value}
+            onClick={() => handleFilterChange(s.value)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              statusFilter === s.value
+                ? 'bg-gray-900 text-white border-gray-900'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+            }`}
+          >
+            {s.label}
+            {statusFilter === s.value && !loading && (
+              <span className="ml-1.5 opacity-60">({totalCount})</span>
+            )}
+          </button>
+        ))}
       </div>
 
-      <p className="text-xs text-gray-400 mb-3">
-        Tổng {totalCount} đơn hàng
-        {statusFilter !== 0 && ` — đang lọc: ${filtered.length} đơn trên trang này`}
-      </p>
+      <p className="text-xs text-gray-400 mb-3">Tổng {totalCount} đơn hàng</p>
 
-      {/* ── Bảng đơn hàng ── */}
+      {/* Bảng đơn hàng */}
       {loading ? (
         <div className="flex items-center justify-center h-64 text-gray-400">Đang tải...</div>
       ) : (
         <>
           <div className="bg-white rounded-xl border shadow-sm overflow-x-auto">
-            {filtered.length === 0 ? (
+            {allOrders.length === 0 ? (
               <p className="text-center text-gray-400 py-12">Không có đơn hàng nào.</p>
             ) : (
               <table className="w-full text-sm">
@@ -138,23 +111,19 @@ export default function AdminOrderPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filtered.map((order) => {
-                    const statusVal   = resolveOrderStatus(order.status);
-                    const statusStyle = STATUS_STYLES[statusVal] ?? 'bg-gray-100 text-gray-600';
-                    const statusLabel = ORDER_STATUSES.find((s) => s.value === statusVal)?.label ?? order.status;
-                    const isExpanded  = expandedId === order.id;
+                  {allOrders.map((order) => {
+                    const statusVal  = resolveOrderStatus(order.status);
+                    const statusInfo = ORDER_STATUSES.find((s) => s.value === statusVal);
+                    const isExpanded = expandedId === order.id;
 
                     return (
                       <Fragment key={order.id}>
-                        {/* ── Row chính ── */}
                         <tr
                           className="hover:bg-gray-50 cursor-pointer transition-colors"
                           onClick={() => setExpandedId(isExpanded ? null : order.id)}
                         >
                           <td className="px-3 py-3 text-gray-400">
-                            {isExpanded
-                              ? <FiChevronDown size={14} />
-                              : <FiChevronRight size={14} />}
+                            {isExpanded ? <FiChevronDown size={14} /> : <FiChevronRight size={14} />}
                           </td>
                           <td className="px-4 py-3 font-mono text-xs text-gray-500">
                             {order.id.slice(0, 8)}…
@@ -169,16 +138,12 @@ export default function AdminOrderPage() {
                             {formatPrice(order.totalAmount)}
                           </td>
                           <td className="px-4 py-3 text-gray-400 whitespace-nowrap text-xs hidden md:table-cell">
-                            {formatDate(order.createdAt)}
+                            {formatDateTime(order.createdAt)}
                           </td>
-                          {/* Trạng thái: badge + dropdown đổi trạng thái */}
-                          <td
-                            className="px-4 py-3"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                             <div className="flex flex-col gap-1.5 min-w-[130px]">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusStyle}`}>
-                                {statusLabel}
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusInfo?.color ?? 'bg-gray-100 text-gray-700'}`}>
+                                {statusInfo?.label ?? order.status}
                               </span>
                               <select
                                 value={statusVal}
@@ -196,7 +161,6 @@ export default function AdminOrderPage() {
                           </td>
                         </tr>
 
-                        {/* ── Row mở rộng: chi tiết sản phẩm ── */}
                         {isExpanded && (
                           <tr className="bg-blue-50/40">
                             <td colSpan={7} className="px-8 py-4">
@@ -204,9 +168,7 @@ export default function AdminOrderPage() {
                                 Chi tiết đơn · {order.items.length} sản phẩm
                               </p>
                               {order.notes && (
-                                <p className="text-xs text-gray-500 mb-3 italic">
-                                  Ghi chú: {order.notes}
-                                </p>
+                                <p className="text-xs text-gray-500 mb-3 italic">Ghi chú: {order.notes}</p>
                               )}
                               <table className="w-full text-xs">
                                 <thead>
@@ -220,18 +182,10 @@ export default function AdminOrderPage() {
                                 <tbody className="divide-y divide-blue-100/60">
                                   {order.items.map((item) => (
                                     <tr key={item.productId}>
-                                      <td className="py-1.5 pr-4 text-gray-700 font-medium">
-                                        {item.productName}
-                                      </td>
-                                      <td className="py-1.5 pr-4 text-right text-gray-500">
-                                        {formatPrice(item.unitPrice)}
-                                      </td>
-                                      <td className="py-1.5 pr-4 text-center text-gray-600">
-                                        ×{item.quantity}
-                                      </td>
-                                      <td className="py-1.5 text-right font-semibold text-blue-600">
-                                        {formatPrice(item.subTotal)}
-                                      </td>
+                                      <td className="py-1.5 pr-4 text-gray-700 font-medium">{item.productName}</td>
+                                      <td className="py-1.5 pr-4 text-right text-gray-500">{formatPrice(item.unitPrice)}</td>
+                                      <td className="py-1.5 pr-4 text-center text-gray-600">×{item.quantity}</td>
+                                      <td className="py-1.5 text-right font-semibold text-blue-600">{formatPrice(item.subTotal)}</td>
                                     </tr>
                                   ))}
                                 </tbody>
@@ -247,28 +201,7 @@ export default function AdminOrderPage() {
             )}
           </div>
 
-          {/* ── Phân trang ── */}
-          {totalPages > 1 && (
-            <div className="mt-4 flex justify-center gap-2">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-3 py-1.5 rounded border text-sm disabled:opacity-40 hover:bg-gray-100"
-              >
-                ← Trước
-              </button>
-              <span className="px-3 py-1.5 text-sm text-gray-500">
-                Trang {page} / {totalPages}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="px-3 py-1.5 rounded border text-sm disabled:opacity-40 hover:bg-gray-100"
-              >
-                Sau →
-              </button>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={loading} />
         </>
       )}
     </AdminLayout>

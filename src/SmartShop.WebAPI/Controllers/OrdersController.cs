@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Features.Orders;
+using SmartShop.Application.Features.Orders.Commands.CancelOrder;
 using SmartShop.Application.Features.Orders.Commands.PlaceOrder;
 using SmartShop.Application.Features.Orders.Commands.UpdateOrderStatus;
 using SmartShop.Application.Features.Orders.Queries.GetAllOrders;
@@ -51,6 +52,14 @@ public class OrdersController(IMediator mediator) : ControllerBase
         return Ok(ApiResponse<OrderDto>.Ok(result));
     }
 
+    /// <summary>Huỷ đơn hàng (chỉ khi Pending, chủ đơn)</summary>
+    [HttpPost("{id:guid}/cancel")]
+    public async Task<ActionResult<ApiResponse<object?>>> Cancel(Guid id, CancellationToken ct)
+    {
+        await mediator.Send(new CancelOrderCommand(id, CurrentUserId), ct);
+        return Ok(ApiResponse.Ok("Đơn hàng đã được huỷ."));
+    }
+
     // ── Admin endpoints ───────────────────────────────────────────────────
 
     /// <summary>Lấy tất cả đơn hàng (Admin only)</summary>
@@ -59,9 +68,10 @@ public class OrdersController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<ApiResponse<PagedResult<OrderDto>>>> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] OrderStatus? status = null,
         CancellationToken ct = default)
     {
-        var result = await mediator.Send(new GetAllOrdersQuery(page, pageSize), ct);
+        var result = await mediator.Send(new GetAllOrdersQuery(page, pageSize, status), ct);
         return Ok(ApiResponse<PagedResult<OrderDto>>.Ok(result));
     }
 

@@ -67,6 +67,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFrontend");
+app.UseStaticFiles(); // serve wwwroot/images/...
 app.UseHttpsRedirection();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();

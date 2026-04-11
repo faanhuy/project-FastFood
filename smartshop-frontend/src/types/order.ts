@@ -23,13 +23,13 @@ export interface PlaceOrderRequest {
 }
 
 export const ORDER_STATUSES = [
-  { value: 1, label: 'Chờ xác nhận', key: 'Pending'   },
-  { value: 2, label: 'Đã xác nhận',  key: 'Confirmed' },
-  { value: 3, label: 'Đang xử lý',   key: 'Processing'},
-  { value: 4, label: 'Đang giao',    key: 'Shipped'   },
-  { value: 5, label: 'Đã giao',      key: 'Delivered' },
-  { value: 6, label: 'Đã hủy',       key: 'Cancelled' },
-  { value: 7, label: 'Hoàn tiền',    key: 'Refunded'  },
+  { value: 1, label: 'Chờ xác nhận', key: 'Pending',    color: 'bg-yellow-100 text-yellow-700' },
+  { value: 2, label: 'Đã xác nhận',  key: 'Confirmed',  color: 'bg-blue-100 text-blue-700'    },
+  { value: 3, label: 'Đang xử lý',   key: 'Processing', color: 'bg-purple-100 text-purple-700'},
+  { value: 4, label: 'Đang giao',    key: 'Shipped',    color: 'bg-indigo-100 text-indigo-700'},
+  { value: 5, label: 'Đã giao',      key: 'Delivered',  color: 'bg-green-100 text-green-700'  },
+  { value: 6, label: 'Đã hủy',       key: 'Cancelled',  color: 'bg-red-100 text-red-700'      },
+  { value: 7, label: 'Hoàn tiền',    key: 'Refunded',   color: 'bg-gray-100 text-gray-700'    },
 ] as const;
 
 export type OrderStatusValue = (typeof ORDER_STATUSES)[number]['value'];

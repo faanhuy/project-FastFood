@@ -16,7 +16,7 @@ const formatPrice = (price: number) =>
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, refreshCartCount } = useAuthStore();
 
   const [product, setProduct] = useState<ProductDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,18 +54,30 @@ export default function ProductDetailPage() {
   }
 
   const handleAddToCart = async () => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
+    if (!isAuthenticated) { navigate('/login'); return; }
     setAddingToCart(true);
     try {
       await cartService.addToCart(product!.id, quantity);
+      refreshCartCount();
       toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
       toast.error(msg ?? 'Thêm vào giỏ hàng thất bại.');
     } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!isAuthenticated) { navigate('/login'); return; }
+    setAddingToCart(true);
+    try {
+      await cartService.addToCart(product!.id, quantity);
+      refreshCartCount();
+      navigate('/checkout');
+    } catch (e: unknown) {
+      const msg = (e as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
+      toast.error(msg ?? 'Thêm vào giỏ hàng thất bại.');
       setAddingToCart(false);
     }
   };
@@ -90,7 +102,7 @@ export default function ProductDetailPage() {
           <div className="md:w-2/5">
             <div className="bg-gray-100 rounded-xl h-64 md:h-80 flex items-center justify-center overflow-hidden">
               {product.imageUrl ? (
-                <img src={product.imageUrl} alt={product.name} className="h-full w-full object-contain" />
+                <img src={product.imageUrl!} alt={product.name} className="h-full w-full object-contain" />
               ) : (
                 <span className="text-gray-300 text-7xl">📦</span>
               )}
@@ -149,9 +161,16 @@ export default function ProductDetailPage() {
                   <button
                     onClick={handleAddToCart}
                     disabled={addingToCart}
+                    className="flex-1 border border-blue-600 text-blue-600 rounded-lg py-2 text-sm font-medium hover:bg-blue-50 transition-colors disabled:opacity-50"
+                  >
+                    {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}
+                  </button>
+                  <button
+                    onClick={handleBuyNow}
+                    disabled={addingToCart}
                     className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
-                    {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ hàng'}
+                    Mua ngay
                   </button>
                 </div>
 

@@ -22,9 +22,9 @@ export const orderService = {
   },
 
   // Admin
-  getAllOrders: async (page = 1, pageSize = 20): Promise<PagedResult<OrderDto>> => {
+  getAllOrders: async (page = 1, pageSize = 20, status?: number): Promise<PagedResult<OrderDto>> => {
     const { data } = await api.get<ApiResponse<PagedResult<OrderDto>>>('/orders/admin/all', {
-      params: { page, pageSize },
+      params: { page, pageSize, ...(status ? { status } : {}) },
     });
     return data.data;
   },
@@ -32,5 +32,9 @@ export const orderService = {
   updateOrderStatus: async (id: string, status: OrderStatusValue): Promise<OrderDto> => {
     const { data } = await api.patch<ApiResponse<OrderDto>>(`/orders/${id}/status`, { status });
     return data.data;
+  },
+
+  cancelOrder: async (id: string): Promise<void> => {
+    await api.post(`/orders/${id}/cancel`);
   },
 };

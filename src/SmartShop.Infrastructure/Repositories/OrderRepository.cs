@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SmartShop.Domain.Entities;
+using SmartShop.Domain.Enums;
 using SmartShop.Domain.Interfaces;
 using SmartShop.Infrastructure.Data;
 
@@ -37,11 +38,16 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
     }
 
     public async Task<(IEnumerable<Order> Items, int TotalCount)> GetAllPagedAsync(
-        int page, int pageSize, CancellationToken ct = default)
+        int page, int pageSize, OrderStatus? statusFilter = null, CancellationToken ct = default)
     {
         var query = context.Orders
             .Include(o => o.Items)
-            .OrderByDescending(o => o.CreatedAt);
+            .AsQueryable();
+
+        if (statusFilter.HasValue)
+            query = query.Where(o => o.Status == statusFilter.Value);
+
+        query = query.OrderByDescending(o => o.CreatedAt);
 
         var totalCount = await query.CountAsync(ct);
         var items = await query

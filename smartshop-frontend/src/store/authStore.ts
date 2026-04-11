@@ -14,9 +14,12 @@ interface AuthState {
   refreshToken: string | null;
   user: AuthUser | null;
   isAuthenticated: boolean;
+  cartVersion: number; // tăng lên mỗi khi giỏ hàng thay đổi → Navbar re-fetch
   setAuth: (data: AuthResponse) => void;
   setTokens: (accessToken: string, refreshToken: string) => void;
+  updateUser: (patch: Partial<AuthUser>) => void;
   logout: () => void;
+  refreshCartCount: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -26,6 +29,7 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       user: null,
       isAuthenticated: false,
+      cartVersion: 0,
 
       setAuth: (data: AuthResponse) =>
         set({
@@ -43,13 +47,20 @@ export const useAuthStore = create<AuthState>()(
       setTokens: (accessToken: string, refreshToken: string) =>
         set({ accessToken, refreshToken }),
 
+      updateUser: (patch: Partial<AuthUser>) =>
+        set((s) => ({ user: s.user ? { ...s.user, ...patch } : s.user })),
+
       logout: () =>
         set({
           accessToken: null,
           refreshToken: null,
           user: null,
           isAuthenticated: false,
+          cartVersion: 0,
         }),
+
+      refreshCartCount: () =>
+        set((s) => ({ cartVersion: s.cartVersion + 1 })),
     }),
     {
       name: 'smartshop-auth',
@@ -58,6 +69,7 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
+        // cartVersion không persist — luôn bắt đầu từ 0
       }),
     }
   )

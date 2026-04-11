@@ -60,7 +60,7 @@ public class ProductsController(IMediator mediator) : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ApiResponse<ProductDto>>> Update(Guid id, [FromBody] UpdateProductRequest request, CancellationToken ct)
     {
-        var result = await mediator.Send(new UpdateProductCommand(id, request.Name, request.Description, request.Price, request.ImageUrl), ct);
+        var result = await mediator.Send(new UpdateProductCommand(id, request.Name, request.Description, request.Price, request.ImageUrl, request.OriginalPrice), ct);
         return Ok(ApiResponse<ProductDto>.Ok(result));
     }
 
@@ -74,4 +74,4 @@ public class ProductsController(IMediator mediator) : ControllerBase
     }
 }
 
-public record UpdateProductRequest(string Name, string Description, decimal Price, string? ImageUrl);
+public record UpdateProductRequest(string Name, string Description, decimal Price, string? ImageUrl, decimal? OriginalPrice = null);

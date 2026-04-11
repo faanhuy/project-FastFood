@@ -1,50 +1,35 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { categoryService, productService } from '../services/productService';
 import { cartService } from '../services/cartService';
-import { orderService } from '../services/orderService';
 import { useAuthStore } from '../store/authStore';
 import type { CategoryDto, PagedResult, ProductDto } from '../types/product';
-import { FiShoppingCart, FiPackage, FiLogOut, FiSearch, FiCpu } from 'react-icons/fi';
+import { FiSearch, FiCpu } from 'react-icons/fi';
 import AISearchBar from '../components/AISearchBar';
+import Navbar from '../components/Navbar';
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
 export default function ProductListPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
   const [products, setProducts] = useState<PagedResult<ProductDto> | null>(null);
   const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [aiMode, setAiMode] = useState(false);
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
-  const [sortBy, setSortBy] = useState<number>(0); // 0 = Newest
+  const [sortBy, setSortBy] = useState<number>(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [addingId, setAddingId] = useState<string | null>(null);
-  const [cartCount, setCartCount] = useState(0);
-  const [orderCount, setOrderCount] = useState(0);
 
   useEffect(() => {
     categoryService.getCategories().then(setCategories).catch(console.error);
   }, []);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    cartService.getCart()
-      .then((cart) => setCartCount(cart.items.reduce((sum, i) => sum + i.quantity, 0)))
-      .catch(() => setCartCount(0));
-    orderService.getMyOrders(1, 1)
-      .then((result) => setOrderCount(result.totalCount))
-      .catch(() => setOrderCount(0));
-  }, [isAuthenticated]);
 
   useEffect(() => {
     setLoading(true);
@@ -80,9 +65,10 @@ export default function ProductListPage() {
     setAddingId(product.id);
     try {
       await cartService.addToCart(product.id, 1);
+      toast.success(`Đã thêm "${product.name}" vào giỏ hàng!`);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
-      alert(msg ?? 'Thêm vào giỏ hàng thất bại.');
+      toast.error(msg ?? 'Thêm vào giỏ hàng thất bại.');
     } finally {
       setAddingId(null);
     }
@@ -90,84 +76,40 @@ export default function ProductListPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <Link to="/" className="text-xl font-bold text-blue-600">SmartShop</Link>
-          <div className="flex-1 max-w-xl flex items-center gap-2">
-            {aiMode ? (
-              <AISearchBar onClose={() => setAiMode(false)} />
-            ) : (
-              <form onSubmit={handleSearch} className="flex-1 relative">
-                <input
-                  className="w-full border border-gray-300 rounded-lg pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="Tìm kiếm sản phẩm..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                />
-                <button
-                  type="submit"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600"
-                >
-                  <FiSearch size={18} />
-                </button>
-              </form>
-            )}
-            <button
-              onClick={() => setAiMode(!aiMode)}
-              title={aiMode ? 'Tìm kiếm thường' : 'Tìm kiếm AI'}
-              className={`shrink-0 flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-medium border transition-colors ${
-                aiMode
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
-              }`}
-            >
-              <FiCpu size={14} />
-              AI
-            </button>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            {isAuthenticated ? (
-              <>
-                <span className="text-sm text-gray-600 hidden sm:block">
-                  Xin chào, <strong>{user?.firstName}</strong>
-                </span>
-                <Link to="/cart" className="relative text-gray-500 hover:text-blue-600" title="Giỏ hàng">
-                  <FiShoppingCart size={20} />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold min-w-4 h-4 px-0.5 rounded-full flex items-center justify-center leading-none">
-                      {cartCount > 99 ? '99+' : cartCount}
-                    </span>
-                  )}
-                </Link>
-                <Link to="/orders" className="relative text-gray-500 hover:text-blue-600" title="Đơn hàng">
-                  <FiPackage size={20} />
-                  {orderCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold min-w-4 h-4 px-0.5 rounded-full flex items-center justify-center leading-none">
-                      {orderCount > 99 ? '99+' : orderCount}
-                    </span>
-                  )}
-                </Link>
-                {user?.role === 'Admin' && (
-                  <Link to="/admin/products" className="text-sm text-gray-500 hover:text-blue-600">Admin</Link>
-                )}
-                <button
-                  onClick={handleLogout}
-                  className="text-red-500 hover:text-red-700"
-                  title="Đăng xuất"
-                >
-                  <FiLogOut size={20} />
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="text-sm text-gray-500 hover:text-blue-600">Đăng nhập</Link>
-                <Link to="/register" className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">Đăng ký</Link>
-              </>
-            )}
-          </div>
+      <Navbar>
+        <div className="flex items-center gap-2">
+          {aiMode ? (
+            <AISearchBar onClose={() => setAiMode(false)} />
+          ) : (
+            <form onSubmit={handleSearch} className="flex-1 relative">
+              <input
+                className="w-full border border-gray-300 rounded-lg pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="Tìm kiếm sản phẩm..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600"
+              >
+                <FiSearch size={18} />
+              </button>
+            </form>
+          )}
+          <button
+            onClick={() => setAiMode(!aiMode)}
+            title={aiMode ? 'Tìm kiếm thường' : 'Tìm kiếm AI'}
+            className={`shrink-0 flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-medium border transition-colors ${
+              aiMode
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
+            }`}
+          >
+            <FiCpu size={14} />
+            AI
+          </button>
         </div>
-      </header>
+      </Navbar>
 
       <div className="max-w-7xl mx-auto px-4 py-6 flex gap-6">
         {/* Sidebar Categories */}

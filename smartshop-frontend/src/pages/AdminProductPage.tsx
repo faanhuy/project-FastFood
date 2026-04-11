@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { categoryService, productService } from '../services/productService';
-import { useAuthStore } from '../store/authStore';
 import type { CategoryDto, CreateProductRequest, ProductDto } from '../types/product';
-import { FiLogOut, FiArrowLeft } from 'react-icons/fi';
 import GenerateDescriptionButton from '../components/GenerateDescriptionButton';
+import AdminLayout from '../components/AdminLayout';
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -34,12 +34,6 @@ const EMPTY_FORM: CreateProductRequest = {
 
 export default function AdminProductPage() {
   const navigate = useNavigate();
-  const logout = useAuthStore((s) => s.logout);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,39 +90,22 @@ export default function AdminProductPage() {
       await productService.deleteProduct(id);
       await loadProducts(page);
     } catch {
-      alert('Xoá thất bại.');
+      toast.error('Xoá thất bại.');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/products" className="text-gray-500 hover:text-blue-600" title="Storefront">
-              <FiArrowLeft size={20} />
-            </Link>
-            <h1 className="text-lg font-semibold text-gray-800">Quản lý sản phẩm</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => { setShowForm(true); setFormError(null); setForm(EMPTY_FORM); }}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
-            >
-              + Thêm sản phẩm
-            </button>
-            <button
-              onClick={handleLogout}
-              className="text-red-500 hover:text-red-700"
-              title="Đăng xuất"
-            >
-              <FiLogOut size={20} />
-            </button>
-          </div>
-        </div>
-      </header>
+    <AdminLayout title="Quản lý sản phẩm">
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => { setShowForm(true); setFormError(null); setForm(EMPTY_FORM); }}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
+        >
+          + Thêm sản phẩm
+        </button>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div>
         {/* Create Form Modal */}
         {showForm && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
@@ -309,6 +286,6 @@ export default function AdminProductPage() {
           </>
         )}
       </div>
-    </div>
+    </AdminLayout>
   );
 }

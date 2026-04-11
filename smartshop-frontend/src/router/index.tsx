@@ -3,7 +3,9 @@ import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import ProductListPage from '../pages/ProductListPage';
 import ProductDetailPage from '../pages/ProductDetailPage';
+import AdminDashboardPage from '../pages/AdminDashboardPage';
 import AdminProductPage from '../pages/AdminProductPage';
+import AdminOrderPage from '../pages/AdminOrderPage';
 import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
@@ -53,10 +55,26 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/admin',
+    element: (
+      <PrivateRoute>
+        <AdminDashboardPage />
+      </PrivateRoute>
+    ),
+  },
+  {
     path: '/admin/products',
     element: (
       <PrivateRoute>
         <AdminProductPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/orders',
+    element: (
+      <PrivateRoute>
+        <AdminOrderPage />
       </PrivateRoute>
     ),
   },

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Domain.Entities;
 
 namespace SmartShop.Infrastructure.Data;
@@ -11,7 +12,8 @@ public static class DbSeeder
     {
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<ApplicationDbContext>>();
+        var hasher  = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+        var logger  = scope.ServiceProvider.GetRequiredService<ILogger<ApplicationDbContext>>();
 
         try
         {
@@ -31,6 +33,16 @@ public static class DbSeeder
                 await context.AppSettings.AddRangeAsync(defaults);
                 await context.SaveChangesAsync();
                 logger.LogInformation("Seeded {Count} AppSettings.", defaults.Length);
+            }
+
+            // Seed Admin user nếu chưa có
+            if (!await context.Users.AnyAsync(u => u.Role == "Admin"))
+            {
+                var admin = User.Create("admin@smartshop.vn", hasher.Hash("Admin@123"), "Admin", "SmartShop");
+                admin.PromoteToAdmin();
+                await context.Users.AddAsync(admin);
+                await context.SaveChangesAsync();
+                logger.LogInformation("Seeded admin user: admin@smartshop.vn / Admin@123");
             }
 
             if (await context.Categories.AnyAsync()) return; // Already seeded

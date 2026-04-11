@@ -35,6 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IProductEmbeddingRepository, ProductEmbeddingRepository>();
+        services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<IAppSettingRepository, AppSettingRepository>();
 
         // AI — Groq (free: 6000 req/min, llama-3.3-70b, hiểu tiếng Việt tốt)

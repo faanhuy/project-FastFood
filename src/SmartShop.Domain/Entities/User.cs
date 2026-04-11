@@ -37,4 +37,17 @@ public class User : BaseAuditableEntity
         RefreshToken = null;
         RefreshTokenExpiry = null;
     }
+
+    public void PromoteToAdmin()
+    {
+        Role = "Admin";
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateProfile(string firstName, string lastName)
+    {
+        FirstName = firstName;
+        LastName = lastName;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

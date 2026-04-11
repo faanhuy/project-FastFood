@@ -48,7 +48,7 @@ public class ProductsController(IMediator mediator) : ControllerBase
 
     /// <summary>Tạo sản phẩm mới (Admin only)</summary>
     [HttpPost]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ApiResponse<ProductDto>>> Create([FromBody] CreateProductCommand command, CancellationToken ct)
     {
         var result = await mediator.Send(command, ct);
@@ -57,7 +57,7 @@ public class ProductsController(IMediator mediator) : ControllerBase
 
     /// <summary>Cập nhật sản phẩm (Admin only)</summary>
     [HttpPut("{id:guid}")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ApiResponse<ProductDto>>> Update(Guid id, [FromBody] UpdateProductRequest request, CancellationToken ct)
     {
         var result = await mediator.Send(new UpdateProductCommand(id, request.Name, request.Description, request.Price, request.ImageUrl), ct);
@@ -66,7 +66,7 @@ public class ProductsController(IMediator mediator) : ControllerBase
 
     /// <summary>Xoá mềm sản phẩm (Admin only)</summary>
     [HttpDelete("{id:guid}")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ApiResponse<object?>>> Delete(Guid id, CancellationToken ct)
     {
         await mediator.Send(new DeleteProductCommand(id), ct);

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { cartService } from '../services/cartService';
+import { getApiError } from '../utils/errorHandler';
 import type { CartDto } from '../types/cart';
 import { FiMinus, FiPlus, FiX, FiTrash2, FiShoppingBag, FiShoppingCart } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
@@ -32,9 +33,8 @@ export default function CartPage() {
     try {
       const updated = await cartService.updateItem(productId, quantity);
       setCart(updated);
-    } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
-      toast.error(msg ?? 'Cập nhật thất bại.');
+    } catch (err) {
+      toast.error(getApiError(err, 'Cập nhật thất bại.'));
     }
   };
 
@@ -69,7 +69,6 @@ export default function CartPage() {
       <Navbar />
       <div className="max-w-3xl mx-auto p-6">
       <div className="flex items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold">Giỏ hàng</h1>
         <h1 className="text-2xl font-bold">Giỏ hàng</h1>
       </div>
 

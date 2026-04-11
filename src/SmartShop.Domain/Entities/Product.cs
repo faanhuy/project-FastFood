@@ -20,25 +20,29 @@ public class Product : BaseAuditableEntity
     public IReadOnlyCollection<Review> Reviews => _reviews.AsReadOnly();
 
     public static Product Create(string name, string description,
-        decimal price, int stock, Guid categoryId, string slug)
+        decimal price, int stock, Guid categoryId, string slug,
+        string? imageUrl = null, decimal? originalPrice = null)
     {
         return new Product
         {
             Name = name,
             Description = description,
             Price = price,
-            OriginalPrice = price,
+            OriginalPrice = originalPrice ?? price,
             Stock = stock,
             CategoryId = categoryId,
-            Slug = slug
+            Slug = slug,
+            ImageUrl = imageUrl
         };
     }
 
-    public void Update(string name, string description, decimal price, string? imageUrl)
+    public void Update(string name, string description, decimal price, string? imageUrl,
+        decimal? originalPrice = null)
     {
         Name = name;
         Description = description;
         Price = price;
+        OriginalPrice = originalPrice ?? OriginalPrice;
         ImageUrl = imageUrl;
     }
 

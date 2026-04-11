@@ -10,11 +10,19 @@ import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
 import OrderDetailPage from '../pages/OrderDetailPage';
+import ProfilePage from '../pages/ProfilePage';
 import { useAuthStore } from '../store/authStore';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, user } = useAuthStore();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user?.role !== 'Admin') return <Navigate to="/products" replace />;
+  return <>{children}</>;
 }
 
 const router = createBrowserRouter([
@@ -57,24 +65,32 @@ const router = createBrowserRouter([
   {
     path: '/admin',
     element: (
-      <PrivateRoute>
+      <AdminRoute>
         <AdminDashboardPage />
-      </PrivateRoute>
+      </AdminRoute>
     ),
   },
   {
     path: '/admin/products',
     element: (
-      <PrivateRoute>
+      <AdminRoute>
         <AdminProductPage />
-      </PrivateRoute>
+      </AdminRoute>
     ),
   },
   {
     path: '/admin/orders',
     element: (
-      <PrivateRoute>
+      <AdminRoute>
         <AdminOrderPage />
+      </AdminRoute>
+    ),
+  },
+  {
+    path: '/profile',
+    element: (
+      <PrivateRoute>
+        <ProfilePage />
       </PrivateRoute>
     ),
   },

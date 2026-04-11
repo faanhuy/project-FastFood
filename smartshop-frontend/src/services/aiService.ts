@@ -1,23 +1,8 @@
 import api from './api';
+import type { ApiResponse } from '../types/auth';
 import type { ProductDto } from '../types/product';
 import type { GenerateDescriptionRequest, SemanticSearchRequest, SemanticSearchResultDto } from '../types/ai';
-import axios from 'axios';
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T | null;
-  message: string | null;
-  errors: string[];
-}
-
-function extractErrorMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err) && err.response?.data) {
-    const body = err.response.data as ApiResponse<unknown>;
-    if (body.errors?.length) return body.errors[0];
-    if (body.message) return body.message;
-  }
-  return fallback;
-}
+import { getApiError } from '../utils/errorHandler';
 
 export const aiService = {
   semanticSearch: async (request: SemanticSearchRequest): Promise<SemanticSearchResultDto[]> => {
@@ -38,5 +23,5 @@ export const aiService = {
     return data.data ?? '';
   },
 
-  extractErrorMessage,
+  extractErrorMessage: (err: unknown, fallback: string) => getApiError(err, fallback),
 };

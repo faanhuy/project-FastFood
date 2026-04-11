@@ -3,13 +3,11 @@ import { Link } from 'react-router-dom';
 import { FiChevronLeft, FiChevronRight, FiAlertCircle } from 'react-icons/fi';
 import { aiService } from '../services/aiService';
 import type { ProductDto } from '../types/product';
+import { formatPrice } from '../utils/formatters';
 
 interface RecommendationCarouselProps {
   productId: string;
 }
-
-const formatPrice = (price: number) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
 export default function RecommendationCarousel({ productId }: RecommendationCarouselProps) {
   const [recommendations, setRecommendations] = useState<ProductDto[]>([]);
@@ -96,7 +94,7 @@ export default function RecommendationCarousel({ productId }: RecommendationCaro
             <div className="h-28 bg-gray-100 rounded-lg flex items-center justify-center mb-2 overflow-hidden">
               {product.imageUrl ? (
                 <img
-                  src={product.imageUrl}
+                  src={product.imageUrl!}
                   alt={product.name}
                   className="h-full w-full object-contain"
                 />

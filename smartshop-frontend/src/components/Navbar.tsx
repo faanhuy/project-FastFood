@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiShoppingCart, FiPackage, FiLogOut, FiGrid } from 'react-icons/fi';
+import { FiShoppingCart, FiPackage, FiLogOut, FiGrid, FiUser } from 'react-icons/fi';
 import { useAuthStore } from '../store/authStore';
 import { cartService } from '../services/cartService';
 import { orderService } from '../services/orderService';
@@ -11,7 +11,7 @@ interface NavbarProps {
 
 export default function Navbar({ children }: NavbarProps) {
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user, logout, cartVersion } = useAuthStore();
   const [cartCount, setCartCount] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
 
@@ -24,6 +24,10 @@ export default function Navbar({ children }: NavbarProps) {
     cartService.getCart()
       .then((cart) => setCartCount(cart.items.reduce((s, i) => s + i.quantity, 0)))
       .catch(() => setCartCount(0));
+  }, [isAuthenticated, cartVersion]); // re-fetch khi cartVersion thay đổi
+
+  useEffect(() => {
+    if (!isAuthenticated) { setOrderCount(0); return; }
     orderService.getMyOrders(1, 1)
       .then((r) => setOrderCount(r.totalCount))
       .catch(() => setOrderCount(0));
@@ -49,9 +53,10 @@ export default function Navbar({ children }: NavbarProps) {
         <div className="flex items-center gap-3 shrink-0">
           {isAuthenticated ? (
             <>
-              <span className="text-sm text-gray-600 hidden sm:block">
-                Xin chào, <strong>{user?.firstName}</strong>
-              </span>
+              <Link to="/profile" className="hidden sm:flex items-center gap-1.5 text-sm text-gray-600 hover:text-blue-600" title="Trang cá nhân">
+                <FiUser size={14} />
+                <strong>{user?.firstName}</strong>
+              </Link>
 
               <Link to="/cart" className="relative text-gray-500 hover:text-blue-600" title="Giỏ hàng">
                 <FiShoppingCart size={20} />

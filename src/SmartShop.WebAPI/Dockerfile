@@ -23,7 +23,10 @@ RUN dotnet publish src/SmartShop.WebAPI/SmartShop.WebAPI.csproj -c Release --no-
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
+# Tạo thư mục upload trước khi đổi user
+RUN mkdir -p /app/wwwroot/images/products \
+    && adduser --disabled-password --gecos "" appuser \
+    && chown -R appuser /app
 USER appuser
 
 COPY --from=publish /app/publish .

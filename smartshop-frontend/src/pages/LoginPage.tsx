@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../services/api';
 import { useAuthStore } from '../store/authStore';
-import type { ApiResponse, AuthResponse } from '../types/auth';
+import { authService } from '../services/authService';
+import { getApiErrors } from '../utils/errorHandler';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -17,28 +17,12 @@ export default function LoginPage() {
     e.preventDefault();
     setErrors([]);
     setLoading(true);
-
     try {
-      const { data } = await api.post<ApiResponse<AuthResponse>>('/auth/login', {
-        email,
-        password,
-      });
-      setAuth(data.data);
+      const auth = await authService.login({ email, password });
+      setAuth(auth);
       navigate('/');
-    } catch (err: unknown) {
-      if (
-        err &&
-        typeof err === 'object' &&
-        'response' in err &&
-        err.response &&
-        typeof err.response === 'object' &&
-        'data' in err.response
-      ) {
-        const body = err.response.data as ApiResponse<null>;
-        setErrors(body.errors?.length ? body.errors : [body.message ?? 'Đăng nhập thất bại.']);
-      } else {
-        setErrors(['Không thể kết nối đến máy chủ.']);
-      }
+    } catch (err) {
+      setErrors(getApiErrors(err, 'Đăng nhập thất bại.'));
     } finally {
       setLoading(false);
     }

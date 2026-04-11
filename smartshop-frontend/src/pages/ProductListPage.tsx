@@ -9,8 +9,7 @@ import { FiSearch, FiCpu } from 'react-icons/fi';
 import AISearchBar from '../components/AISearchBar';
 import Navbar from '../components/Navbar';
 
-const formatPrice = (price: number) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+import { formatPrice } from '../utils/formatters';
 
 export default function ProductListPage() {
   const navigate = useNavigate();

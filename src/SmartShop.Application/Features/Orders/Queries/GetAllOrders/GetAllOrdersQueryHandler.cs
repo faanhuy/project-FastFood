@@ -11,7 +11,7 @@ public class GetAllOrdersQueryHandler(IOrderRepository orderRepository)
         GetAllOrdersQuery request, CancellationToken cancellationToken)
     {
         var (items, totalCount) = await orderRepository.GetAllPagedAsync(
-            request.Page, request.PageSize, cancellationToken);
+            request.Page, request.PageSize, request.StatusFilter, cancellationToken);
 
         var dtos = items.Select(o => new OrderDto
         {

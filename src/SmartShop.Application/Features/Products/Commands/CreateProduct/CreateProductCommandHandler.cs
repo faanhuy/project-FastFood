@@ -30,7 +30,9 @@ public class CreateProductCommandHandler(
             request.Price,
             request.Stock,
             request.CategoryId,
-            request.Slug
+            request.Slug,
+            request.ImageUrl,
+            request.OriginalPrice
         );
 
         await repository.AddAsync(product, cancellationToken);

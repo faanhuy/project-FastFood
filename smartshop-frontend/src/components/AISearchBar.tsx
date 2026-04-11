@@ -3,9 +3,7 @@ import { FiSearch, FiX, FiCpu } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { aiService } from '../services/aiService';
 import type { SemanticSearchResultDto } from '../types/ai';
-
-const formatPrice = (price: number) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+import { formatPrice } from '../utils/formatters';
 
 interface AISearchBarProps {
   onClose?: () => void;

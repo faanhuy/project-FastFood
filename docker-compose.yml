@@ -51,6 +51,8 @@ services:
       Jwt__ExpiresInMinutes: "60"
       Groq__ApiKey: "${GROQ_API_KEY}"
       Groq__Model: "llama-3.3-70b-versatile"
+    volumes:
+      - uploads:/app/wwwroot/images/products  # persist uploaded images
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -74,3 +76,4 @@ services:
 volumes:
   sqldata: {}
   redisdata: {}
+  uploads: {}   # uploaded product images

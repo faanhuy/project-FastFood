@@ -32,14 +32,17 @@ export interface CreateProductRequest {
   name: string;
   description: string;
   price: number;
+  originalPrice?: number;
   stock: number;
   categoryId: string;
   slug: string;
+  imageUrl?: string | null;
 }
 
 export interface UpdateProductRequest {
   name: string;
   description: string;
   price: number;
+  originalPrice?: number | null;
   imageUrl: string | null;
 }

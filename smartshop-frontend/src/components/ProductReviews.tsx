@@ -1,60 +1,33 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { FiStar, FiTrash2 } from 'react-icons/fi';
+import { FiTrash2 } from 'react-icons/fi';
 import { useAuthStore } from '../store/authStore';
 import { reviewService } from '../services/reviewService';
+import { getApiError } from '../utils/errorHandler';
+import { formatDate } from '../utils/formatters';
 import type { ReviewDto } from '../types/review';
+import StarRating from './common/StarRating';
+import Pagination from './common/Pagination';
 
 interface Props {
   productId: string;
 }
 
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('vi-VN', { dateStyle: 'medium' });
-
-function StarRating({ value, onChange }: { value: number; onChange?: (v: number) => void }) {
-  const [hovered, setHovered] = useState(0);
-  const display = hovered || value;
-
-  return (
-    <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          onClick={() => onChange?.(star)}
-          onMouseEnter={() => onChange && setHovered(star)}
-          onMouseLeave={() => onChange && setHovered(0)}
-          className={`text-xl transition-colors ${
-            star <= display ? 'text-yellow-400' : 'text-gray-300'
-          } ${onChange ? 'cursor-pointer hover:scale-110' : 'cursor-default'}`}
-        >
-          <FiStar
-            size={18}
-            fill={star <= display ? 'currentColor' : 'none'}
-            strokeWidth={1.5}
-          />
-        </button>
-      ))}
-    </div>
-  );
-}
+const PAGE_SIZE = 5;
 
 export default function ProductReviews({ productId }: Props) {
   const { isAuthenticated, user } = useAuthStore();
 
-  const [reviews,     setReviews]     = useState<ReviewDto[]>([]);
-  const [totalCount,  setTotalCount]  = useState(0);
-  const [page,        setPage]        = useState(1);
-  const [loading,     setLoading]     = useState(true);
-  const [submitting,  setSubmitting]  = useState(false);
-  const [deletingId,  setDeletingId]  = useState<string | null>(null);
+  const [reviews,    setReviews]    = useState<ReviewDto[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page,       setPage]       = useState(1);
+  const [loading,    setLoading]    = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [avgRating,  setAvgRating]  = useState(0);
 
-  // Form state
-  const [rating,   setRating]   = useState(5);
-  const [comment,  setComment]  = useState('');
-
-  const PAGE_SIZE = 5;
+  const [rating,  setRating]  = useState(5);
+  const [comment, setComment] = useState('');
 
   const loadReviews = async (p: number) => {
     setLoading(true);
@@ -69,7 +42,22 @@ export default function ProductReviews({ productId }: Props) {
     }
   };
 
+  const loadAvgRating = async () => {
+    try {
+      const all = await reviewService.getProductReviews(productId, 1, 1000);
+      if (all.items.length > 0) {
+        const avg = all.items.reduce((s, r) => s + r.rating, 0) / all.items.length;
+        setAvgRating(parseFloat(avg.toFixed(1)));
+      } else {
+        setAvgRating(0);
+      }
+    } catch {
+      // silent
+    }
+  };
+
   useEffect(() => { loadReviews(page); }, [productId, page]);
+  useEffect(() => { loadAvgRating(); }, [productId]);
 
   // userId trong ReviewDto là Guid; store chỉ có email → so sánh bằng userFullName
   const myReview = reviews.find(
@@ -85,12 +73,10 @@ export default function ProductReviews({ productId }: Props) {
       setComment('');
       setRating(5);
       setPage(1);
-      await loadReviews(1);
+      await Promise.all([loadReviews(1), loadAvgRating()]);
       toast.success('Đánh giá của bạn đã được ghi nhận!');
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { errors?: string[] } } })
-        ?.response?.data?.errors?.[0];
-      toast.error(msg ?? 'Gửi đánh giá thất bại.');
+    } catch (err) {
+      toast.error(getApiError(err, 'Gửi đánh giá thất bại.'));
     } finally {
       setSubmitting(false);
     }
@@ -101,7 +87,7 @@ export default function ProductReviews({ productId }: Props) {
     try {
       await reviewService.deleteReview(reviewId);
       setPage(1);
-      await loadReviews(1);
+      await Promise.all([loadReviews(1), loadAvgRating()]);
       toast.success('Đã xóa đánh giá.');
     } catch {
       toast.error('Xóa thất bại.');
@@ -111,12 +97,6 @@ export default function ProductReviews({ productId }: Props) {
   };
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
-
-  // Điểm trung bình từ reviews hiện tại
-  const avgRating =
-    reviews.length > 0
-      ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
-      : 0;
 
   return (
     <section className="mt-8 bg-white rounded-2xl shadow-sm p-6">
@@ -191,18 +171,14 @@ export default function ProductReviews({ productId }: Props) {
 
             return (
               <div key={review.id} className="py-4 flex gap-3">
-                {/* Avatar */}
                 <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold shrink-0">
                   {review.userFullName.charAt(0).toUpperCase()}
                 </div>
 
-                {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-medium text-gray-800">
-                        {review.userFullName}
-                      </span>
+                      <span className="text-sm font-medium text-gray-800">{review.userFullName}</span>
                       {isOwn && (
                         <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium">
                           Bạn
@@ -232,26 +208,7 @@ export default function ProductReviews({ productId }: Props) {
         </div>
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-4 flex justify-center gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-3 py-1.5 rounded border text-sm disabled:opacity-40 hover:bg-gray-100"
-          >
-            ← Trước
-          </button>
-          <span className="px-3 py-1.5 text-sm text-gray-500">{page} / {totalPages}</span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="px-3 py-1.5 rounded border text-sm disabled:opacity-40 hover:bg-gray-100"
-          >
-            Sau →
-          </button>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </section>
   );
 }

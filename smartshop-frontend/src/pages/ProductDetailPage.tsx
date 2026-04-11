@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { productService } from '../services/productService';
 import { cartService } from '../services/cartService';
 import { useAuthStore } from '../store/authStore';
 import type { ProductDto } from '../types/product';
-import { FiLogOut, FiArrowLeft, FiHome } from 'react-icons/fi';
+import { FiArrowLeft } from 'react-icons/fi';
 import RecommendationCarousel from '../components/RecommendationCarousel';
+import ProductReviews from '../components/ProductReviews';
+import Navbar from '../components/Navbar';
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -13,18 +16,13 @@ const formatPrice = (price: number) =>
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
   const [product, setProduct] = useState<ProductDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
-  const [cartMessage, setCartMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -61,13 +59,12 @@ export default function ProductDetailPage() {
       return;
     }
     setAddingToCart(true);
-    setCartMessage(null);
     try {
       await cartService.addToCart(product!.id, quantity);
-      setCartMessage({ type: 'success', text: `Đã thêm ${quantity} sản phẩm vào giỏ hàng!` });
+      toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
-      setCartMessage({ type: 'error', text: msg ?? 'Thêm vào giỏ hàng thất bại.' });
+      toast.error(msg ?? 'Thêm vào giỏ hàng thất bại.');
     } finally {
       setAddingToCart(false);
     }
@@ -80,29 +77,12 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Link to="/products" className="text-gray-500 hover:text-blue-600" title="Quay lại">
-              <FiArrowLeft size={20} />
-            </Link>
-            <span className="text-gray-300">|</span>
-            <Link to="/" className="text-gray-500 hover:text-blue-600" title="Trang chủ">
-              <FiHome size={20} />
-            </Link>
-          </div>
-          {isAuthenticated && (
-            <button
-              onClick={handleLogout}
-              className="text-red-500 hover:text-red-700"
-              title="Đăng xuất"
-            >
-              <FiLogOut size={20} />
-            </button>
-          )}
-        </div>
-      </header>
+      <Navbar>
+        <Link to="/products" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600">
+          <FiArrowLeft size={16} />
+          Quay lại
+        </Link>
+      </Navbar>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col md:flex-row gap-8">
@@ -175,28 +155,12 @@ export default function ProductDetailPage() {
                   </button>
                 </div>
 
-                {cartMessage && (
-                  <div className={`flex items-center justify-between rounded-lg px-4 py-2 text-sm ${
-                    cartMessage.type === 'success'
-                      ? 'bg-green-50 text-green-700 border border-green-200'
-                      : 'bg-red-50 text-red-700 border border-red-200'
-                  }`}>
-                    <span>{cartMessage.text}</span>
-                    {cartMessage.type === 'success' && (
-                      <button
-                        onClick={() => navigate('/cart')}
-                        className="ml-3 font-medium underline hover:no-underline whitespace-nowrap"
-                      >
-                        Xem giỏ hàng →
-                      </button>
-                    )}
-                  </div>
-                )}
               </div>
             ) : null}
           </div>
         </div>
 
+        <ProductReviews productId={product.id} />
         <RecommendationCarousel productId={product.id} />
       </div>
     </div>

@@ -5,9 +5,12 @@ using Microsoft.AspNetCore.Mvc;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Features.Orders;
 using SmartShop.Application.Features.Orders.Commands.PlaceOrder;
+using SmartShop.Application.Features.Orders.Commands.UpdateOrderStatus;
+using SmartShop.Application.Features.Orders.Queries.GetAllOrders;
 using SmartShop.Application.Features.Orders.Queries.GetMyOrders;
 using SmartShop.Application.Features.Orders.Queries.GetOrderById;
 using SmartShop.Application.Products.Queries.GetProducts;
+using SmartShop.Domain.Enums;
 
 namespace SmartShop.WebAPI.Controllers;
 
@@ -47,6 +50,31 @@ public class OrdersController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetOrderByIdQuery(CurrentUserId, id), ct);
         return Ok(ApiResponse<OrderDto>.Ok(result));
     }
+
+    // ── Admin endpoints ───────────────────────────────────────────────────
+
+    /// <summary>Lấy tất cả đơn hàng (Admin only)</summary>
+    [HttpGet("admin/all")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse<PagedResult<OrderDto>>>> GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetAllOrdersQuery(page, pageSize), ct);
+        return Ok(ApiResponse<PagedResult<OrderDto>>.Ok(result));
+    }
+
+    /// <summary>Cập nhật trạng thái đơn hàng (Admin only)</summary>
+    [HttpPatch("{id:guid}/status")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse<OrderDto>>> UpdateStatus(
+        Guid id, [FromBody] UpdateOrderStatusRequest request, CancellationToken ct)
+    {
+        var result = await mediator.Send(new UpdateOrderStatusCommand(id, request.Status), ct);
+        return Ok(ApiResponse<OrderDto>.Ok(result));
+    }
 }
 
 public record PlaceOrderRequest(string ShippingAddress, string? Notes);
+public record UpdateOrderStatusRequest(OrderStatus Status);

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { cartService } from '../services/cartService';
 import type { CartDto } from '../types/cart';
-import { FiHome, FiMinus, FiPlus, FiX, FiTrash2, FiShoppingBag, FiShoppingCart } from 'react-icons/fi';
+import { FiMinus, FiPlus, FiX, FiTrash2, FiShoppingBag, FiShoppingCart } from 'react-icons/fi';
+import Navbar from '../components/Navbar';
 
 export default function CartPage() {
   const [cart, setCart] = useState<CartDto | null>(null);
@@ -32,7 +34,7 @@ export default function CartPage() {
       setCart(updated);
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
-      alert(msg ?? 'Cập nhật thất bại.');
+      toast.error(msg ?? 'Cập nhật thất bại.');
     }
   };
 
@@ -41,7 +43,7 @@ export default function CartPage() {
       const updated = await cartService.removeItem(productId);
       setCart(updated);
     } catch {
-      alert('Xoá sản phẩm thất bại.');
+      toast.error('Xoá sản phẩm thất bại.');
     }
   };
 
@@ -51,22 +53,23 @@ export default function CartPage() {
       await cartService.clearCart();
       setCart(null);
     } catch {
-      alert('Xoá giỏ hàng thất bại.');
+      toast.error('Xoá giỏ hàng thất bại.');
     }
   };
 
-  if (loading) return <div className="p-8 text-center">Đang tải...</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="p-8 text-center text-gray-400">Đang tải...</div>
+    </div>
+  );
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="max-w-3xl mx-auto p-6">
       <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigate('/')}
-          className="text-gray-500 hover:text-gray-700"
-          title="Trang chủ"
-        >
-          <FiHome size={20} />
-        </button>
+        <h1 className="text-2xl font-bold">Giỏ hàng</h1>
         <h1 className="text-2xl font-bold">Giỏ hàng</h1>
       </div>
 
@@ -149,6 +152,7 @@ export default function CartPage() {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

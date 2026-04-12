@@ -1,5 +1,5 @@
 using MediatR;
-using SmartShop.Application.Common.Exceptions;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.DTOs;
 using SmartShop.Domain.Entities;

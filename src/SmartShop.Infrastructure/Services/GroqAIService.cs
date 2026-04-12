@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using SmartShop.Application.Common.Exceptions;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Application.Common.Interfaces;
 
 namespace SmartShop.Infrastructure.Services;

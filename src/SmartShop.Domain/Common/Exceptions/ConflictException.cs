@@ -1,3 +1,3 @@
-namespace SmartShop.Application.Common.Exceptions;
+namespace SmartShop.Domain.Common.Exceptions;
 
 public class ConflictException(string message) : Exception(message);

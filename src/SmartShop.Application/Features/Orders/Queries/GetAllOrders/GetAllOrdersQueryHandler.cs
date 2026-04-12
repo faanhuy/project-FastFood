@@ -4,7 +4,7 @@ using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.Application.Features.Orders.Queries.GetAllOrders;
 
-public class GetAllOrdersQueryHandler(IOrderRepository orderRepository)
+public class GetCouponsQueryHandler(IOrderRepository orderRepository)
     : IRequestHandler<GetAllOrdersQuery, PagedResult<OrderDto>>
 {
     public async Task<PagedResult<OrderDto>> Handle(

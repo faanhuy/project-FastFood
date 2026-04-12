@@ -27,52 +27,98 @@ const DEFAULT_DATA = {
     },
     {
       id: 'sp1', name: 'Sprint 1 — Auth & Domain Entities',
-      status: 'active', date: '30/03/2026', color: '#6c63ff',
+      status: 'done', date: '30/03/2026', color: '#6c63ff',
       tasks: [
-        { id: 'sp1-t1', name: 'Domain Entities: Order, OrderItem, Cart, CartItem, Category, Review (User ✅ Product ✅)', status: 'done', notes: 'Tất cả 8 entities xong. Bonus: CartItem. OrderStatus enum 7 trạng thái. Đủ navigation properties + business methods.' },
-        { id: 'sp1-t2', name: 'EF Core DbContext + Migrations cho Order, Cart, Category, Review',              status: 'partial', notes: '4 migrations: InitialCreate → AddUserEntity → AddRefreshTokenToUser → AddFullSchema. 8 IEntityTypeConfiguration files. Còn thiếu seed data.' },
-        { id: 'sp1-t3', name: 'IUserRepository + UserRepository (GetByRefreshTokenAsync)',                     status: 'done',    notes: '' },
-        { id: 'sp1-t4', name: 'RegisterCommand + Handler + FluentValidation + BCrypt hash',                    status: 'done',    notes: '' },
-        { id: 'sp1-t5', name: 'LoginCommand + JWT AccessToken (15m) + RefreshToken rotation',                  status: 'done',    notes: '' },
-        { id: 'sp1-t6', name: 'AuthController: POST register / login / refresh / revoke',                     status: 'done',    notes: '' },
-        { id: 'sp1-t7', name: 'Global Exception Handler + ApiResponse<T> standard wrapper',                    status: 'done',    notes: 'ExceptionHandlingMiddleware xử lý 400/401/409/500. ApiResponse<T> implement đầy đủ. AuthController và Middleware đều dùng wrapper.' },
-        { id: 'sp1-t8', name: 'React: LoginPage + RegisterPage + authStore Zustand + axios interceptor',       status: 'todo',    notes: '' },
+        { id: 'sp1-t1', name: 'Domain Entities: User, Product, Order, Cart, Category, Review + enums', status: 'done', notes: 'Tất cả 8 entities. OrderStatus enum 7 trạng thái. Đủ navigation + business methods.' },
+        { id: 'sp1-t2', name: 'EF Core Migrations: InitialCreate → AddUserEntity → AddRefreshTokenToUser → AddFullSchema', status: 'done', notes: '8 IEntityTypeConfiguration files. Seed data Admin được bổ sung ở Sprint 6.' },
+        { id: 'sp1-t3', name: 'IUserRepository + UserRepository (GetByRefreshTokenAsync)',  status: 'done', notes: '' },
+        { id: 'sp1-t4', name: 'RegisterCommand + Handler + FluentValidation + BCrypt hash', status: 'done', notes: '' },
+        { id: 'sp1-t5', name: 'LoginCommand + JWT AccessToken (15m) + RefreshToken rotation', status: 'done', notes: '' },
+        { id: 'sp1-t6', name: 'AuthController: POST register / login / refresh / revoke',   status: 'done', notes: '' },
+        { id: 'sp1-t7', name: 'Global Exception Handler + ApiResponse<T> wrapper',          status: 'done', notes: 'ExceptionHandlingMiddleware xử lý 400/401/409/500.' },
+        { id: 'sp1-t8', name: 'React: LoginPage + RegisterPage + authStore Zustand + axios interceptor', status: 'done', notes: 'Zustand persist token. Axios interceptor tự động refresh khi 401.' },
       ],
     },
     {
       id: 'sp2', name: 'Sprint 2 — Product Catalog',
-      status: 'todo', date: '', color: '#a78bfa',
+      status: 'done', date: '04/04/2026', color: '#a78bfa',
       tasks: [
-        { id: 'sp2-t1', name: 'Category entity + CRUD API (GET/POST/PUT/DELETE)',              status: 'todo', notes: '' },
-        { id: 'sp2-t2', name: 'Product CRUD Admin + Slug auto-generation + soft delete',       status: 'todo', notes: '' },
-        { id: 'sp2-t3', name: 'Product listing (paginated, filter by category, search name)',  status: 'todo', notes: '' },
-        { id: 'sp2-t4', name: 'Redis caching: product:{id} 30m, products:category:{id} 10m',  status: 'todo', notes: '' },
-        { id: 'sp2-t5', name: 'React: ProductListPage (filter + pagination)',                  status: 'todo', notes: '' },
-        { id: 'sp2-t6', name: 'React: ProductDetailPage (slug URL, specs, add to cart)',       status: 'todo', notes: '' },
+        { id: 'sp2-t1', name: 'Category entity + CRUD API (GET/POST/PUT/DELETE)',             status: 'done', notes: '' },
+        { id: 'sp2-t2', name: 'Product CRUD Admin + Slug auto-generation + soft delete',      status: 'done', notes: 'Slug tự sinh từ name. Soft delete dùng IsDeleted flag.' },
+        { id: 'sp2-t3', name: 'Product listing (paginated, filter by category, search name)', status: 'done', notes: 'PagedResult<T> với Skip/Take. Filter kết hợp.' },
+        { id: 'sp2-t4', name: 'Redis caching: product:{id} 30m, products:category:{id} 10m', status: 'done', notes: 'StackExchange.Redis. Invalidate cache khi Admin update/delete.' },
+        { id: 'sp2-t5', name: 'React: ProductListPage (filter + pagination)',                 status: 'done', notes: '' },
+        { id: 'sp2-t6', name: 'React: ProductDetailPage (slug URL, specs, add to cart)',      status: 'done', notes: '' },
       ],
     },
     {
       id: 'sp3', name: 'Sprint 3 — Cart & Orders',
-      status: 'todo', date: '', color: '#00d4aa',
+      status: 'done', date: '07/04/2026', color: '#00d4aa',
       tasks: [
-        { id: 'sp3-t1', name: 'Cart entity + Redis cart (TTL 7 ngày) + CartService',         status: 'todo', notes: '' },
-        { id: 'sp3-t2', name: 'Order + OrderItem entities + PlaceOrder command',              status: 'todo', notes: '' },
-        { id: 'sp3-t3', name: 'Order status flow: Pending→Confirmed→Shipping→Delivered',      status: 'todo', notes: '' },
-        { id: 'sp3-t4', name: 'React: CartPage + checkout form + summary',                    status: 'todo', notes: '' },
-        { id: 'sp3-t5', name: 'React: OrderHistoryPage + OrderDetailPage + status tracking',  status: 'todo', notes: '' },
+        { id: 'sp3-t1', name: 'Cart CRUD API + AddToCart / UpdateQuantity / RemoveItem',     status: 'done', notes: 'Cart.AddItem(productId, quantity, unitPrice). 1 cart/user.' },
+        { id: 'sp3-t2', name: 'PlaceOrder command + OrderItem + tính tổng tiền',             status: 'done', notes: 'GetByIdAsync gọi 2 lần/item trong handler.' },
+        { id: 'sp3-t3', name: 'Order status flow: Pending→Confirmed→Shipping→Delivered',     status: 'done', notes: 'resolveOrderStatus helper. Cancel chỉ được khi Pending/Confirmed.' },
+        { id: 'sp3-t4', name: 'React: CartPage + CheckoutPage + order summary',              status: 'done', notes: '' },
+        { id: 'sp3-t5', name: 'React: OrderHistoryPage + OrderDetailPage + cancel order',    status: 'done', notes: '' },
       ],
     },
     {
-      id: 'sp4', name: 'Sprint 4-5 — AI Features & Deployment',
-      status: 'todo', date: '', color: '#f59e0b',
+      id: 'sp4', name: 'Sprint 4 — AI Features',
+      status: 'done', date: '09/04/2026', color: '#f59e0b',
       tasks: [
-        { id: 'sp4-t1', name: 'Semantic Kernel setup + OpenAI embedding (1536 dims)',       status: 'todo', notes: '' },
-        { id: 'sp4-t2', name: 'AI Semantic Search API + vector similarity search',          status: 'todo', notes: '' },
-        { id: 'sp4-t3', name: 'AI Product Recommendations (dựa trên lịch sử xem/mua)',     status: 'todo', notes: '' },
-        { id: 'sp4-t4', name: 'AI Chatbot hỗ trợ 24/7 (POST /ai/chat)',                    status: 'todo', notes: '' },
-        { id: 'sp4-t5', name: 'Review system (chỉ user đã mua được review)',                status: 'todo', notes: '' },
-        { id: 'sp4-t6', name: 'GitHub Actions CI/CD pipeline (.yml workflow)',              status: 'todo', notes: '' },
-        { id: 'sp4-t7', name: 'Azure App Service deployment + environment variables',       status: 'todo', notes: '' },
+        { id: 'sp4-t1', name: 'Groq integration: llama-3.3-70b (chat) + llama-3.1-8b (search)', status: 'done', notes: 'Dual-model. MaxCandidates = 300 (không dùng int.MaxValue).' },
+        { id: 'sp4-t2', name: 'Voyage AI embeddings (voyage-3, 1024 dims) + ProductEmbedding entity', status: 'done', notes: 'Vector similarity search. Embed khi tạo/update product.' },
+        { id: 'sp4-t3', name: 'AI Semantic Search — GET /api/ai/search?q=',                 status: 'done', notes: '' },
+        { id: 'sp4-t4', name: 'AI Recommendations — GET /api/ai/recommendations/{productId}', status: 'done', notes: '' },
+        { id: 'sp4-t5', name: 'AI Description Generator — POST /api/ai/generate-description', status: 'done', notes: 'Admin only. Groq sinh mô tả tự động từ tên + category.' },
+        { id: 'sp4-t6', name: 'React: AI Search bar tích hợp vào Navbar',                   status: 'done', notes: '' },
+      ],
+    },
+    {
+      id: 'sp5', name: 'Sprint 5 — Tests, Docker & CI/CD',
+      status: 'done', date: '10/04/2026', color: '#0ea5e9',
+      tasks: [
+        { id: 'sp5-t1', name: '59 unit tests — xUnit + Moq + FluentAssertions (0 failures)', status: 'done', notes: 'Cover Auth, Cart, Order, Product, Review handlers.' },
+        { id: 'sp5-t2', name: 'Dockerfile multi-stage cho Backend + Frontend',               status: 'done', notes: '' },
+        { id: 'sp5-t3', name: 'Docker Compose full-stack (api + frontend + db + redis)',     status: 'done', notes: '' },
+        { id: 'sp5-t4', name: 'GitHub Actions CI: build + test trên push master',           status: 'done', notes: '' },
+        { id: 'sp5-t5', name: 'GitHub Actions CD: build & push images lên GHCR',           status: 'done', notes: 'Live tại ghcr.io/faanhui/' },
+        { id: 'sp5-t6', name: 'README portfolio: badges CI, tech stack, hướng dẫn chạy',   status: 'done', notes: '' },
+      ],
+    },
+    {
+      id: 'sp6', name: 'Sprint 6 — Security, Reviews & Admin',
+      status: 'done', date: '11/04/2026', color: '#ef4444',
+      tasks: [
+        { id: 'sp6-t1', name: 'Role-Based Auth: [Authorize(Roles="Admin")] trên ProductsController', status: 'done', notes: 'Admin seeded: admin@smartshop.vn / Admin@123' },
+        { id: 'sp6-t2', name: 'Reviews API: GET/POST/DELETE — full CQRS',                   status: 'done', notes: '' },
+        { id: 'sp6-t3', name: 'Order Admin: GET all + PATCH status (Admin only)',            status: 'done', notes: '' },
+        { id: 'sp6-t4', name: 'User Profile: GET/PUT /api/users/me',                        status: 'done', notes: '' },
+        { id: 'sp6-t5', name: 'Frontend: Navbar component (tự fetch cart/order counts)',    status: 'done', notes: '' },
+        { id: 'sp6-t6', name: 'Frontend: react-hot-toast thay thế toàn bộ alert()',        status: 'done', notes: '' },
+        { id: 'sp6-t7', name: 'Frontend: AdminOrderPage /admin/orders + status dropdown',   status: 'done', notes: '' },
+      ],
+    },
+    {
+      id: 'sp7', name: 'Sprint 7 — Coupon & Discount System',
+      status: 'active', date: '', color: '#f97316',
+      tasks: [
+        { id: 'sp7-t1',  name: 'Enum DiscountType (Percentage / FixedAmount)',                       status: 'done', notes: 'Đặt tại Domain/Enums. EF Core lưu dạng int. Tránh dùng string vì dễ typo.' },
+        { id: 'sp7-t2',  name: 'Entity Coupon: Create(), CalculateDiscount(), Use(), backing field', status: 'done', notes: 'Kế thừa BaseAuditableEntity. Code là unique key. MinOrderValue check trước khi tính. _usages backing field + public IReadOnlyCollection. DateTime.UtcNow nhất quán.' },
+        { id: 'sp7-t3',  name: 'Entity CouponUsage: Create() + FK UserId/OrderId/CouponId',         status: 'done', notes: 'Bản ghi đơn — không có collection. Navigation: User?, Coupon?, Order?. Coupon là aggregate root chứa _usages.' },
+        { id: 'sp7-t4',  name: 'EF Core Config: unique index Code, composite (CouponId, UserId)',    status: 'done', notes: 'CouponConfiguration: unique index trên Code, precision(18,2) cho decimal, cấu hình backing field _usages. CouponUsageConfiguration: composite unique (CouponId, UserId) — enforce 1 lần/user. Delete behavior: Restrict trên cả 3 FK.' },
+        { id: 'sp7-t5',  name: 'AppDbContext: thêm DbSet Coupons + CouponUsages',                   status: 'done', notes: 'Thêm 2 dòng DbSet vào AppDbContext.cs.' },
+        { id: 'sp7-t6',  name: 'ICouponRepository + CouponRepository + DI registration',            status: 'done', notes: 'Methods: GetByCodeAsync, GetAllAsync, AddAsync, DeleteAsync, HasUsageByUserAsync, HasAnyUsageAsync. Đăng ký Scoped trong DependencyInjection.cs.' },
+        { id: 'sp7-t7',  name: 'Migration: AddCouponSystem',                                        status: 'done', notes: 'File đã rename từ AddCouponSchema → AddCouponSystem để class name khớp file name. Bài học: EF quan tâm class name trong partial class, không phải file name.' },
+        { id: 'sp7-t8',  name: 'DTOs: CouponResponse, ValidateCouponResponse',                      status: 'done', notes: 'ValidateCouponResponse tách rõ 3 giá trị: OriginalAmount / DiscountAmount / FinalAmount. Tránh tên mơ hồ DiscountedAmount.' },
+        { id: 'sp7-t9',  name: 'CreateCouponCommand + DeleteCouponCommand (Admin)',                  status: 'done', notes: 'Bug đã fix: handler dùng nhầm CreateCouponRequest (plain DTO) thay vì CreateCouponCommand (IRequest). Xoá file thừa CreateCouponRequest.cs.' },
+        { id: 'sp7-t10', name: 'GetCouponsQuery + ValidateCouponQuery',                             status: 'done', notes: 'Validate check theo thứ tự: tồn tại → hết hạn → hết lượt → min order value → user đã dùng. Bug fix: "not found" phải là NotFoundException, không phải ConflictException.' },
+        { id: 'sp7-t11', name: 'Tích hợp CouponCode vào PlaceOrderCommand',                         status: 'todo', notes: 'Thêm string? CouponCode vào command. Nếu có giá trị: validate → coupon.Use() → tạo CouponUsage → trừ discountAmount. Toàn bộ trong 1 transaction với IUnitOfWork.' },
+        { id: 'sp7-t12', name: 'CouponsController: 4 endpoints',                                    status: 'done', notes: 'POST /api/coupons (Admin), DELETE /api/coupons/{code} (Admin), GET /api/coupons (Admin), POST /api/coupons/validate (User). Validate dùng POST body thay GET query — type-safe hơn với decimal.' },
+        { id: 'sp7-t13', name: 'Công cụ: scaffold-feature.ps1 tự động sinh CQRS boilerplate',       status: 'done', notes: 'tools/scaffold-feature.ps1 -EntityName <Name>. Sinh 7 file: Command/Handler, Delete/Handler, Query/Handler, Controller với namespace đúng + TODO comment. File tồn tại bị SKIP — không ghi đè.' },
+        { id: 'sp7-t14', name: 'Frontend: CouponInput component + tích hợp CheckoutPage',           status: 'todo', notes: 'Nhận orderTotal + callback onApply(discount). Gọi validate API khi bấm nút (không gọi onChange). Hiển thị breakdown: giá gốc → giảm → tổng. Cho phép xoá coupon đã áp dụng.' },
+        { id: 'sp7-t15', name: 'Frontend: AdminCouponsPage /admin/coupons',                         status: 'todo', notes: 'Bảng: Code, Loại, Giá trị, MinOrderValue, Hết hạn, Đã dùng/Tổng, Trạng thái. Form tạo mới với validate client-side. Confirmation dialog trước khi xoá.' },
+        { id: 'sp7-t16', name: 'Unit Tests: CouponTests (domain) + handler tests',                  status: 'todo', notes: 'Domain: CalculateDiscount Percentage/Fixed, throw khi MinOrderValue, throw khi expired/hết lượt, tăng UsedQuantity. Handler: ConflictException khi code trùng, khi user đã dùng, khi hết hạn.' },
       ],
     },
   ],
@@ -105,7 +151,7 @@ const DEFAULT_DATA = {
 
 // ── STATE ─────────────────────────────────────────────
 let S = {};
-const STORAGE_KEY = 'smartshop-tracker-v2';
+const STORAGE_KEY = 'smartshop-tracker-v6';
 
 function load() {
   try {
@@ -448,8 +494,10 @@ function renderTaskRow(sid, t) {
       <button class="task-status-btn" title="Click để đổi trạng thái" data-action="toggle-task" data-sid="${sid}" data-tid="${t.id}">
         ${STATUS_ICON[t.status]}
       </button>
-      <span class="task-name">${escHtml(t.name)}</span>
-      ${t.notes ? `<span class="task-notes-icon" title="${escHtml(t.notes)}">💬</span>` : ''}
+      <div class="task-body">
+        <span class="task-name">${escHtml(t.name)}</span>
+        ${t.notes ? `<div class="task-notes-inline">💬 ${escHtml(t.notes)}</div>` : ''}
+      </div>
       <div class="task-actions">
         <button class="btn ghost icon sm" title="Chỉnh sửa" data-action="edit-task" data-sid="${sid}" data-tid="${t.id}">✏️</button>
         <button class="btn ghost icon sm" title="Xóa" data-action="del-task" data-sid="${sid}" data-tid="${t.id}">🗑️</button>

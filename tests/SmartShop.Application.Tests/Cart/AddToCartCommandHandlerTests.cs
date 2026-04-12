@@ -1,12 +1,12 @@
 using FluentAssertions;
 using Moq;
-using SmartShop.Application.Common.Exceptions;
 using Xunit;
 using SmartShop.Application.Features.Cart.Commands.AddToCart;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces;
 using CartEntity = SmartShop.Domain.Entities.Cart;
+using SmartShop.Domain.Common.Exceptions;
 
 namespace SmartShop.Application.Tests.Cart;
 

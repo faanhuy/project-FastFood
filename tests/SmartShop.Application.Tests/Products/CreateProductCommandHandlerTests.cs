@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Moq;
-using SmartShop.Application.Common.Exceptions;
+using SmartShop.Domain.Common.Exceptions;
 using Xunit;
 using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.DTOs;

@@ -1,12 +1,12 @@
 using FluentAssertions;
 using Moq;
-using SmartShop.Application.Common.Exceptions;
 using Xunit;
 using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Features.Auth.Commands.Login;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces;
+using SmartShop.Domain.Common.Exceptions;
 
 namespace SmartShop.Application.Tests.Auth;
 

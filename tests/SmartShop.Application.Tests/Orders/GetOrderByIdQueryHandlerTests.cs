@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Moq;
-using SmartShop.Application.Common.Exceptions;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Application.Features.Orders.Queries.GetOrderById;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces;

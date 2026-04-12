@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Moq;
-using SmartShop.Application.Common.Exceptions;
+using SmartShop.Domain.Common.Exceptions;
 using Xunit;
 using SmartShop.Application.Features.Orders.Commands.PlaceOrder;
 using SmartShop.Application.Interfaces;
@@ -15,13 +15,14 @@ public class PlaceOrderCommandHandlerTests
     private readonly Mock<ICartRepository> _cartRepo = new();
     private readonly Mock<IOrderRepository> _orderRepo = new();
     private readonly Mock<IProductRepository> _productRepo = new();
+    private readonly Mock<ICouponRepository> _couponRepo = new();
+    private readonly Mock<ICouponUsageRepository> _couponUsageRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
 
     private PlaceOrderCommandHandler CreateHandler() =>
-        new(_cartRepo.Object, _orderRepo.Object, _productRepo.Object, _uow.Object);
-
+        new(_cartRepo.Object, _orderRepo.Object, _productRepo.Object, _couponRepo.Object, _couponUsageRepo.Object, _uow.Object);
     private static PlaceOrderCommand ValidCommand(Guid userId) =>
-        new(userId, "123 Main St", null);
+        new(userId, "123 Main St", null, null);
 
     [Fact]
     public async Task Handle_ValidCart_CreatesOrderAndReturnsDto()

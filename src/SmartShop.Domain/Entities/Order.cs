@@ -10,6 +10,9 @@ public class Order : BaseAuditableEntity
     public decimal TotalAmount { get; private set; }
     public string ShippingAddress { get; private set; } = string.Empty;
     public string? Notes { get; private set; }
+    public decimal OriginalAmount { get; private set; }   // tổng trước giảm(= tổng các items)
+    public decimal DiscountAmount { get; private set; }   // số tiền được giảm(= 0 nếu không dùng coupon)
+    public string? CouponCode { get; private set; }       // mã đã dùng(nullable)
 
     public User? User { get; private set; }
 
@@ -37,12 +40,20 @@ public class Order : BaseAuditableEntity
 
     private void RecalculateTotal()
     {
-        TotalAmount = _items.Sum(i => i.UnitPrice * i.Quantity);
+        OriginalAmount = _items.Sum(i => i.UnitPrice * i.Quantity);
+        TotalAmount = OriginalAmount - DiscountAmount;
     }
 
     public void UpdateStatus(OrderStatus status)
     {
         Status = status;
+        UpdatedAt = DateTime.UtcNow;
+    }
+    public void ApplyCoupon(string couponCode, decimal discountAmount)
+    {
+        CouponCode = couponCode;
+        DiscountAmount = discountAmount;
+        TotalAmount = OriginalAmount - DiscountAmount;
         UpdatedAt = DateTime.UtcNow;
     }
 

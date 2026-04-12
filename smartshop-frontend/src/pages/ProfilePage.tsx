@@ -6,7 +6,7 @@ import { userService, type UserProfileDto } from '../services/userService';
 import { useAuthStore } from '../store/authStore';
 
 export default function ProfilePage() {
-  const { user, updateUser } = useAuthStore();
+  const { updateUser } = useAuthStore();
   const [profile, setProfile] = useState<UserProfileDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

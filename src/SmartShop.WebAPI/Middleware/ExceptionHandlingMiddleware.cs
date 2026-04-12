@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using FluentValidation;
-using SmartShop.Application.Common.Exceptions;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Application.Common.Models;
 
 namespace SmartShop.WebAPI.Middleware;

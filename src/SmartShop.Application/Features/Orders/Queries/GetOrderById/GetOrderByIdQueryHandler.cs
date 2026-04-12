@@ -1,5 +1,5 @@
 using MediatR;
-using SmartShop.Application.Common.Exceptions;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.Application.Features.Orders.Queries.GetOrderById;

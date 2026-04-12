@@ -1,8 +1,8 @@
 using FluentAssertions;
 using Moq;
-using SmartShop.Application.Common.Exceptions;
 using SmartShop.Application.Features.Cart.Commands.UpdateCartItem;
 using SmartShop.Application.Interfaces;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces;
 using Xunit;

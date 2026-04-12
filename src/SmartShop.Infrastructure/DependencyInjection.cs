@@ -32,6 +32,8 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<ICouponRepository, CouponRepository>();
+        services.AddScoped<ICouponUsageRepository, CouponUsageRepository>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IProductEmbeddingRepository, ProductEmbeddingRepository>();

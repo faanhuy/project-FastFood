@@ -12,4 +12,5 @@
     <None Remove="NewFolder\**" />
   </ItemGroup>
 
+
 </Project>

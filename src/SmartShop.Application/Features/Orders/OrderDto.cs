@@ -15,8 +15,11 @@ public class OrderDto
     public Guid UserId { get; init; }
     public string Status { get; init; } = string.Empty;
     public decimal TotalAmount { get; init; }
+    public decimal DiscountAmount { get; init; }
+    public decimal OriginalAmount { get; init; }
     public string ShippingAddress { get; init; } = string.Empty;
     public string? Notes { get; init; }
+    public string? CouponCode { get; init; }
     public List<OrderItemDto> Items { get; init; } = [];
     public DateTime CreatedAt { get; init; }
 }

@@ -1,5 +1,5 @@
 using MediatR;
-using SmartShop.Application.Common.Exceptions;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces;
@@ -10,6 +10,8 @@ public class PlaceOrderCommandHandler(
     ICartRepository cartRepository,
     IOrderRepository orderRepository,
     IProductRepository productRepository,
+    ICouponRepository couponRepository,
+    ICouponUsageRepository couponUsageRepository,
     IUnitOfWork unitOfWork) : IRequestHandler<PlaceOrderCommand, OrderDto>
 {
     public async Task<OrderDto> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
@@ -47,6 +49,36 @@ public class PlaceOrderCommandHandler(
             productRepository.Update(product);
         }
 
+        if (!string.IsNullOrEmpty(request.CouponCode))
+        {
+            var coupon = await couponRepository.GetByCodeAsync(request.CouponCode, cancellationToken)
+                ?? throw new NotFoundException("Coupon", request.CouponCode);
+
+            if (coupon.IsExpired())
+                throw new ConflictException($"Coupon '{request.CouponCode}' đã hết hạn.");
+
+            if (!coupon.HasRemaining())
+                throw new ConflictException($"Coupon '{request.CouponCode}' đã hết lượt sử dụng.");
+
+            if (!coupon.MeetsMinOrderValue(order.TotalAmount))
+                throw new ConflictException($"Đơn hàng chưa đạt giá trị tối thiểu để dùng coupon.");
+
+            var alreadyUsed = await couponRepository.HasUsageByUserAsync(coupon.Id, request.UserId, cancellationToken);
+            if (alreadyUsed)
+                throw new ConflictException($"Bạn đã sử dụng coupon '{request.CouponCode}' trước đó.");
+
+            decimal discountAmount = coupon.CalculateDiscount(order.TotalAmount);
+            order.ApplyCoupon(coupon.Code, discountAmount);
+            coupon.Use();
+
+            // Lưu thông tin sử dụng coupon
+            var couponUsage = CouponUsage.Create(request.UserId, order.Id, coupon.Id);
+            couponUsage.CreatedBy = request.UserId.ToString();
+            couponUsage.UpdatedBy = request.UserId.ToString();
+            await couponUsageRepository.AddAsync(couponUsage, cancellationToken);
+            couponRepository.Update(coupon);
+        }
+
         await orderRepository.AddAsync(order, cancellationToken);
 
         // Clear cart after successful order
@@ -60,7 +92,10 @@ public class PlaceOrderCommandHandler(
             UserId = order.UserId,
             Status = order.Status.ToString(),
             TotalAmount = order.TotalAmount,
+            OriginalAmount = order.OriginalAmount,
+            DiscountAmount = order.DiscountAmount,
             ShippingAddress = order.ShippingAddress,
+            CouponCode = order.CouponCode,
             Notes = order.Notes,
             Items = order.Items.Select(i => new OrderItemDto
             {

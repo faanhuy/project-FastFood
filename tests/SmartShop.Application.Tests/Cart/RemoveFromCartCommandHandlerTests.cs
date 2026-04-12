@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Moq;
-using SmartShop.Application.Common.Exceptions;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Application.Features.Cart.Commands.RemoveFromCart;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Entities;

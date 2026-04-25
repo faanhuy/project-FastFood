@@ -16,11 +16,11 @@ public class ReviewRepository(ApplicationDbContext context) : IReviewRepository
         => await context.Reviews
             .FirstOrDefaultAsync(r => r.UserId == userId && r.ProductId == productId, ct);
 
-    public async Task<(IEnumerable<Review> Items, int TotalCount)> GetPagedByProductAsync(
+    public async Task<(IEnumerable<ReviewSummary> Items, int TotalCount)> GetPagedByProductAsync(
         Guid productId, int page, int pageSize, CancellationToken ct = default)
     {
         var query = context.Reviews
-            .Include(r => r.User)
+            .AsNoTracking()
             .Where(r => r.ProductId == productId && r.IsApproved)
             .OrderByDescending(r => r.CreatedAt);
 
@@ -28,6 +28,14 @@ public class ReviewRepository(ApplicationDbContext context) : IReviewRepository
         var items = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(r => new ReviewSummary(
+                r.Id,
+                r.UserId,
+                r.User != null ? r.User.FirstName + " " + r.User.LastName : "Ẩn danh",
+                r.ProductId,
+                r.Rating,
+                r.Comment,
+                r.CreatedAt))
             .ToListAsync(ct);
 
         return (items, totalCount);

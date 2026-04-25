@@ -8,6 +8,7 @@ import { ORDER_STATUSES } from '../types/order';
 import { getApiError } from '../utils/errorHandler';
 import { formatPrice, formatDateTime } from '../utils/formatters';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -107,6 +108,7 @@ export default function OrderDetailPage() {
           </p>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { ORDER_STATUSES } from '../types/order';
 import { formatPrice, formatDate } from '../utils/formatters';
 import Pagination from '../components/common/Pagination';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 export default function OrderHistoryPage() {
   const [orders, setOrders] = useState<OrderDto[]>([]);
@@ -83,6 +84,7 @@ export default function OrderHistoryPage() {
           </>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

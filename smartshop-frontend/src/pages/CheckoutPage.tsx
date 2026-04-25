@@ -5,6 +5,7 @@ import { cartService } from '../services/cartService';
 import type { CartDto } from '../types/cart';
 import { FiArrowLeft, FiShoppingBag } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { couponSession } from '../utils/couponSession';
 
 const formatPrice = (price: number) =>
@@ -185,6 +186,7 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { FiArrowLeft } from 'react-icons/fi';
 import RecommendationCarousel from '../components/RecommendationCarousel';
 import ProductReviews from '../components/ProductReviews';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -182,6 +183,7 @@ export default function ProductDetailPage() {
         <ProductReviews productId={product.id} />
         <RecommendationCarousel productId={product.id} />
       </div>
+      <Footer />
     </div>
   );
 }

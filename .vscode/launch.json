@@ -4,13 +4,14 @@
         {
             "name": "Debug React Frontend",
             "type": "msedge",
-            "request": "launch",
-            "runtimeExecutable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+            "request": "attach",
+            "port": 9222,
             "url": "http://localhost:5173",
             "webRoot": "${workspaceFolder}/smartshop-frontend",
+            "preLaunchTask": "launch-edge-debug",
+            "timeout": 10000,
             "sourceMapPathOverrides": {
-                "/@fs/*": "/*",
-                "/src/*": "${workspaceFolder}/smartshop-frontend/src/*"
+                "/@fs/*": "/*"
             }
         },
         {

@@ -9,6 +9,7 @@ import type { CartDto } from '../types/cart';
 import type { ProductDto } from '../types/product';
 import { FiMinus, FiPlus, FiShoppingCart } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import CouponInput from '../components/CouponInput';
 import type { ValidateCouponResult } from '../services/couponService';
 import { couponSession } from '../utils/couponSession';
@@ -299,6 +300,7 @@ export default function CartPage() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

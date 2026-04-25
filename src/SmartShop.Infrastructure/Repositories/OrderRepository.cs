@@ -24,6 +24,7 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
         Guid userId, int page, int pageSize, CancellationToken ct = default)
     {
         var query = context.Orders
+            .AsNoTracking()
             .Include(o => o.Items)
             .Where(o => o.UserId == userId)
             .OrderByDescending(o => o.CreatedAt);
@@ -41,6 +42,7 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
         int page, int pageSize, OrderStatus? statusFilter = null, CancellationToken ct = default)
     {
         var query = context.Orders
+            .AsNoTracking()
             .Include(o => o.Items)
             .AsQueryable();
 

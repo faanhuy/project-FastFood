@@ -364,3 +364,6 @@ FodyWeavers.xsd
 # Claude Code personal overrides
 CLAUDE.local.md
 .claude/settings.local.json
+
+# VS Code browser profile (Edge profile data - should never be committed)
+.vscode/edge-profile/

@@ -8,12 +8,13 @@ import type { CategoryDto, PagedResult, ProductDto } from '../types/product';
 import { FiSearch, FiCpu } from 'react-icons/fi';
 import AISearchBar from '../components/AISearchBar';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 import { formatPrice } from '../utils/formatters';
 
 export default function ProductListPage() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, refreshCartCount } = useAuthStore();
 
   const [products, setProducts] = useState<PagedResult<ProductDto> | null>(null);
   const [categories, setCategories] = useState<CategoryDto[]>([]);
@@ -64,6 +65,7 @@ export default function ProductListPage() {
     setAddingId(product.id);
     try {
       await cartService.addToCart(product.id, 1);
+      refreshCartCount();
       toast.success(`Đã thêm "${product.name}" vào giỏ hàng!`);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
@@ -273,6 +275,7 @@ export default function ProductListPage() {
           )}
         </main>
       </div>
+      <Footer />
     </div>
   );
 }

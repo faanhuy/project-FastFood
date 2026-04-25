@@ -33,7 +33,7 @@ public class ProductRepository : IProductRepository
         int page, int pageSize, Guid? categoryId = null, string? search = null,
         string sortBy = "newest", CancellationToken ct = default)
     {
-        var query = _context.Products.Where(p => p.IsActive).AsQueryable();
+        var query = _context.Products.AsNoTracking().Where(p => p.IsActive).AsQueryable();
 
         if (categoryId.HasValue)
             query = query.Where(p => p.CategoryId == categoryId.Value);

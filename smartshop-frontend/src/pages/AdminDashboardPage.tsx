@@ -422,7 +422,7 @@ export default function AdminDashboardPage() {
                     formatter={(value: number) => [`${value} sản phẩm`, 'Đã bán']}
                     contentStyle={{ fontSize: 12 }}
                   />
-                  <Bar dataKey="totalQuantity" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="totalQuantity" fill="#9a0718" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}

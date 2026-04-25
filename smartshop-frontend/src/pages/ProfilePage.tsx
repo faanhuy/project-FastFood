@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { FiUser, FiMail, FiCalendar, FiSave } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { userService, type UserProfileDto } from '../services/userService';
 import { useAuthStore } from '../store/authStore';
 
@@ -107,6 +108,7 @@ export default function ProfilePage() {
           </form>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

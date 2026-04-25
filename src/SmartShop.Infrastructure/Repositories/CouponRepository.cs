@@ -28,7 +28,7 @@ public class CouponRepository : ICouponRepository
 
     public async Task<IEnumerable<Coupon>> GetAllAsync(CancellationToken ct = default)
     {
-        return await _context.Coupons.ToListAsync(ct);
+        return await _context.Coupons.AsNoTracking().ToListAsync(ct);
     }
 
     public async Task<Coupon?> GetByCodeAsync(string code, CancellationToken ct = default)

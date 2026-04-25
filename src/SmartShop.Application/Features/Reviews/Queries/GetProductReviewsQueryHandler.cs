@@ -17,7 +17,7 @@ public class GetProductReviewsQueryHandler(IReviewRepository reviewRepository)
         {
             Id           = r.Id,
             UserId       = r.UserId,
-            UserFullName = r.User is not null ? $"{r.User.FirstName} {r.User.LastName}" : "Ẩn danh",
+            UserFullName = r.UserFullName,
             ProductId    = r.ProductId,
             Rating       = r.Rating,
             Comment      = r.Comment,

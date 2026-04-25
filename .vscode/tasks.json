@@ -26,6 +26,17 @@
             "isBackground": true
         },
         {
+            "label": "launch-edge-debug",
+            "type": "shell",
+            "command": "Start-Process",
+            "args": [
+                "'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'",
+                "-ArgumentList",
+                "'--remote-debugging-port=9222 --user-data-dir=${workspaceFolder}\\.vscode\\edge-profile http://localhost:5173'"
+            ],
+            "problemMatcher": []
+        },
+        {
             "label": "start-react",
             "type": "shell",
             "command": "npm run dev",

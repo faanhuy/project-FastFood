@@ -168,7 +168,7 @@ function RevenueTooltip({
   return (
     <div className="bg-white border rounded-lg shadow-md px-3 py-2 text-sm">
       <p className="text-gray-500 mb-1">{label}</p>
-      <p className="font-semibold text-blue-600">{formatVnd(payload[0].value)}</p>
+      <p className="font-semibold text-rose-600">{formatVnd(payload[0].value)}</p>
       {payload[1] && (
         <p className="text-gray-600">{payload[1].value} đơn hàng</p>
       )}
@@ -242,7 +242,7 @@ export default function AdminDashboardPage() {
       value: stats?.totalProducts,
       icon: FiPackage,
       to: '/admin/products',
-      iconCls: 'bg-blue-50 text-blue-600 border-blue-100',
+      iconCls: 'bg-rose-50 text-rose-600 border-rose-100',
     },
     {
       label: 'Đơn giao',
@@ -301,8 +301,8 @@ export default function AdminDashboardPage() {
             onClick={() => setPeriod(days)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
               period === days
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600'
+                ? 'bg-rose-600 text-white border-rose-600'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-rose-400 hover:text-rose-600'
             }`}
           >
             {label}
@@ -327,7 +327,7 @@ export default function AdminDashboardPage() {
               label="Đơn hàng"
               value={summary ? String(summary.totalOrders) : '—'}
               icon={FiShoppingBag}
-              iconCls="bg-blue-50 text-blue-600 border-blue-100"
+              iconCls="bg-rose-50 text-rose-600 border-rose-100"
             />
             <KpiCard
               label="Khách mới"
@@ -372,10 +372,10 @@ export default function AdminDashboardPage() {
               <Line
                 type="monotone"
                 dataKey="revenue"
-                stroke="#3b82f6"
+                stroke="#e11d48"
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 4, fill: '#3b82f6' }}
+                activeDot={{ r: 4, fill: '#e11d48' }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -473,7 +473,7 @@ export default function AdminDashboardPage() {
             <h3 className="font-semibold text-gray-800">Quản lý món ăn</h3>
             <FiArrowRight
               size={16}
-              className="text-gray-400 group-hover:text-blue-600 transition-colors"
+              className="text-gray-400 group-hover:text-rose-600 transition-colors"
             />
           </div>
           <p className="text-sm text-gray-500">
@@ -489,7 +489,7 @@ export default function AdminDashboardPage() {
             <h3 className="font-semibold text-gray-800">Quản lý đơn giao</h3>
             <FiArrowRight
               size={16}
-              className="text-gray-400 group-hover:text-blue-600 transition-colors"
+              className="text-gray-400 group-hover:text-rose-600 transition-colors"
             />
           </div>
           <p className="text-sm text-gray-500">

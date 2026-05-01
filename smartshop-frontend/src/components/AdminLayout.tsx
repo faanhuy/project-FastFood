@@ -25,7 +25,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
     <div className="flex flex-col h-full bg-gray-900 text-white">
       <div className="px-5 py-4 border-b border-gray-700/60">
         <p className="text-lg font-bold text-white">FastFood</p>
-        <span className="inline-block mt-1 text-[10px] font-semibold tracking-widest uppercase bg-blue-600 text-white px-2 py-0.5 rounded">
+        <span className="inline-block mt-1 text-[10px] font-semibold tracking-widest uppercase bg-rose-600 text-white px-2 py-0.5 rounded">
           Admin
         </span>
       </div>
@@ -40,7 +40,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-rose-600 text-white'
                   : 'text-gray-400 hover:bg-gray-800 hover:text-white'
               }`
             }

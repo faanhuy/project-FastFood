@@ -95,10 +95,10 @@ export default function ImageUploadField({ currentUrl, onUploaded }: ImageUpload
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
           onClick={() => inputRef.current?.click()}
-          className="w-full h-28 rounded-xl border-2 border-dashed border-gray-300 hover:border-blue-400 bg-gray-50 hover:bg-blue-50 transition-colors cursor-pointer flex flex-col items-center justify-center gap-1.5"
+          className="w-full h-28 rounded-xl border-2 border-dashed border-gray-300 hover:border-rose-400 bg-gray-50 hover:bg-rose-50 transition-colors cursor-pointer flex flex-col items-center justify-center gap-1.5"
         >
           <FiUploadCloud size={22} className="text-gray-400" />
-          <p className="text-xs text-gray-500">Kéo thả hoặc <span className="text-blue-600 font-medium">chọn file</span></p>
+          <p className="text-xs text-gray-500">Kéo thả hoặc <span className="text-rose-600 font-medium">chọn file</span></p>
           <p className="text-[10px] text-gray-400">JPG, PNG, WebP, GIF · tối đa {MAX_SIZE_MB} MB</p>
         </div>
       )}

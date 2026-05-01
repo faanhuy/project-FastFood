@@ -48,7 +48,7 @@ export default function ProductDetailPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <p className="text-gray-500">{error ?? 'Không tìm thấy món ăn.'}</p>
-        <Link to="/products" className="text-blue-600 hover:text-blue-800" title="Quay lại danh sách">
+        <Link to="/products" className="text-rose-600 hover:text-rose-800" title="Quay lại danh sách">
           <FiArrowLeft size={20} />
         </Link>
       </div>
@@ -92,7 +92,7 @@ export default function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar>
-        <Link to="/products" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600">
+        <Link to="/products" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-rose-600">
           <FiArrowLeft size={16} />
           Quay lại
         </Link>
@@ -116,7 +116,7 @@ export default function ProductDetailPage() {
             <h1 className="text-xl font-bold text-gray-900">{product.name}</h1>
 
             <div className="mt-3 flex items-center gap-3">
-              <span className="text-2xl font-bold text-blue-600">{formatPrice(product.price)}</span>
+              <span className="text-2xl font-bold text-rose-600">{formatPrice(product.price)}</span>
               {discountPercent > 0 && (
                 <>
                   <span className="text-gray-400 line-through text-sm">{formatPrice(product.originalPrice)}</span>
@@ -142,9 +142,9 @@ export default function ProductDetailPage() {
             <p className="mt-4 text-sm text-gray-600 leading-relaxed">{product.description}</p>
 
             <div className="mt-4 flex flex-wrap gap-2 text-xs">
-              <span className="rounded-full bg-orange-100 px-3 py-1 font-medium text-orange-700">Chuẩn bị 15-20 phút</span>
+              <span className="rounded-full bg-amber-100 px-3 py-1 font-medium text-amber-700">Chuẩn bị 15-20 phút</span>
               <span className="rounded-full bg-emerald-100 px-3 py-1 font-medium text-emerald-700">Giao nhanh nội thành</span>
-              <span className="rounded-full bg-blue-100 px-3 py-1 font-medium text-blue-700">Ăn nóng ngon hơn</span>
+              <span className="rounded-full bg-rose-100 px-3 py-1 font-medium text-rose-700">Ăn nóng ngon hơn</span>
             </div>
 
             {/* Quantity + Add to Cart */}
@@ -170,14 +170,14 @@ export default function ProductDetailPage() {
                   <button
                     onClick={handleAddToCart}
                     disabled={addingToCart}
-                    className="flex-1 border border-blue-600 text-blue-600 rounded-lg py-2 text-sm font-medium hover:bg-blue-50 transition-colors disabled:opacity-50"
+                    className="flex-1 border border-rose-600 text-rose-600 rounded-lg py-2 text-sm font-medium hover:bg-rose-50 transition-colors disabled:opacity-50"
                   >
                     {addingToCart ? 'Đang thêm...' : 'Thêm món'}
                   </button>
                   <button
                     onClick={handleBuyNow}
                     disabled={addingToCart}
-                    className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="flex-1 bg-rose-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-rose-700 transition-colors disabled:opacity-50"
                   >
                     Đặt ngay
                   </button>

@@ -52,8 +52,8 @@ export default function AISearchBar({ onClose }: AISearchBarProps) {
 
   return (
     <div className="relative w-full max-w-xl">
-      <div className="flex items-center border border-blue-300 rounded-xl bg-white shadow-sm px-3 py-2 gap-2">
-        <FiCpu className="text-blue-500 shrink-0" size={16} />
+      <div className="flex items-center border border-rose-300 rounded-xl bg-white shadow-sm px-3 py-2 gap-2">
+        <FiCpu className="text-rose-500 shrink-0" size={16} />
         <input
           className="flex-1 text-sm outline-none text-gray-800 placeholder-gray-400"
           placeholder="Tìm món bằng AI: burger bò, gà rán cay, pizza phô mai..."
@@ -61,7 +61,7 @@ export default function AISearchBar({ onClose }: AISearchBarProps) {
           onChange={(e) => handleInput(e.target.value)}
         />
         {loading && (
-          <span className="text-xs text-blue-400 animate-pulse">Đang tìm...</span>
+          <span className="text-xs text-rose-400 animate-pulse">Đang tìm...</span>
         )}
         {query && !loading && (
           <button onClick={handleClear} className="text-gray-400 hover:text-gray-600">
@@ -84,14 +84,14 @@ export default function AISearchBar({ onClose }: AISearchBarProps) {
                   <Link
                     to={`/products/${item.slug}`}
                     onClick={onClose}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-rose-50 transition-colors"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-800 truncate">{item.name}</p>
                       <p className="text-xs text-gray-500 truncate">{item.description}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-sm font-semibold text-blue-600">{formatPrice(item.price)}</p>
+                      <p className="text-sm font-semibold text-rose-600">{formatPrice(item.price)}</p>
                       <p className="text-xs text-gray-400">{Math.round(item.score * 100)}% hợp vị</p>
                     </div>
                   </Link>

@@ -10,7 +10,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <FiShoppingBag className="text-orange-400" size={22} />
+              <FiShoppingBag className="text-amber-400" size={22} />
               <span className="text-white text-xl font-bold">FastFood</span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
@@ -22,10 +22,10 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Thực đơn</h4>
             <ul className="space-y-2.5 text-sm">
-              <li><Link to="/products" className="hover:text-orange-300 transition-colors">Toàn bộ món</Link></li>
-              <li><Link to="/products?sort=newest" className="hover:text-orange-300 transition-colors">Combo mới lên sóng</Link></li>
-              <li><Link to="/cart" className="hover:text-orange-300 transition-colors">Giỏ món</Link></li>
-              <li><Link to="/checkout" className="hover:text-orange-300 transition-colors">Xác nhận đơn</Link></li>
+              <li><Link to="/products" className="hover:text-amber-300 transition-colors">Toàn bộ món</Link></li>
+              <li><Link to="/products?sort=newest" className="hover:text-amber-300 transition-colors">Combo mới lên sóng</Link></li>
+              <li><Link to="/cart" className="hover:text-amber-300 transition-colors">Giỏ món</Link></li>
+              <li><Link to="/checkout" className="hover:text-amber-300 transition-colors">Xác nhận đơn</Link></li>
             </ul>
           </div>
 
@@ -33,10 +33,10 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Tài khoản</h4>
             <ul className="space-y-2.5 text-sm">
-              <li><Link to="/profile" className="hover:text-orange-300 transition-colors">Hồ sơ giao nhận</Link></li>
-              <li><Link to="/orders" className="hover:text-orange-300 transition-colors">Đơn giao của tôi</Link></li>
-              <li><Link to="/login" className="hover:text-orange-300 transition-colors">Đăng nhập</Link></li>
-              <li><Link to="/register" className="hover:text-orange-300 transition-colors">Đăng ký</Link></li>
+              <li><Link to="/profile" className="hover:text-amber-300 transition-colors">Hồ sơ giao nhận</Link></li>
+              <li><Link to="/orders" className="hover:text-amber-300 transition-colors">Đơn giao của tôi</Link></li>
+              <li><Link to="/login" className="hover:text-amber-300 transition-colors">Đăng nhập</Link></li>
+              <li><Link to="/register" className="hover:text-amber-300 transition-colors">Đăng ký</Link></li>
             </ul>
           </div>
 
@@ -45,24 +45,24 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Liên hệ</h4>
             <ul className="space-y-2.5 text-sm">
               <li className="flex items-center gap-2">
-                <FiMail size={14} className="text-orange-300 shrink-0" />
+                <FiMail size={14} className="text-amber-300 shrink-0" />
                 <span>huyp18062000@gmail.com</span>
               </li>
               <li className="flex items-center gap-2">
-                <FiPhone size={14} className="text-orange-300 shrink-0" />
+                <FiPhone size={14} className="text-amber-300 shrink-0" />
                 <span>0355 609 145</span>
               </li>
               <li className="flex items-start gap-2">
-                <FiMapPin size={14} className="text-orange-300 shrink-0 mt-0.5" />
+                <FiMapPin size={14} className="text-amber-300 shrink-0 mt-0.5" />
                 <span>TP. Hồ Chí Minh, giao nội thành mỗi ngày</span>
               </li>
               <li className="flex items-center gap-2 mt-1">
-                <FiGithub size={14} className="text-orange-300 shrink-0" />
+                <FiGithub size={14} className="text-amber-300 shrink-0" />
                 <a
                   href="https://github.com/faanhuy/project-SmartShop"
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-orange-300 transition-colors"
+                  className="hover:text-amber-300 transition-colors"
                 >
                   GitHub
                 </a>

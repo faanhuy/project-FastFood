@@ -135,14 +135,14 @@ export default function ProductReviews({ productId }: Props) {
             placeholder="Món có vừa miệng không, giao có nhanh không, bạn thích điểm nào nhất?"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white"
           />
 
           <div className="flex justify-end mt-2">
             <button
               type="submit"
               disabled={submitting || !comment.trim()}
-              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 bg-rose-600 text-white text-sm rounded-lg hover:bg-rose-700 disabled:opacity-50 transition-colors"
             >
               {submitting ? 'Đang gửi...' : 'Gửi đánh giá'}
             </button>
@@ -152,7 +152,7 @@ export default function ProductReviews({ productId }: Props) {
 
       {!isAuthenticated && (
         <p className="text-sm text-gray-400 mb-5 italic">
-          <a href="/login" className="text-blue-600 hover:underline">Đăng nhập</a> để viết đánh giá.
+          <a href="/login" className="text-rose-600 hover:underline">Đăng nhập</a> để viết đánh giá.
         </p>
       )}
 
@@ -171,7 +171,7 @@ export default function ProductReviews({ productId }: Props) {
 
             return (
               <div key={review.id} className="py-4 flex gap-3">
-                <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold shrink-0">
+                <div className="w-9 h-9 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-sm font-bold shrink-0">
                   {review.userFullName.charAt(0).toUpperCase()}
                 </div>
 
@@ -180,7 +180,7 @@ export default function ProductReviews({ productId }: Props) {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-medium text-gray-800">{review.userFullName}</span>
                       {isOwn && (
-                        <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium">
+                        <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded font-medium">
                           Bạn
                         </span>
                       )}

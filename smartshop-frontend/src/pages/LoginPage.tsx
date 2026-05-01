@@ -34,7 +34,7 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Đăng nhập</h1>
         <p className="text-sm text-gray-500 mb-6">
           Chưa có tài khoản?{' '}
-          <Link to="/register" className="text-blue-600 hover:underline font-medium">
+          <Link to="/register" className="text-rose-600 hover:underline font-medium">
             Đăng ký ngay
           </Link>
         </p>
@@ -56,7 +56,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
             />
           </div>
 
@@ -68,14 +68,14 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium py-2 rounded-lg transition-colors text-sm"
+            className="w-full bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white font-medium py-2 rounded-lg transition-colors text-sm"
           >
             {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </button>

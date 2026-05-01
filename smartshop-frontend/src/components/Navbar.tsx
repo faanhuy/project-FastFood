@@ -43,7 +43,7 @@ export default function Navbar({ children }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link to="/products" className="shrink-0">
-          <span className="block text-xl font-bold text-orange-500">FastFood</span>
+          <span className="block text-xl font-bold text-rose-600">FastFood</span>
           <span className="hidden sm:block text-[11px] text-gray-400">Giao mon nhanh trong ngay</span>
         </Link>
 
@@ -54,12 +54,12 @@ export default function Navbar({ children }: NavbarProps) {
         <div className="flex items-center gap-3 shrink-0">
           {isAuthenticated ? (
             <>
-              <Link to="/profile" className="hidden sm:flex items-center gap-1.5 text-sm text-gray-600 hover:text-blue-600" title="Trang cá nhân">
+              <Link to="/profile" className="hidden sm:flex items-center gap-1.5 text-sm text-gray-600 hover:text-rose-600" title="Trang cá nhân">
                 <FiUser size={14} />
                 <strong>{user?.firstName}</strong>
               </Link>
 
-              <Link to="/cart" className="relative text-gray-500 hover:text-blue-600" title="Giỏ hàng">
+              <Link to="/cart" className="relative text-gray-500 hover:text-rose-600" title="Giỏ hàng">
                 <FiShoppingCart size={20} />
                 {cartCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold min-w-4 h-4 px-0.5 rounded-full flex items-center justify-center leading-none">
@@ -68,7 +68,7 @@ export default function Navbar({ children }: NavbarProps) {
                 )}
               </Link>
 
-              <Link to="/orders" className="relative text-gray-500 hover:text-blue-600" title="Đơn hàng">
+              <Link to="/orders" className="relative text-gray-500 hover:text-rose-600" title="Đơn hàng">
                 <FiPackage size={20} />
                 {orderCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold min-w-4 h-4 px-0.5 rounded-full flex items-center justify-center leading-none">
@@ -78,7 +78,7 @@ export default function Navbar({ children }: NavbarProps) {
               </Link>
 
               {user?.role === 'Admin' && (
-                <Link to="/admin" className="text-gray-500 hover:text-blue-600" title="Admin Panel">
+                <Link to="/admin" className="text-gray-500 hover:text-rose-600" title="Admin Panel">
                   <FiGrid size={18} />
                 </Link>
               )}
@@ -89,8 +89,8 @@ export default function Navbar({ children }: NavbarProps) {
             </>
           ) : (
             <>
-              <Link to="/login" className="text-sm text-gray-500 hover:text-blue-600">Đăng nhập</Link>
-              <Link to="/register" className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">
+              <Link to="/login" className="text-sm text-gray-500 hover:text-rose-600">Đăng nhập</Link>
+              <Link to="/register" className="text-sm bg-rose-600 text-white px-3 py-1.5 rounded-lg hover:bg-rose-700">
                 Đăng ký
               </Link>
             </>

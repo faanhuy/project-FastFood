@@ -48,7 +48,7 @@ export default function OrderHistoryPage() {
             <p className="mb-4">Bạn chưa có đơn giao nào.</p>
             <button
               onClick={() => navigate('/products')}
-              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+              className="bg-rose-600 text-white px-6 py-2 rounded hover:bg-rose-700"
             >
               Đặt món ngay
             </button>
@@ -97,7 +97,7 @@ export default function OrderHistoryPage() {
                         <span className="text-xs text-gray-400">+{order.items.length - previewItems.length} món</span>
                       )}
                     </div>
-                    <p className="font-semibold text-blue-700">{formatPrice(order.totalAmount)}</p>
+                    <p className="font-semibold text-rose-700">{formatPrice(order.totalAmount)}</p>
                   </div>
                 );
               })}

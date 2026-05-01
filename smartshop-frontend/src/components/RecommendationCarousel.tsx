@@ -106,7 +106,7 @@ export default function RecommendationCarousel({ productId }: RecommendationCaro
             <p className="text-xs font-medium text-gray-800 line-clamp-2 leading-snug">
               {product.name}
             </p>
-            <p className="mt-1 text-sm font-bold text-blue-600">{formatPrice(product.price)}</p>
+            <p className="mt-1 text-sm font-bold text-rose-600">{formatPrice(product.price)}</p>
           </Link>
         ))}
       </div>

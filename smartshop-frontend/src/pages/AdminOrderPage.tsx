@@ -135,7 +135,7 @@ export default function AdminOrderPage() {
                           <td className="px-4 py-3 text-gray-500 max-w-xs truncate text-xs hidden sm:table-cell">
                             {order.shippingAddress}
                           </td>
-                          <td className="px-4 py-3 text-right font-semibold text-blue-600 whitespace-nowrap">
+                          <td className="px-4 py-3 text-right font-semibold text-rose-600 whitespace-nowrap">
                             {formatPrice(order.totalAmount)}
                           </td>
                           <td className="px-4 py-3 text-gray-400 whitespace-nowrap text-xs hidden md:table-cell">
@@ -152,7 +152,7 @@ export default function AdminOrderPage() {
                                   handleStatusChange(order.id, Number(e.target.value) as OrderStatusValue)
                                 }
                                 disabled={updatingId === order.id}
-                                className="text-xs border border-gray-200 rounded-md px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-blue-300 disabled:opacity-50 bg-white text-gray-600 cursor-pointer"
+                                className="text-xs border border-gray-200 rounded-md px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-rose-300 disabled:opacity-50 bg-white text-gray-600 cursor-pointer"
                               >
                                 {ORDER_STATUSES.map((s) => (
                                   <option key={s.value} value={s.value}>{s.label}</option>
@@ -163,7 +163,7 @@ export default function AdminOrderPage() {
                         </tr>
 
                         {isExpanded && (
-                          <tr className="bg-blue-50/40">
+                          <tr className="bg-rose-50/40">
                             <td colSpan={7} className="px-8 py-4">
                               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                                 Chi tiết đơn · {order.items.length} món
@@ -173,7 +173,7 @@ export default function AdminOrderPage() {
                               )}
                               <table className="w-full text-xs">
                                 <thead>
-                                  <tr className="text-gray-400 text-left border-b border-blue-100">
+                                  <tr className="text-gray-400 text-left border-b border-rose-100">
                                     <th className="pb-1.5 font-medium pr-4">Ảnh</th>
                                     <th className="pb-1.5 font-medium pr-4">Sản phẩm</th>
                                     <th className="pb-1.5 font-medium text-right pr-4">Đơn giá</th>
@@ -181,11 +181,11 @@ export default function AdminOrderPage() {
                                     <th className="pb-1.5 font-medium text-right">Thành tiền</th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-blue-100/60">
+                                <tbody className="divide-y divide-rose-100/60">
                                   {order.items.map((item) => (
                                     <tr key={item.productId}>
                                       <td className="py-1.5 pr-4">
-                                        <div className="h-10 w-10 overflow-hidden rounded-md border border-blue-100 bg-white">
+                                        <div className="h-10 w-10 overflow-hidden rounded-md border border-rose-100 bg-white">
                                           {item.productImageUrl ? (
                                             <img
                                               src={getImageUrl(item.productImageUrl)}
@@ -200,7 +200,7 @@ export default function AdminOrderPage() {
                                       <td className="py-1.5 pr-4 text-gray-700 font-medium">{item.productName}</td>
                                       <td className="py-1.5 pr-4 text-right text-gray-500">{formatPrice(item.unitPrice)}</td>
                                       <td className="py-1.5 pr-4 text-center text-gray-600">×{item.quantity}</td>
-                                      <td className="py-1.5 text-right font-semibold text-blue-600">{formatPrice(item.subTotal)}</td>
+                                      <td className="py-1.5 text-right font-semibold text-rose-600">{formatPrice(item.subTotal)}</td>
                                     </tr>
                                   ))}
                                 </tbody>

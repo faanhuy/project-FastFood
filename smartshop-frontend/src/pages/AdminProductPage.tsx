@@ -17,7 +17,7 @@ const EMPTY_CREATE: CreateProductRequest = {
   stock: 0, categoryId: '', slug: '', imageUrl: '',
 };
 
-const INPUT_CLS = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none';
+const INPUT_CLS = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-rose-400 focus:outline-none';
 
 export default function AdminProductPage() {
   const navigate = useNavigate();
@@ -153,7 +153,7 @@ export default function AdminProductPage() {
       <div className="flex justify-end mb-4">
         <button
           onClick={() => { setShowCreate(true); setCreateError(null); setCreateForm(EMPTY_CREATE); setCreateKey((k) => k + 1); }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
+          className="bg-rose-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-rose-700"
         >
           + Thêm món
         </button>
@@ -221,7 +221,7 @@ export default function AdminProductPage() {
                 <button type="button" onClick={() => setShowCreate(false)}
                   className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">Hủy</button>
                 <button type="submit" disabled={creating}
-                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60">
+                  className="px-4 py-2 text-sm bg-rose-600 text-white rounded-lg hover:bg-rose-700 disabled:opacity-60">
                   {creating ? 'Đang lưu...' : 'Lưu'}
                 </button>
               </div>
@@ -272,7 +272,7 @@ export default function AdminProductPage() {
                 <button type="button" onClick={() => setEditProduct(null)}
                   className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">Hủy</button>
                 <button type="submit" disabled={editing}
-                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60">
+                  className="px-4 py-2 text-sm bg-rose-600 text-white rounded-lg hover:bg-rose-700 disabled:opacity-60">
                   {editing ? 'Đang lưu...' : 'Cập nhật'}
                 </button>
               </div>
@@ -315,7 +315,7 @@ export default function AdminProductPage() {
                       <div className="font-medium text-gray-800 line-clamp-1">{p.name}</div>
                       <div className="text-xs text-gray-400 font-mono">{p.slug}</div>
                     </td>
-                    <td className="px-4 py-3 text-blue-600 font-medium">{formatPrice(p.price)}</td>
+                    <td className="px-4 py-3 text-rose-600 font-medium">{formatPrice(p.price)}</td>
                     <td className="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">
                       {p.originalPrice > p.price ? (
                         <span className="line-through">{formatPrice(p.originalPrice)}</span>
@@ -333,7 +333,7 @@ export default function AdminProductPage() {
                     </td>
                     <td className="px-4 py-3 text-right space-x-3">
                       <button onClick={() => navigate(`/products/${p.slug}`)}
-                        className="text-blue-600 hover:underline text-xs">Xem</button>
+                        className="text-rose-600 hover:underline text-xs">Xem</button>
                       <button onClick={() => openEdit(p)}
                         className="text-yellow-600 hover:underline text-xs">Sửa</button>
                       <button onClick={() => handleDelete(p.id, p.name)}

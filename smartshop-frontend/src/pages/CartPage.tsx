@@ -186,7 +186,7 @@ export default function CartPage() {
               <p className="text-lg mb-4">Giỏ món đang trống</p>
               <button
                 onClick={() => navigate('/products')}
-                className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 flex items-center gap-2 mx-auto"
+                className="bg-rose-600 text-white px-6 py-2 rounded hover:bg-rose-700 flex items-center gap-2 mx-auto"
                 title="Tiếp tục đặt món"
               >
                 <FiPlus size={18} />
@@ -209,12 +209,12 @@ export default function CartPage() {
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-base mb-1">{item.productName}</div>
                       <div className="text-gray-500 text-sm mb-1">Chuẩn bị nóng hổi tại bếp FastFood và giao nhanh đến địa chỉ của bạn.</div>
-                      <div className="flex gap-2 text-orange-600 font-bold items-center mb-1">
+                      <div className="flex gap-2 text-amber-600 font-bold items-center mb-1">
                         <span className="line-through text-gray-400 font-normal mr-2">{item.unitPrice.toLocaleString('vi-VN')} đ</span>
                         <span className="text-xl ml-2">{item.subTotal.toLocaleString('vi-VN')} đ</span>
                       </div>
                       <div className="flex gap-4 text-sm mt-1">
-                        <button className="text-orange-500 hover:underline" onClick={() => handleRemove(item.productId)}>Gỡ món</button>
+                        <button className="text-amber-600 hover:underline" onClick={() => handleRemove(item.productId)}>Gỡ món</button>
                       </div>
                     </div>
                     <div className="flex flex-col items-center gap-2">
@@ -240,7 +240,7 @@ export default function CartPage() {
               <div className="space-y-2 text-lg mb-4">
                 <div className="flex justify-between">
                   <span className="font-semibold">Tổng</span>
-                  <span className="text-orange-500 font-semibold">{originalTotal.toLocaleString('vi-VN')} <span className="underline">đ</span></span>
+                  <span className="text-rose-600 font-semibold">{originalTotal.toLocaleString('vi-VN')} <span className="underline">đ</span></span>
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between">
@@ -250,14 +250,14 @@ export default function CartPage() {
                 )}
                 <div className="flex justify-between font-bold text-xl border-t pt-2">
                   <span>Tổng cộng</span>
-                  <span className="text-orange-500">{finalTotal.toLocaleString('vi-VN')} <span className="underline">đ</span></span>
+                  <span className="text-rose-600">{finalTotal.toLocaleString('vi-VN')} <span className="underline">đ</span></span>
                 </div>
               </div>
               {/* Nút thanh toán */}
               <button
                 onClick={() => navigate('/checkout')}
-                className="w-full bg-orange-500 text-white py-3 rounded-full font-bold text-lg 
-                hover:bg-orange-600 transition-colors mt-2">
+                className="w-full bg-rose-600 text-white py-3 rounded-full font-bold text-lg 
+                hover:bg-rose-700 transition-colors mt-2">
                 Xác nhận đặt món
               </button>
             </div>
@@ -284,12 +284,12 @@ export default function CartPage() {
                   <div className="flex-1 min-w-0">
                     <button
                       onClick={() => navigate(`/products/${p.slug}`)}
-                      className="font-semibold text-sm text-gray-800 leading-tight line-clamp-2 text-left hover:text-orange-500 transition-colors w-full"
+                      className="font-semibold text-sm text-gray-800 leading-tight line-clamp-2 text-left hover:text-rose-600 transition-colors w-full"
                     >
                       {p.name}
                     </button>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-orange-500 font-bold text-sm">{formatPrice(p.price)}</span>
+                      <span className="text-rose-600 font-bold text-sm">{formatPrice(p.price)}</span>
                       {p.originalPrice > p.price && (
                         <span className="text-gray-400 text-xs line-through">{formatPrice(p.originalPrice)}</span>
                       )}
@@ -297,7 +297,7 @@ export default function CartPage() {
                     <button
                       disabled={addingId === p.id}
                       onClick={() => handleAddSuggestion(p)}
-                      className="mt-2 flex items-center gap-1.5 border border-orange-500 text-orange-500 rounded-full px-3 py-1 text-xs font-semibold hover:bg-orange-50 transition-colors disabled:opacity-50"
+                      className="mt-2 flex items-center gap-1.5 border border-rose-500 text-rose-600 rounded-full px-3 py-1 text-xs font-semibold hover:bg-rose-50 transition-colors disabled:opacity-50"
                     >
                       <FiShoppingCart size={12} />
                       {addingId === p.id ? 'Đang thêm...' : 'Thêm món'}

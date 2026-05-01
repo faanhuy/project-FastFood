@@ -1,1 +1,21 @@
 @import "tailwindcss";
+
+@theme {
+	/* Brand palette: chỉnh màu chủ đạo tại đây */
+	--color-rose-50: #fff1f2;
+	--color-rose-100: #ffe4e6;
+	--color-rose-300: #fda4af;
+	--color-rose-400: #fb7185;
+	--color-rose-500: #f43f5e;
+	--color-rose-600: #e11d48;
+	--color-rose-700: #be123c;
+	--color-rose-800: #9f1239;
+
+	--color-amber-50: #fffbeb;
+	--color-amber-100: #fef3c7;
+	--color-amber-300: #fcd34d;
+	--color-amber-400: #fbbf24;
+	--color-amber-500: #f59e0b;
+	--color-amber-600: #d97706;
+	--color-amber-700: #b45309;
+}

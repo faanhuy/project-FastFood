@@ -61,7 +61,7 @@ export default function OrderDetailPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="max-w-2xl mx-auto p-6">
-        <button onClick={() => navigate('/orders')} className="text-blue-600 hover:text-blue-800 mb-4 flex items-center gap-1.5 text-sm" title="Quay lại danh sách đơn giao">
+        <button onClick={() => navigate('/orders')} className="text-rose-600 hover:text-rose-800 mb-4 flex items-center gap-1.5 text-sm" title="Quay lại danh sách đơn giao">
           <FiArrowLeft size={16} /> Lịch sử đơn giao
         </button>
 
@@ -117,7 +117,7 @@ export default function OrderDetailPage() {
               {cancelling ? 'Đang huỷ...' : 'Huỷ đơn'}
             </button>
           ) : <div />}
-          <p className="text-xl font-bold text-blue-700">
+          <p className="text-xl font-bold text-rose-700">
             Tổng cộng: {formatPrice(order.totalAmount)}
           </p>
         </div>

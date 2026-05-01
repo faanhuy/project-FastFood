@@ -41,7 +41,7 @@ export default function RegisterPage() {
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Tạo tài khoản</h1>
         <p className="text-sm text-gray-500 mb-6">
           Đã có tài khoản?{' '}
-          <Link to="/login" className="text-blue-600 hover:underline font-medium">
+          <Link to="/login" className="text-rose-600 hover:underline font-medium">
             Đăng nhập
           </Link>
         </p>
@@ -65,7 +65,7 @@ export default function RegisterPage() {
                 value={form.firstName}
                 onChange={handleChange}
                 placeholder="Nguyễn"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
               />
             </div>
             <div>
@@ -77,7 +77,7 @@ export default function RegisterPage() {
                 value={form.lastName}
                 onChange={handleChange}
                 placeholder="Văn A"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
               />
             </div>
           </div>
@@ -91,7 +91,7 @@ export default function RegisterPage() {
               value={form.email}
               onChange={handleChange}
               placeholder="you@example.com"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
             />
           </div>
 
@@ -105,14 +105,14 @@ export default function RegisterPage() {
               value={form.password}
               onChange={handleChange}
               placeholder="••••••••"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium py-2 rounded-lg transition-colors text-sm"
+            className="w-full bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white font-medium py-2 rounded-lg transition-colors text-sm"
           >
             {loading ? 'Đang tạo tài khoản...' : 'Đăng ký'}
           </button>

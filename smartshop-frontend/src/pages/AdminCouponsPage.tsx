@@ -12,7 +12,7 @@ const DISCOUNT_TYPES = [
 ];
 
 const INPUT_CLS =
-  'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none';
+  'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-rose-400 focus:outline-none';
 
 const EMPTY_FORM: CreateCouponRequest = {
   code: '',
@@ -103,7 +103,7 @@ export default function AdminCouponsPage() {
       <div className="flex justify-end mb-4">
         <button
           onClick={openCreate}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
+          className="bg-rose-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-rose-700"
         >
           + Tạo mã giảm giá
         </button>
@@ -231,7 +231,7 @@ export default function AdminCouponsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60"
+                  className="px-4 py-2 text-sm bg-rose-600 text-white rounded-lg hover:bg-rose-700 disabled:opacity-60"
                 >
                   {saving ? 'Đang lưu...' : 'Tạo mã'}
                 </button>
@@ -283,7 +283,7 @@ export default function AdminCouponsPage() {
                     <td className="px-4 py-3 text-gray-600">
                       {c.discountType === 1 ? 'Phần trăm' : 'Số tiền'}
                     </td>
-                    <td className="px-4 py-3 font-medium text-blue-600">
+                    <td className="px-4 py-3 font-medium text-rose-600">
                       {c.discountType === 1
                         ? `${c.discountValue}%`
                         : formatPrice(c.discountValue)}

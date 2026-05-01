@@ -84,7 +84,7 @@ export default function CheckoutPage() {
                     value={shippingAddress}
                     onChange={(e) => setShippingAddress(e.target.value)}
                     rows={3}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
                     placeholder="Số nhà, đường, phường/xã, quận/huyện, thành phố"
                   />
                 </div>
@@ -97,7 +97,7 @@ export default function CheckoutPage() {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={2}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
                     placeholder="Ít cay, thêm tương, gọi trước khi giao..."
                   />
                 </div>
@@ -114,7 +114,7 @@ export default function CheckoutPage() {
                   <button
                     type="submit"
                     disabled={loading || cartLoading || !cart || cart.items.length === 0}
-                    className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-semibold text-sm flex items-center justify-center gap-2"
+                    className="flex-1 bg-rose-600 text-white py-2 rounded-lg hover:bg-rose-700 disabled:opacity-50 font-semibold text-sm flex items-center justify-center gap-2"
                   >
                     <FiShoppingBag size={16} />
                     {loading ? 'Đang xử lý...' : 'Xác nhận đặt món'}
@@ -152,7 +152,7 @@ export default function CheckoutPage() {
                           <p className="text-sm font-medium text-gray-800 truncate">{item.productName}</p>
                           <p className="text-xs text-gray-500">x{item.quantity} phần</p>
                         </div>
-                        <p className="text-sm font-semibold text-blue-600 shrink-0">
+                        <p className="text-sm font-semibold text-rose-600 shrink-0">
                           {formatPrice(item.subTotal)}
                         </p>
                       </div>
@@ -176,7 +176,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex justify-between text-base font-bold text-gray-900 pt-1 border-t">
                       <span>Tổng cộng</span>
-                      <span className="text-blue-600">
+                      <span className="text-rose-600">
                         {formatPrice(Math.max(0, cart.totalAmount - discountAmount))}
                       </span>
                     </div>

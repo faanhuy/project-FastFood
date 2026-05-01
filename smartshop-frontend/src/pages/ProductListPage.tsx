@@ -85,14 +85,14 @@ export default function ProductListPage() {
           ) : (
             <form onSubmit={handleSearch} className="flex-1 relative">
               <input
-                className="w-full border border-gray-300 rounded-lg pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full border border-gray-300 rounded-lg pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
                 placeholder="Tìm burger, pizza, gà rán, trà sữa..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-rose-600"
               >
                 <FiSearch size={18} />
               </button>
@@ -103,8 +103,8 @@ export default function ProductListPage() {
             title={aiMode ? 'Tìm món thường' : 'Tìm món bằng AI'}
             className={`shrink-0 flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-medium border transition-colors ${
               aiMode
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
+                ? 'bg-rose-600 text-white border-rose-600'
+                : 'bg-white text-rose-600 border-rose-300 hover:bg-rose-50'
             }`}
           >
             <FiCpu size={14} />
@@ -121,7 +121,7 @@ export default function ProductListPage() {
             <li>
               <button
                 onClick={() => handleCategoryChange(undefined)}
-                className={`w-full text-left px-3 py-1.5 rounded text-sm ${!categoryId ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+                className={`w-full text-left px-3 py-1.5 rounded text-sm ${!categoryId ? 'bg-rose-100 text-rose-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
               >
                 Tất cả món
               </button>
@@ -130,7 +130,7 @@ export default function ProductListPage() {
               <li key={cat.id}>
                 <button
                   onClick={() => handleCategoryChange(cat.id)}
-                  className={`w-full text-left px-3 py-1.5 rounded text-sm ${categoryId === cat.id ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+                  className={`w-full text-left px-3 py-1.5 rounded text-sm ${categoryId === cat.id ? 'bg-rose-100 text-rose-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
                 >
                   {cat.name}
                 </button>
@@ -141,10 +141,10 @@ export default function ProductListPage() {
 
         {/* Main */}
         <main className="flex-1">
-          <div className="mb-6 rounded-3xl bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 px-6 py-7 text-white shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-100">Fast delivery menu</p>
+          <div className="mb-6 rounded-3xl bg-gradient-to-r from-rose-600 via-red-500 to-amber-500 px-6 py-7 text-white shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rose-100">Fast delivery menu</p>
             <h1 className="mt-2 text-2xl font-bold sm:text-3xl">Đặt đồ ăn nhanh, giao nóng hổi trong vài chạm</h1>
-            <p className="mt-2 max-w-2xl text-sm text-orange-50 sm:text-base">
+            <p className="mt-2 max-w-2xl text-sm text-rose-50 sm:text-base">
               Chọn burger, gà rán, pizza, mì Ý và đồ uống cho bữa trưa văn phòng, bữa tối nhẹ nhàng hoặc combo xem phim cuối tuần.
             </p>
           </div>
@@ -162,8 +162,8 @@ export default function ProductListPage() {
                 onClick={() => handleSortChange(0)}
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors
                   ${sortBy === 0
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-600'}`}
+                    ? 'bg-rose-600 text-white border-rose-600'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-rose-400 hover:text-rose-600'}`}
               >
                 Mới
               </button>
@@ -173,8 +173,8 @@ export default function ProductListPage() {
                 onClick={() => handleSortChange(5)}
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors
                   ${sortBy === 5
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-600'}`}
+                    ? 'bg-rose-600 text-white border-rose-600'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-rose-400 hover:text-rose-600'}`}
               >
                 Bán chạy
               </button>
@@ -185,8 +185,8 @@ export default function ProductListPage() {
                 onChange={(e) => e.target.value !== '' && handleSortChange(Number(e.target.value))}
                 className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer
                   ${[1, 2].includes(sortBy)
-                    ? 'border-blue-600 text-blue-600 bg-blue-50'
-                    : 'border-gray-300 text-gray-600 bg-white hover:border-blue-400 hover:text-blue-600'}`}
+                    ? 'border-rose-600 text-rose-600 bg-rose-50'
+                    : 'border-gray-300 text-gray-600 bg-white hover:border-rose-400 hover:text-rose-600'}`}
               >
                 <option value="" disabled>Giá ↕</option>
                 <option value={1}>Giá tăng dần</option>
@@ -199,8 +199,8 @@ export default function ProductListPage() {
                 onChange={(e) => e.target.value !== '' && handleSortChange(Number(e.target.value))}
                 className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer
                   ${[3, 4].includes(sortBy)
-                    ? 'border-blue-600 text-blue-600 bg-blue-50'
-                    : 'border-gray-300 text-gray-600 bg-white hover:border-blue-400 hover:text-blue-600'}`}
+                    ? 'border-rose-600 text-rose-600 bg-rose-50'
+                    : 'border-gray-300 text-gray-600 bg-white hover:border-rose-400 hover:text-rose-600'}`}
               >
                 <option value="" disabled>Tên ↕</option>
                 <option value={3}>Tên A → Z</option>
@@ -218,7 +218,7 @@ export default function ProductListPage() {
                   <Link
                     key={product.id}
                     to={`/products/${product.slug}`}
-                    className="bg-white rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-blue-200 border border-transparent transition-all duration-200 p-3 flex flex-col group cursor-pointer"
+                    className="bg-white rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-rose-200 border border-transparent transition-all duration-200 p-3 flex flex-col group cursor-pointer"
                   >
                     <div className="bg-gray-100 rounded-lg h-36 flex items-center justify-center mb-3 overflow-hidden">
                       {product.imageUrl ? (
@@ -229,7 +229,7 @@ export default function ProductListPage() {
                     </div>
                     <p className="text-sm font-medium text-gray-800 line-clamp-2 flex-1">{product.name}</p>
                     <div className="mt-2">
-                      <p className="text-blue-600 font-bold text-sm">{formatPrice(product.price)}</p>
+                      <p className="text-rose-600 font-bold text-sm">{formatPrice(product.price)}</p>
                       {product.originalPrice > product.price && (
                         <p className="text-gray-400 text-xs line-through">{formatPrice(product.originalPrice)}</p>
                       )}
@@ -243,7 +243,7 @@ export default function ProductListPage() {
                       <button
                         onClick={(e) => handleQuickAdd(e, product)}
                         disabled={addingId === product.id}
-                        className="mt-2 w-full text-xs bg-blue-600 text-white rounded-lg py-1.5 hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        className="mt-2 w-full text-xs bg-rose-600 text-white rounded-lg py-1.5 hover:bg-rose-700 disabled:opacity-50 transition-colors"
                       >
                         {addingId === product.id ? 'Đang thêm...' : '+ Thêm món'}
                       </button>
@@ -266,7 +266,7 @@ export default function ProductListPage() {
                     <button
                       key={p}
                       onClick={() => setPage(p)}
-                      className={`px-3 py-1.5 rounded border text-sm ${p === page ? 'bg-blue-600 text-white border-blue-600' : 'hover:bg-gray-100'}`}
+                      className={`px-3 py-1.5 rounded border text-sm ${p === page ? 'bg-rose-600 text-white border-rose-600' : 'hover:bg-gray-100'}`}
                     >
                       {p}
                     </button>

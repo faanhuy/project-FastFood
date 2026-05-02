@@ -367,3 +367,8 @@ CLAUDE.local.md
 
 # VS Code browser profile (Edge profile data - should never be committed)
 .vscode/edge-profile/
+
+# MCP Server build artifacts and local config
+tools/mcp-server/node_modules/
+tools/mcp-server/dist/
+tools/mcp-server/.env

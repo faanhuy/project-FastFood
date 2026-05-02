@@ -255,6 +255,53 @@ public class ClaudeAIService : ISemanticKernelService
         }
     }
 
+    // ── ChatAsync (chatbot RAG) ───────────────────────────────────────────
+    public async Task<string> ChatAsync(
+        string systemPrompt, string userMessage, CancellationToken ct = default)
+    {
+        var body = new
+        {
+            model = _claudeModel,
+            max_tokens = 1024,
+            system = systemPrompt,
+            messages = new[] { new { role = "user", content = userMessage } }
+        };
+
+        try
+        {
+            var response = await _claudeHttp.PostAsJsonAsync("/v1/messages", body, ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorText = await response.Content.ReadAsStringAsync(ct);
+                if ((int)response.StatusCode == 429)
+                {
+                    _logger.LogWarning("Claude API rate limit exceeded on ChatAsync.");
+                    throw new ServiceUnavailableException("Dịch vụ AI tạm thời không khả dụng (rate limit). Vui lòng thử lại sau.");
+                }
+                if (IsLowCreditError(errorText))
+                {
+                    _logger.LogError("Claude API credit balance too low on ChatAsync.");
+                    throw new ServiceUnavailableException("Dịch vụ AI không khả dụng do tài khoản hết credit. Vui lòng liên hệ quản trị viên.");
+                }
+                _logger.LogError("Claude API error {Status}: {Body}", response.StatusCode, errorText);
+                throw new ServiceUnavailableException($"Dịch vụ AI lỗi: {response.StatusCode}");
+            }
+
+            using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+            return doc.RootElement.GetProperty("content")[0].GetProperty("text").GetString() ?? string.Empty;
+        }
+        catch (ServiceUnavailableException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in Claude ChatAsync.");
+            throw new ServiceUnavailableException("Không thể kết nối đến dịch vụ AI. Vui lòng thử lại sau.");
+        }
+    }
+
     private static bool IsLowCreditError(string errorBody)
     {
         try

@@ -10,7 +10,6 @@ public class NotificationRepository(ApplicationDbContext context) : INotificatio
     public async Task<IEnumerable<Notification>> GetByUserIdAsync(string userId, CancellationToken ct = default)
     {
         return await context.Notifications
-            .AsNoTracking()
             .Where(n => n.UserId == userId)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync(ct);
@@ -31,5 +30,19 @@ public class NotificationRepository(ApplicationDbContext context) : INotificatio
     {
         return await context.Notifications
             .CountAsync(n => n.UserId == userId && !n.IsRead, ct);
+    }
+
+    public Task DeleteAsync(Notification notification, CancellationToken ct = default)
+    {
+        context.Notifications.Remove(notification);
+        return Task.CompletedTask;
+    }
+
+    public async Task DeleteAllByUserIdAsync(string userId, CancellationToken ct = default)
+    {
+        var notifications = await context.Notifications
+            .Where(n => n.UserId == userId)
+            .ToListAsync(ct);
+        context.Notifications.RemoveRange(notifications);
     }
 }

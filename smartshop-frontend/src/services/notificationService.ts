@@ -15,4 +15,12 @@ export const notificationService = {
   markAllAsRead: async (): Promise<void> => {
     await api.patch('/notifications/read-all');
   },
+
+  deleteOne: async (id: string): Promise<void> => {
+    await api.delete(`/notifications/${id}`);
+  },
+
+  deleteAll: async (): Promise<void> => {
+    await api.delete('/notifications');
+  },
 };

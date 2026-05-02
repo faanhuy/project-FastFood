@@ -24,6 +24,12 @@
             "cwd": "${workspaceFolder}/src/SmartShop.WebAPI",
             "launchSettingsProfile": "https",
             "stopAtEntry": false,
+            "exceptionOptions": [
+                {
+                    "exceptionFilter": "all",
+                    "breakMode": "unhandled"
+                }
+            ],
             "serverReadyAction": {
                 "action": "openExternally",
                 "pattern": "\\bNow listening on:\\s+(https?://\\S+)",

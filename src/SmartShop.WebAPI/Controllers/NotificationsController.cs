@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartShop.Application.Common.Models;
+using SmartShop.Application.Features.Notifications.Commands.DeleteNotification;
 using SmartShop.Application.Features.Notifications.Commands.MarkAsRead;
 using SmartShop.Application.Features.Notifications.Queries.GetNotifications;
 
@@ -33,6 +34,22 @@ public class NotificationsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> MarkAllAsRead(CancellationToken ct)
     {
         var result = await mediator.Send(new MarkAsReadCommand(null), ct);
+        return Ok(result);
+    }
+
+    /// <summary>Xóa một thông báo</summary>
+    [HttpDelete("{id:guid}")]
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteOne(Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new DeleteNotificationCommand(id), ct);
+        return Ok(result);
+    }
+
+    /// <summary>Xóa tất cả thông báo của user</summary>
+    [HttpDelete]
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteAll(CancellationToken ct)
+    {
+        var result = await mediator.Send(new DeleteNotificationCommand(null), ct);
         return Ok(result);
     }
 }

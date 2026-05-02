@@ -17,11 +17,12 @@ export default function AdminOrderPage() {
   const [loading,      setLoading]      = useState(true);
   const [page,         setPage]         = useState(1);
   const [statusFilter, setStatusFilter] = useState<number>(0);
-  const [updatingId,   setUpdatingId]   = useState<string | null>(null);
+  const [updatingIds,  setUpdatingIds]  = useState<Set<string>>(new Set());
   const [expandedId,   setExpandedId]   = useState<string | null>(null);
+  const isBusy = updatingIds.size > 0;
 
-  const loadOrders = async (p: number, sf: number) => {
-    setLoading(true);
+  const loadOrders = async (p: number, sf: number, showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const result = await orderService.getAllOrders(p, PAGE_SIZE, sf || undefined);
       setAllOrders(result.items);
@@ -29,7 +30,7 @@ export default function AdminOrderPage() {
     } catch {
       toast.error('Không thể tải danh sách đơn giao.');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -42,15 +43,37 @@ export default function AdminOrderPage() {
   };
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatusValue) => {
-    setUpdatingId(orderId);
+    if (updatingIds.has(orderId)) return;
+
+    const optimisticStatus =
+      ORDER_STATUSES.find((s) => s.value === newStatus)?.key ?? String(newStatus);
+
+    setUpdatingIds((prev) => {
+      const next = new Set(prev);
+      next.add(orderId);
+      return next;
+    });
+
+    // Optimistic update để admin thấy thay đổi ngay trên đúng dòng đang thao tác.
+    setAllOrders((prev) =>
+      prev.map((order) =>
+        order.id === orderId ? { ...order, status: optimisticStatus } : order
+      )
+    );
+
     try {
       await orderService.updateOrderStatus(orderId, newStatus);
-      await loadOrders(page, statusFilter);
+      await loadOrders(page, statusFilter, false);
       toast.success('Đã cập nhật trạng thái đơn giao.');
     } catch {
       toast.error('Cập nhật trạng thái thất bại.');
+      await loadOrders(page, statusFilter, false);
     } finally {
-      setUpdatingId(null);
+      setUpdatingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(orderId);
+        return next;
+      });
     }
   };
 
@@ -62,11 +85,12 @@ export default function AdminOrderPage() {
       <div className="flex gap-1.5 flex-wrap mb-4">
         <button
           onClick={() => handleFilterChange(0)}
+          disabled={isBusy}
           className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
             statusFilter === 0
               ? 'bg-gray-900 text-white border-gray-900'
               : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
-          }`}
+          } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           Tất cả
         </button>
@@ -74,11 +98,12 @@ export default function AdminOrderPage() {
           <button
             key={s.value}
             onClick={() => handleFilterChange(s.value)}
+            disabled={isBusy}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
               statusFilter === s.value
                 ? 'bg-gray-900 text-white border-gray-900'
                 : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
-            }`}
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {s.label}
             {statusFilter === s.value && !loading && (
@@ -87,6 +112,16 @@ export default function AdminOrderPage() {
           </button>
         ))}
       </div>
+
+      {isBusy && (
+        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 flex items-center gap-2">
+          <svg className="h-3.5 w-3.5 animate-spin text-amber-700" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          </svg>
+          Đang xử lý {updatingIds.size} đơn hàng. Vui lòng chờ hoàn tất.
+        </div>
+      )}
 
       <p className="text-xs text-gray-400 mb-3">Tổng {totalCount} đơn giao</p>
 
@@ -152,14 +187,14 @@ export default function AdminOrderPage() {
                                   onChange={(e) =>
                                     handleStatusChange(order.id, Number(e.target.value) as OrderStatusValue)
                                   }
-                                  disabled={updatingId === order.id}
-                                  className="text-xs border border-gray-200 rounded-md px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-rose-300 disabled:opacity-50 bg-white text-gray-600 cursor-pointer w-full"
+                                  disabled={isBusy}
+                                  className="text-xs border border-gray-200 rounded-md px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-rose-300 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-600 cursor-pointer w-full"
                                 >
                                   {ORDER_STATUSES.map((s) => (
                                     <option key={s.value} value={s.value}>{s.label}</option>
                                   ))}
                                 </select>
-                                {updatingId === order.id && (
+                                {updatingIds.has(order.id) && (
                                   <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-md">
                                     <svg className="w-3.5 h-3.5 animate-spin text-rose-500" viewBox="0 0 24 24" fill="none">
                                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -227,7 +262,7 @@ export default function AdminOrderPage() {
             )}
           </div>
 
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={loading} />
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={loading || isBusy} />
         </>
       )}
     </AdminLayout>

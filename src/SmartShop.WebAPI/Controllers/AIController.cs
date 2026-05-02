@@ -5,6 +5,8 @@ using SmartShop.Application.Common.Models;
 using SmartShop.Application.DTOs;
 using SmartShop.Application.Features.AI;
 using SmartShop.Application.Features.AI.Commands.GenerateDescription;
+using SmartShop.Application.Features.AI.Commands.SendMessage;
+using SmartShop.Application.Features.AI.Queries.GetChatHistory;
 using SmartShop.Application.Features.AI.Queries.GetRecommendations;
 using SmartShop.Application.Features.AI.Queries.SemanticSearch;
 
@@ -46,6 +48,28 @@ public class AIController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(command, ct);
         return Ok(ApiResponse<string>.Ok(result));
+    }
+
+    /// <summary>
+    /// Gửi tin nhắn đến AI chatbot và nhận phản hồi dựa trên FAQ (public).
+    /// </summary>
+    [HttpPost("chat")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SendMessage([FromBody] SendMessageCommand command, CancellationToken ct)
+    {
+        var result = await mediator.Send(command, ct);
+        return Ok(ApiResponse<SendMessageResponseDto>.Ok(result));
+    }
+
+    /// <summary>
+    /// Lấy lịch sử hội thoại theo sessionId (public).
+    /// </summary>
+    [HttpGet("chat/{sessionId:guid}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetChatHistory(Guid sessionId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetChatHistoryQuery(sessionId), ct);
+        return Ok(ApiResponse<IReadOnlyList<ChatMessageDto>>.Ok(result));
     }
 }
 

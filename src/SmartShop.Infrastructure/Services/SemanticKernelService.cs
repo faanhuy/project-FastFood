@@ -62,6 +62,25 @@ public class SemanticKernelService : ISemanticKernelService
         CancellationToken ct = default)
         => throw new NotSupportedException("SemanticKernelService is not the active AI provider.");
 
+    public async Task<string> ChatAsync(
+        string systemPrompt, string userMessage, CancellationToken ct = default)
+    {
+        var history = new ChatHistory();
+        history.AddSystemMessage(systemPrompt);
+        history.AddUserMessage(userMessage);
+
+        try
+        {
+            var result = await _chatService.GetChatMessageContentAsync(history, cancellationToken: ct);
+            return result.Content ?? string.Empty;
+        }
+        catch (HttpOperationException ex) when (ex.Message.Contains("429") || ex.Message.Contains("insufficient_quota"))
+        {
+            _logger.LogWarning("OpenAI quota exceeded when calling ChatAsync.");
+            throw new ServiceUnavailableException("Dịch vụ AI tạm thời không khả dụng. Vui lòng nạp credits tại platform.openai.com.");
+        }
+    }
+
     public async Task<string> GenerateProductDescriptionAsync(
         string productName, string categoryName, CancellationToken ct = default)
     {

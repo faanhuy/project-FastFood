@@ -41,10 +41,20 @@ public static class DependencyInjection
         services.AddScoped<IProductEmbeddingRepository, ProductEmbeddingRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<IAppSettingRepository, AppSettingRepository>();
+        services.AddScoped<IFaqDocumentRepository, FaqDocumentRepository>();
+        services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
+        services.AddScoped<IChatbotService, ChatbotService>();
 
-        // AI — Groq (free: 6000 req/min, llama-3.3-70b, hiểu tiếng Việt tốt)
+        // AI — chọn provider qua config "AI:Provider" (Groq | Gemini), mặc định Groq
+        // Groq: free 500K tokens/day, llama-3.3-70b, nhanh, hiểu tiếng Việt tốt
+        // Gemini: free 1M tokens/day, gemini-2.0-flash-lite, hiểu tiếng Việt tốt nhất
+        var aiProvider = configuration.GetValue<string>("AI:Provider") ?? "Groq";
         services.AddHttpClient("Groq");
-        services.AddSingleton<ISemanticKernelService, GroqAIService>();
+        services.AddHttpClient("Gemini");
+        if (aiProvider.Equals("Gemini", StringComparison.OrdinalIgnoreCase))
+            services.AddSingleton<ISemanticKernelService, GeminiAIService>();
+        else
+            services.AddSingleton<ISemanticKernelService, GroqAIService>();
         services.AddHostedService<EmbeddingBackgroundService>();
 
         // Cache registration with graceful fallback when Redis is unavailable.

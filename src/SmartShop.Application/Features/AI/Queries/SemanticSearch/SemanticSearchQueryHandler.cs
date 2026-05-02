@@ -30,7 +30,12 @@ public class SemanticSearchQueryHandler(
         var minScore = await settings.GetDoubleAsync("AI:Search:MinScore", defaultValue: 0.3, cancellationToken);
         var activeProducts   = allProducts.Where(p => p.IsActive).ToList();
 
-        var candidates = activeProducts.Select(p => (p.Id, p.Name, p.Description ?? string.Empty));
+        var candidates = activeProducts.Select(p =>
+        {
+            // Nhúng giá vào description để AI có thể rank theo budget
+            var enrichedDesc = $"{p.Description ?? string.Empty} [Giá: {p.Price:N0}đ]";
+            return (p.Id, p.Name, enrichedDesc);
+        });
         var ranked     = await semanticKernel.SemanticSearchAsync(
             request.Query, candidates, request.TopN, cancellationToken);
 

@@ -127,36 +127,49 @@ public class GroqAIService : ISemanticKernelService
             {
                 id   = p.Id.ToString(),
                 name = p.Name,
-                desc = p.Description.Length > 100 ? p.Description[..100] : p.Description
+                desc = p.Description.Length > 200 ? p.Description[..200] : p.Description
             })
             .ToList();
 
         if (productList.Count == 0) return [];
 
         const string system =
-            "You are a Vietnamese e-commerce semantic search engine with deep product knowledge.\n\n" +
-            "BRAND RELATIONSHIPS (apply when user searches by brand):\n" +
+            "You are a Vietnamese food/e-commerce semantic search engine with deep product knowledge.\n\n" +
+            "BRAND RELATIONSHIPS:\n" +
             "- Xiaomi brand family: Xiaomi, Redmi, POCO, Black Shark\n" +
             "- Samsung brand family: Samsung, Galaxy\n" +
             "- Apple brand family: Apple, iPhone, MacBook, AirPods, iPad\n" +
             "- ASUS brand family: ASUS, ROG, VivoBook, ZenBook\n" +
             "- Lenovo brand family: Lenovo, ThinkPad, IdeaPad, Legion\n\n" +
-            "VIETNAMESE SYNONYMS:\n" +
-            "- điện thoại / điện thoại thông minh / smartphone → phone products\n" +
-            "- quần áo / thời trang / trang phục → fashion/clothing\n" +
-            "- tai nghe / headphones / earphones / earbuds → audio\n" +
-            "- máy tính / laptop / notebook → computer products\n" +
-            "- phụ kiện → accessories\n\n" +
+            "VIETNAMESE FOOD SYNONYMS:\n" +
+            "- burger / bơ gơ / hamburger → burger products\n" +
+            "- gà rán / fried chicken / crispy chicken → fried chicken products\n" +
+            "- pizza / bánh pizza → pizza products\n" +
+            "- đồ uống / nước / drink → beverage products\n" +
+            "- salad / rau trộn → salad products\n" +
+            "- ngon / ngon miệng / hấp dẫn → high-quality food\n" +
+            "- rẻ / tiết kiệm / giá tốt → low price products\n" +
+            "- cay / spicy → spicy food\n\n" +
+            "GENERAL E-COMMERCE SYNONYMS:\n" +
+            "- điện thoại / smartphone → phone products\n" +
+            "- quần áo / thời trang → fashion/clothing\n" +
+            "- tai nghe / earbuds / headphones → audio\n" +
+            "- máy tính / laptop / notebook → computer products\n\n" +
+            "PRICE MATCHING:\n" +
+            "- 'rẻ' / 'giá rẻ' → prefer price < 100000\n" +
+            "- 'vừa túi tiền' / 'bình dân' → prefer price 50000-200000\n" +
+            "- 'cao cấp' / 'premium' → prefer high price items\n\n" +
             "Always respond with a valid JSON array only, no explanation.";
 
         var user =
             $"Search query: \"{query}\"\n\n" +
             $"Product catalog:\n{JsonSerializer.Serialize(productList)}\n\n" +
-            $"Find the top {topN} most relevant products. Apply brand knowledge and synonyms.\n" +
+            $"Find the top {topN} most relevant products. Apply brand knowledge, food synonyms, and price hints.\n" +
             "Return JSON array: [{\"id\":\"<exact-guid>\",\"score\":0.95}, ...]\n" +
             "Rules:\n" +
             "- Copy IDs EXACTLY as provided\n" +
-            "- score 0.0-1.0: brand match=0.9+, category match=0.6+, partial=0.3+\n" +
+            "- score 0.0-1.0: exact name match=0.95+, brand/food match=0.85+, category match=0.6+, partial=0.3+\n" +
+            "- If query mentions price range, boost products matching that range\n" +
             "- Sort by score descending\n" +
             "- Include all products with score >= 0.3\n" +
             "- Return [] only if truly nothing is relevant\n" +
@@ -220,6 +233,13 @@ public class GroqAIService : ISemanticKernelService
             _logger.LogError(ex, "Unexpected error in Groq GetRecommendations.");
             throw new ServiceUnavailableException("Gợi ý sản phẩm thất bại. Vui lòng thử lại sau.");
         }
+    }
+
+    // ── ChatAsync (chatbot RAG) ───────────────────────────────────────────
+    public async Task<string> ChatAsync(
+        string systemPrompt, string userMessage, CancellationToken ct = default)
+    {
+        return await CallGroqAsync(systemPrompt, userMessage, 1024, ct);
     }
 
     // ── GenerateDescription ───────────────────────────────────────────────

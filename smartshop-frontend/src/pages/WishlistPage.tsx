@@ -84,13 +84,13 @@ export default function WishlistPage() {
             >
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
             </svg>
-            <p className="text-gray-500 text-lg font-medium mb-2">Chua co san pham yeu thich</p>
-            <p className="text-gray-400 text-sm mb-6">Them san pham vao danh sach de xem lai sau</p>
+            <p className="text-gray-500 text-lg font-medium mb-2">Chưa có sản phẩm nào yêu thích</p>
+            <p className="text-gray-400 text-sm mb-6">Thêm sản phẩm vào danh sách để xem lại sau</p>
             <Link
               to="/products"
               className="bg-rose-600 text-white px-6 py-2.5 rounded-lg hover:bg-rose-700 text-sm font-medium transition-colors"
             >
-              Kham pha san pham
+              Khám phá sản phẩm
             </Link>
           </div>
         ) : (
@@ -143,10 +143,10 @@ export default function WishlistPage() {
                     disabled={addingId === item.productId}
                     className="mt-2 w-full text-xs bg-rose-600 text-white rounded-lg py-1.5 hover:bg-rose-700 disabled:opacity-50 transition-colors"
                   >
-                    {addingId === item.productId ? 'Dang them...' : '+ Them vao gio hang'}
+                    {addingId === item.productId ? 'Đang thêm...' : '+ Thêm vào giỏ hàng'}
                   </button>
                 ) : (
-                  <p className="mt-2 text-xs text-center text-gray-400 py-1">Tam het hang</p>
+                  <p className="mt-2 text-xs text-center text-gray-400 py-1">Tạm hết hàng</p>
                 )}
               </div>
             ))}

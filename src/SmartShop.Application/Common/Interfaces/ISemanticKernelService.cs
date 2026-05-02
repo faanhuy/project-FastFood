@@ -23,4 +23,9 @@ public interface ISemanticKernelService
         CancellationToken ct = default);
 
     Task<string> GenerateProductDescriptionAsync(string productName, string categoryName, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gọi LLM với system prompt + user message, dùng cho chatbot RAG.
+    /// </summary>
+    Task<string> ChatAsync(string systemPrompt, string userMessage, CancellationToken ct = default);
 }

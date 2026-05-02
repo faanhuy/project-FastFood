@@ -25,6 +25,8 @@ public class PushSignalRNotificationHandler(
                 "Shipped"   => "Đang giao hàng",
                 "Delivered" => "Đã giao hàng",
                 "Cancelled" => "Đã hủy",
+                "Processing" => "Đang xử lý",
+                "Refunded" => "Đã hoàn tiền",
                 _           => notification.NewStatus
             };
             var orderCode = notification.OrderId.ToString()[..8].ToUpper();

@@ -11,6 +11,8 @@ const STATUS_MAP: Record<string, string> = {
   Shipped: 'Đang giao hàng',
   Delivered: 'Đã giao hàng',
   Cancelled: 'Đã hủy',
+  Processing: 'Đang xử lý',
+  Refunded: 'Đã hoàn tiền'
 };
 
 function localizeMessage(message: string): string {
@@ -33,7 +35,7 @@ function formatRelativeTime(isoString: string): string {
 
 export default function NotificationBell() {
   const navigate = useNavigate();
-  const { notifications, markOneRead, markAllRead } = useNotificationStore();
+  const { notifications, markOneRead, markAllRead, removeOne, removeAll } = useNotificationStore();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -65,6 +67,35 @@ export default function NotificationBell() {
     try {
       await notificationService.markAllAsRead();
       markAllRead();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message ?? 'Có lỗi xảy ra');
+    }
+  };
+
+  const handleDeleteOne = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    try {
+      await notificationService.deleteOne(id);
+      removeOne(id);
+    } catch {
+      toast.error('Có lỗi xảy ra');
+    }
+  };
+
+  const handleMarkOneRead = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    try {
+      await notificationService.markAsRead(id);
+      markOneRead(id);
+    } catch {
+      toast.error('Có lỗi xảy ra');
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    try {
+      await notificationService.deleteAll();
+      removeAll();
     } catch (error: any) {
       toast.error(error.response?.data?.message ?? 'Có lỗi xảy ra');
     }
@@ -104,37 +135,74 @@ export default function NotificationBell() {
               </div>
             ) : (
               notifications.map((n) => (
-                <button
+                <div
                   key={n.id}
-                  onClick={() => handleNotificationClick(n)}
-                  className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${
-                    !n.isRead ? 'bg-rose-50' : ''
+                  className={`group relative border-b border-gray-50 transition-colors ${
+                    !n.isRead ? 'bg-rose-50 hover:bg-rose-100/60' : 'hover:bg-gray-50'
                   }`}
                 >
-                  <div className="flex items-start gap-2">
-                    {!n.isRead && (
-                      <span className="mt-1.5 w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-                    )}
-                    <div className={!n.isRead ? '' : 'pl-4'}>
-                      <p className="text-sm font-medium text-gray-800 line-clamp-1">{n.title}</p>
-                      <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">
-                        {localizeMessage(n.message)}
-                      </p>
-                      <p className="text-[11px] text-gray-400 mt-1">{formatRelativeTime(n.createdAt)}</p>
+                  <button
+                    onClick={() => handleNotificationClick(n)}
+                    className="w-full text-left px-4 py-3 pr-20"
+                  >
+                    <div className="flex items-start gap-2">
+                      {!n.isRead && (
+                        <span className="mt-1.5 w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                      )}
+                      <div className={!n.isRead ? '' : 'pl-4'}>
+                        <p className="text-sm font-medium text-gray-800 line-clamp-1">{n.title}</p>
+                        <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">
+                          {localizeMessage(n.message)}
+                        </p>
+                        <p className="text-[11px] text-gray-400 mt-1">{formatRelativeTime(n.createdAt)}</p>
+                      </div>
                     </div>
+                  </button>
+
+                  {/* Action buttons — always visible for unread, hover-only for delete */}
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                    {!n.isRead && (
+                      <button
+                        onClick={(e) => handleMarkOneRead(e, n.id)}
+                        title="Đánh dấu đã đọc"
+                        className="p-1.5 rounded-md text-green-500 hover:text-green-700 hover:bg-green-50 transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => handleDeleteOne(e, n.id)}
+                      title="Xóa thông báo"
+                      className="p-1.5 rounded-md text-gray-300 hover:text-red-600 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-1 14H6L5 6" />
+                        <path d="M10 11v6M14 11v6" />
+                        <path d="M9 6V4h6v2" />
+                      </svg>
+                    </button>
                   </div>
-                </button>
+                </div>
               ))
             )}
           </div>
 
           {notifications.length > 0 && (
-            <div className="px-4 py-2.5 border-t border-gray-100">
+            <div className="px-4 py-2.5 border-t border-gray-100 flex items-center gap-2">
               <button
                 onClick={handleMarkAllRead}
-                className="w-full text-xs text-center text-rose-600 hover:text-rose-700 font-medium py-1"
+                className="flex-1 text-xs text-center text-rose-600 hover:text-rose-700 font-medium py-1 rounded-md hover:bg-rose-50 transition-colors"
               >
                 Đọc tất cả
+              </button>
+              <button
+                onClick={handleDeleteAll}
+                className="flex-1 text-xs text-center text-gray-500 hover:text-gray-700 font-medium py-1 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Xóa tất cả
               </button>
             </div>
           )}

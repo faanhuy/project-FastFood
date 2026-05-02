@@ -231,13 +231,12 @@ public class GeminiAIService : ISemanticKernelService
         int topN,
         CancellationToken ct = default)
     {
-        // Truncate description để giảm kích thước prompt
         var productList = candidates
             .Select(p => new
             {
-                id = p.Id.ToString(),
+                id   = p.Id.ToString(),
                 name = p.Name,
-                desc = p.Description.Length > 80 ? p.Description[..80] : p.Description
+                desc = p.Description.Length > 200 ? p.Description[..200] : p.Description
             })
             .ToList();
 
@@ -245,12 +244,23 @@ public class GeminiAIService : ISemanticKernelService
 
         var productJson = JsonSerializer.Serialize(productList);
         var prompt =
-            $"E-commerce product search. Query: \"{query}\"\n\n" +
-            $"Products:\n{productJson}\n\n" +
-            $"Return a JSON array of up to {topN} most relevant products.\n" +
-            "Format: [{\"id\":\"<exact-id>\",\"score\":0.95},...]\n" +
-            "Rules: copy IDs exactly, sort by relevance descending, return [] if none match.\n" +
-            "Output JSON array only, no markdown, no explanation.";
+            $"Bạn là công cụ tìm kiếm thực phẩm và thương mại điện tử tiếng Việt.\n\n" +
+            "NGỮ NGHĨA TIẾNG VIỆT:\n" +
+            "- burger/bơ gơ/hamburger → burger | gà rán/fried chicken → gà rán | pizza → pizza\n" +
+            "- đồ uống/nước → beverages | rẻ/giá rẻ → giá thấp | cay/spicy → đồ cay\n" +
+            "- điện thoại/smartphone | máy tính/laptop | tai nghe/earbuds\n\n" +
+            "GỢI Ý GIÁ: 'rẻ'=giá<100000 | 'bình dân'=50000-200000 | 'cao cấp'=giá cao\n\n" +
+            $"Truy vấn tìm kiếm: \"{query}\"\n\n" +
+            $"Danh sách sản phẩm:\n{productJson}\n\n" +
+            $"Tìm tối đa {topN} sản phẩm phù hợp nhất. Xem xét tên, mô tả, và giá.\n" +
+            "Trả về JSON array: [{\"id\":\"<id-chính-xác>\",\"score\":0.95},...]\n" +
+            "Quy tắc:\n" +
+            "- Sao chép id CHÍNH XÁC như trong danh sách\n" +
+            "- score 0.0-1.0: khớp tên=0.95+, khớp loại=0.7+, liên quan=0.4+, không liên quan<0.3\n" +
+            "- Nếu query đề cập giá, ưu tiên sản phẩm đúng khoảng giá đó\n" +
+            "- Sắp xếp score giảm dần\n" +
+            "- Chỉ trả [] nếu thực sự không có sản phẩm nào liên quan\n" +
+            "Chỉ output JSON array, không có text hay markdown.";
 
         try
         {
@@ -303,6 +313,14 @@ public class GeminiAIService : ISemanticKernelService
             _logger.LogError(ex, "Unexpected error in GetRecommendations.");
             throw new ServiceUnavailableException("Gợi ý sản phẩm thất bại. Vui lòng thử lại sau.");
         }
+    }
+
+    // ── ChatAsync (chatbot RAG) ───────────────────────────────────────────
+    public async Task<string> ChatAsync(
+        string systemPrompt, string userMessage, CancellationToken ct = default)
+    {
+        var fullPrompt = $"{systemPrompt}\n\nUser: {userMessage}";
+        return await CallGeminiAsync(fullPrompt, 1024, ct);
     }
 
     // ── GenerateDescription ───────────────────────────────────────────────

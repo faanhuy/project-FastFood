@@ -22,6 +22,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<AppSetting> AppSettings { get; set; }
     public DbSet<Coupon> Coupons { get; set; }
     public DbSet<CouponUsage> CouponUsages { get; set; }
+    public DbSet<WishlistItem> WishlistItems { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -12,6 +12,7 @@ import CheckoutPage from '../pages/CheckoutPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
 import OrderDetailPage from '../pages/OrderDetailPage';
 import ProfilePage from '../pages/ProfilePage';
+import WishlistPage from '../pages/WishlistPage';
 import { useAuthStore } from '../store/authStore';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -100,6 +101,14 @@ const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <ProfilePage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/wishlist',
+    element: (
+      <PrivateRoute>
+        <WishlistPage />
       </PrivateRoute>
     ),
   },

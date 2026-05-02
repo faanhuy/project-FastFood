@@ -2,12 +2,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Interfaces;
 using SmartShop.Infrastructure.Caching;
 using SmartShop.Infrastructure.Data;
+using SmartShop.Infrastructure.Email;
 using SmartShop.Infrastructure.Repositories;
 using SmartShop.Infrastructure.Services;
 using SmartShop.Infrastructure.UnitOfWork;
@@ -45,12 +47,41 @@ public static class DependencyInjection
         services.AddSingleton<ISemanticKernelService, GroqAIService>();
         services.AddHostedService<EmbeddingBackgroundService>();
 
-        // Redis Cache
-        var redisConnection = configuration.GetConnectionString("Redis") ?? "localhost:6379";
-        var redisConfig = ConfigurationOptions.Parse(redisConnection);
-        redisConfig.AbortOnConnectFail = false;
-        services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConfig));
-        services.AddSingleton<ICacheService, RedisCacheService>();
+        // Cache registration with graceful fallback when Redis is unavailable.
+        services.AddSingleton<ICacheService>(serviceProvider =>
+        {
+            var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("CacheRegistration");
+            var cacheEnabled = configuration.GetValue("Cache:Enabled", true);
+            var cacheProvider = configuration.GetValue<string>("Cache:Provider") ?? "Redis";
+
+            if (!cacheEnabled || cacheProvider.Equals("None", StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogWarning("Cache disabled. Using NoOpCacheService.");
+                return new NoOpCacheService();
+            }
+
+            if (!cacheProvider.Equals("Redis", StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogWarning("Unknown cache provider '{Provider}'. Falling back to NoOpCacheService.", cacheProvider);
+                return new NoOpCacheService();
+            }
+
+            try
+            {
+                var redisConnection = configuration.GetConnectionString("Redis") ?? "localhost:6379";
+                var redisConfig = ConfigurationOptions.Parse(redisConnection);
+                redisConfig.AbortOnConnectFail = false;
+
+                var multiplexer = ConnectionMultiplexer.Connect(redisConfig);
+                logger.LogInformation("Cache provider Redis connected successfully.");
+                return new RedisCacheService(multiplexer);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Redis unavailable. Falling back to NoOpCacheService.");
+                return new NoOpCacheService();
+            }
+        });
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>

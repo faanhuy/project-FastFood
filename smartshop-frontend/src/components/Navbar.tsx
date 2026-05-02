@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiShoppingCart, FiPackage, FiLogOut, FiGrid, FiUser } from 'react-icons/fi';
+import { FiShoppingCart, FiPackage, FiLogOut, FiGrid, FiUser, FiHeart } from 'react-icons/fi';
 import { useAuthStore } from '../store/authStore';
 import { cartService } from '../services/cartService';
 import { orderService } from '../services/orderService';
+import NotificationBell from './NotificationBell';
 
 interface NavbarProps {
   children?: React.ReactNode; // slot cho search bar (ProductListPage)
@@ -58,6 +59,12 @@ export default function Navbar({ children }: NavbarProps) {
                 <FiUser size={14} />
                 <strong>{user?.firstName}</strong>
               </Link>
+
+              <Link to="/wishlist" className="text-gray-500 hover:text-rose-600" title="Yêu thích">
+                <FiHeart size={20} />
+              </Link>
+
+              <NotificationBell />
 
               <Link to="/cart" className="relative text-gray-500 hover:text-rose-600" title="Giỏ hàng">
                 <FiShoppingCart size={20} />

@@ -1,4 +1,5 @@
 using FluentAssertions;
+using MediatR;
 using Moq;
 using SmartShop.Domain.Common.Exceptions;
 using Xunit;
@@ -17,10 +18,12 @@ public class PlaceOrderCommandHandlerTests
     private readonly Mock<IProductRepository> _productRepo = new();
     private readonly Mock<ICouponRepository> _couponRepo = new();
     private readonly Mock<ICouponUsageRepository> _couponUsageRepo = new();
+    private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
+    private readonly Mock<IMediator> _mediator = new();
 
     private PlaceOrderCommandHandler CreateHandler() =>
-        new(_cartRepo.Object, _orderRepo.Object, _productRepo.Object, _couponRepo.Object, _couponUsageRepo.Object, _uow.Object);
+        new(_cartRepo.Object, _orderRepo.Object, _productRepo.Object, _couponRepo.Object, _couponUsageRepo.Object, _userRepo.Object, _uow.Object, _mediator.Object);
     private static PlaceOrderCommand ValidCommand(Guid userId) =>
         new(userId, "123 Main St", null, null);
 

@@ -1,0 +1,12 @@
+using SmartShop.Domain.Entities;
+
+namespace SmartShop.Domain.Interfaces;
+
+public interface IWishlistRepository
+{
+    Task<IEnumerable<WishlistItem>> GetByUserIdAsync(string userId, CancellationToken ct = default);
+    Task<WishlistItem?> GetByUserAndProductAsync(string userId, Guid productId, CancellationToken ct = default);
+    Task AddAsync(WishlistItem item, CancellationToken ct = default);
+    void RemoveAsync(WishlistItem item);
+    Task<bool> ExistsAsync(string userId, Guid productId, CancellationToken ct = default);
+}

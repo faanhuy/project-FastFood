@@ -4,8 +4,9 @@ using StackExchange.Redis;
 
 namespace SmartShop.Infrastructure.Caching;
 
-public class RedisCacheService(IConnectionMultiplexer redis) : ICacheService
+public class RedisCacheService(IConnectionMultiplexer redis) : ICacheService, IDisposable
 {
+    private readonly IConnectionMultiplexer _redis = redis;
     private readonly IDatabase _db = redis.GetDatabase();
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -34,9 +35,14 @@ public class RedisCacheService(IConnectionMultiplexer redis) : ICacheService
 
     public async Task RemoveByPrefixAsync(string prefix, CancellationToken ct = default)
     {
-        var server = redis.GetServer(redis.GetEndPoints().First());
+        var server = _redis.GetServer(_redis.GetEndPoints().First());
         var keys = server.Keys(pattern: $"{prefix}*").ToArray();
         if (keys.Length > 0)
             await _db.KeyDeleteAsync(keys);
+    }
+
+    public void Dispose()
+    {
+        _redis.Dispose();
     }
 }

@@ -3,6 +3,7 @@ using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Enums;
 using SmartShop.Domain.Interfaces;
+using SmartShop.Domain.Events;
 
 namespace SmartShop.Application.Features.Orders.Commands.UpdateOrderStatus;
 
@@ -10,7 +11,9 @@ public class UpdateOrderStatusCommandHandler(
     IOrderRepository orderRepository,
     ICouponRepository couponRepository,
     ICouponUsageRepository couponUsageRepository,
-    IUnitOfWork unitOfWork
+    IUserRepository userRepository,
+    IUnitOfWork unitOfWork,
+    IMediator mediator
 ) : IRequestHandler<UpdateOrderStatusCommand, OrderDto>
 {
     public async Task<OrderDto> Handle(UpdateOrderStatusCommand request, CancellationToken cancellationToken)
@@ -37,6 +40,18 @@ public class UpdateOrderStatusCommandHandler(
 
         order.UpdateStatus(request.NewStatus);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Publish event for email + SignalR notification
+        var user = await userRepository.GetByIdAsync(order.UserId, cancellationToken);
+        if (user is not null)
+        {
+            await mediator.Publish(new OrderStatusChangedEvent(
+                OrderId: order.Id,
+                UserId: user.Id.ToString(),
+                UserEmail: user.Email,
+                UserName: $"{user.FirstName} {user.LastName}".Trim(),
+                NewStatus: order.Status.ToString()), cancellationToken);
+        }
 
         return new OrderDto
         {

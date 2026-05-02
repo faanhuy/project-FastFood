@@ -9,6 +9,7 @@ import { FiSearch, FiCpu } from 'react-icons/fi';
 import AISearchBar from '../components/AISearchBar';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import WishlistButton from '../components/WishlistButton';
 
 import { formatPrice } from '../utils/formatters';
 import { getImageUrl } from '../utils/imageUrl';
@@ -218,8 +219,11 @@ export default function ProductListPage() {
                   <Link
                     key={product.id}
                     to={`/products/${product.slug}`}
-                    className="bg-white rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-rose-200 border border-transparent transition-all duration-200 p-3 flex flex-col group cursor-pointer"
+                    className="relative bg-white rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-rose-200 border border-transparent transition-all duration-200 p-3 flex flex-col group cursor-pointer"
                   >
+                    <div className="absolute top-2 right-2">
+                      <WishlistButton productId={product.id} />
+                    </div>
                     <div className="bg-gray-100 rounded-lg h-36 flex items-center justify-center mb-3 overflow-hidden">
                       {product.imageUrl ? (
                         <img src={getImageUrl(product.imageUrl)} alt={product.name} className="h-full w-full object-contain" />

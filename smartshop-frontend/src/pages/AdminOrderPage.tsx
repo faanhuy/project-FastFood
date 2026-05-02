@@ -146,18 +146,29 @@ export default function AdminOrderPage() {
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusInfo?.color ?? 'bg-gray-100 text-gray-700'}`}>
                                 {statusInfo?.label ?? order.status}
                               </span>
-                              <select
-                                value={statusVal}
-                                onChange={(e) =>
-                                  handleStatusChange(order.id, Number(e.target.value) as OrderStatusValue)
-                                }
-                                disabled={updatingId === order.id}
-                                className="text-xs border border-gray-200 rounded-md px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-rose-300 disabled:opacity-50 bg-white text-gray-600 cursor-pointer"
-                              >
-                                {ORDER_STATUSES.map((s) => (
-                                  <option key={s.value} value={s.value}>{s.label}</option>
-                                ))}
-                              </select>
+                              <div className="relative">
+                                <select
+                                  value={statusVal}
+                                  onChange={(e) =>
+                                    handleStatusChange(order.id, Number(e.target.value) as OrderStatusValue)
+                                  }
+                                  disabled={updatingId === order.id}
+                                  className="text-xs border border-gray-200 rounded-md px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-rose-300 disabled:opacity-50 bg-white text-gray-600 cursor-pointer w-full"
+                                >
+                                  {ORDER_STATUSES.map((s) => (
+                                    <option key={s.value} value={s.value}>{s.label}</option>
+                                  ))}
+                                </select>
+                                {updatingId === order.id && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-md">
+                                    <svg className="w-3.5 h-3.5 animate-spin text-rose-500" viewBox="0 0 24 24" fill="none">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                    </svg>
+                                    <span className="ml-1 text-[10px] text-rose-500 font-medium">Đang xử lý...</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </td>
                         </tr>

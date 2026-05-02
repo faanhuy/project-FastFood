@@ -3,6 +3,7 @@ using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces;
+using SmartShop.Domain.Events;
 
 namespace SmartShop.Application.Features.Orders.Commands.PlaceOrder;
 
@@ -12,7 +13,9 @@ public class PlaceOrderCommandHandler(
     IProductRepository productRepository,
     ICouponRepository couponRepository,
     ICouponUsageRepository couponUsageRepository,
-    IUnitOfWork unitOfWork) : IRequestHandler<PlaceOrderCommand, OrderDto>
+    IUserRepository userRepository,
+    IUnitOfWork unitOfWork,
+    IMediator mediator) : IRequestHandler<PlaceOrderCommand, OrderDto>
 {
     public async Task<OrderDto> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
     {
@@ -85,6 +88,22 @@ public class PlaceOrderCommandHandler(
         cart.Clear();
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Publish event for email + notifications (fire-and-forget style via MediatR)
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
+        if (user is not null)
+        {
+            var eventItems = order.Items.Select(i =>
+                new OrderEventItemDto(i.ProductName, i.Quantity, i.UnitPrice)).ToList();
+
+            await mediator.Publish(new OrderPlacedEvent(
+                OrderId: order.Id,
+                UserId: user.Id.ToString(),
+                UserEmail: user.Email,
+                UserName: $"{user.FirstName} {user.LastName}".Trim(),
+                TotalPrice: order.TotalAmount,
+                Items: eventItems), cancellationToken);
+        }
 
         return new OrderDto
         {

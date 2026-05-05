@@ -233,7 +233,7 @@ export default function AdminOrderPage() {
                             {order.id.slice(0, 8)}…
                           </td>
                           <td className="px-4 py-3 text-xs text-gray-700">
-                            {order.userId.slice(0, 8)}…
+                            {order.userName || order.userId.slice(0, 8) + '…'}
                           </td>
                           <td className="px-4 py-3 text-gray-500 max-w-xs truncate text-xs hidden sm:table-cell">
                             {order.shippingAddress}

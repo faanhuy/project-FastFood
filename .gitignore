@@ -365,8 +365,9 @@ FodyWeavers.xsd
 CLAUDE.local.md
 .claude/settings.local.json
 
-# VS Code browser profile (Edge profile data - should never be committed)
+# VS Code browser profile (Edge/Chrome profile data - should never be committed)
 .vscode/edge-profile/
+.vscode/chrome-profile/
 
 # MCP Server build artifacts and local config
 tools/mcp-server/node_modules/

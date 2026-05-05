@@ -10,4 +10,5 @@ public record WishlistItemDto(
     string ProductName,
     decimal Price,
     string? ImageUrl,
-    bool IsInStock);
+    bool IsInStock,
+    string Slug);

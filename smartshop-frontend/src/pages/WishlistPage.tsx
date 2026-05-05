@@ -101,7 +101,10 @@ export default function WishlistPage() {
                 className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-3 flex flex-col"
               >
                 <div className="relative">
-                  <div className="bg-gray-100 rounded-lg h-36 flex items-center justify-center overflow-hidden mb-3">
+                  <div
+                    className="bg-gray-100 rounded-lg h-36 flex items-center justify-center overflow-hidden mb-3 cursor-pointer"
+                    onClick={() => navigate(`/products/${item.slug}`)}
+                  >
                     {item.imageUrl ? (
                       <img
                         src={getImageUrl(item.imageUrl)}
@@ -132,7 +135,10 @@ export default function WishlistPage() {
                   </button>
                 </div>
 
-                <p className="text-sm font-medium text-gray-800 line-clamp-2 flex-1">
+                <p
+                  className="text-sm font-medium text-gray-800 line-clamp-2 flex-1 cursor-pointer hover:text-rose-600 transition-colors"
+                  onClick={() => navigate(`/products/${item.slug}`)}
+                >
                   {item.productName}
                 </p>
                 <p className="text-rose-600 font-bold text-sm mt-1">{formatPrice(item.price)}</p>

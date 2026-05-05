@@ -1,13 +1,18 @@
+import { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { FiCheckCircle, FiXCircle, FiShoppingBag, FiRefreshCw } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { paymentService } from '../services/paymentService';
 
 export default function PaymentResultPage() {
   const [params] = useSearchParams();
+  const [retrying, setRetrying] = useState(false);
 
   const successParam = params.get('success');
-  const orderId = params.get('orderId') ?? params.get('vnp_TxnRef');
+  const rawRef = params.get('orderId') ?? params.get('vnp_TxnRef') ?? '';
+  const orderId = rawRef.includes('_') ? rawRef.substring(0, rawRef.lastIndexOf('_')) : rawRef || null;
   const transactionNo = params.get('vnp_TransactionNo');
   const isSuccess = successParam?.toLowerCase() === 'true';
 
@@ -86,13 +91,25 @@ export default function PaymentResultPage() {
               </p>
             </div>
             <div className="flex gap-3 justify-center">
-              <Link
-                to="/checkout"
-                className="flex items-center gap-2 bg-rose-600 text-white px-5 py-2.5 rounded-xl font-medium text-sm hover:bg-rose-700 transition-colors"
-              >
-                <FiRefreshCw size={16} />
-                Thử lại
-              </Link>
+              {orderId && (
+                <button
+                  onClick={async () => {
+                    setRetrying(true);
+                    try {
+                      const url = await paymentService.createVNPayUrl(orderId);
+                      window.location.href = url;
+                    } catch {
+                      toast.error('Không thể tạo link thanh toán. Vui lòng thử lại.');
+                      setRetrying(false);
+                    }
+                  }}
+                  disabled={retrying}
+                  className="flex items-center gap-2 bg-rose-600 text-white px-5 py-2.5 rounded-xl font-medium text-sm hover:bg-rose-700 transition-colors disabled:opacity-60"
+                >
+                  <FiRefreshCw size={16} className={retrying ? 'animate-spin' : ''} />
+                  {retrying ? 'Đang xử lý...' : 'Thanh toán lại'}
+                </button>
+              )}
               <Link
                 to="/orders"
                 className="flex items-center gap-2 border border-gray-300 text-gray-700 px-5 py-2.5 rounded-xl font-medium text-sm hover:bg-gray-50 transition-colors"

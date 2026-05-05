@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { FiArrowLeft } from 'react-icons/fi';
 import { orderService } from '../services/orderService';
+import { paymentService } from '../services/paymentService';
 import type { OrderDto } from '../types/order';
 import { ORDER_STATUSES } from '../types/order';
 import { getApiError } from '../utils/errorHandler';
@@ -11,12 +12,19 @@ import { getImageUrl } from '../utils/imageUrl';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  COD: 'Thanh toán khi nhận hàng (COD)',
+  VNPay: 'VNPay',
+  BankTransfer: 'Chuyển khoản ngân hàng',
+};
+
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<OrderDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [cancelling, setCancelling] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,6 +34,19 @@ export default function OrderDetailPage() {
       .catch(() => setError('Không tìm thấy đơn giao.'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const handleRetryPayment = async () => {
+    if (!order) return;
+    setRetrying(true);
+    try {
+      const url = await paymentService.createVNPayUrl(order.id);
+      window.location.href = url;
+    } catch (err: any) {
+      toast.error(err.response?.data?.message ?? 'Không thể tạo link thanh toán');
+    } finally {
+      setRetrying(false);
+    }
+  };
 
   const handleCancel = async () => {
     if (!order) return;
@@ -80,6 +101,39 @@ export default function OrderDetailPage() {
           {order.notes && <p><span className="font-medium text-gray-800">Ghi chú:</span> {order.notes}</p>}
         </div>
 
+        <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2 text-sm text-gray-600">
+          <p className="font-medium text-gray-800 mb-1">Thông tin thanh toán</p>
+          {order.paymentMethod && (
+            <p>
+              <span className="font-medium text-gray-800">Phương thức:</span>{' '}
+              {PAYMENT_METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod}
+            </p>
+          )}
+          {order.paymentStatus && (
+            <p className="flex items-center gap-2">
+              <span className="font-medium text-gray-800">Trạng thái:</span>
+              {order.paymentStatus === 'Paid' && (
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-green-100 text-green-700">Đã thanh toán</span>
+              )}
+              {order.paymentStatus === 'Failed' && (
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-red-100 text-red-700">Thanh toán thất bại</span>
+              )}
+              {order.paymentStatus === 'Pending' && (order.paymentMethod === 'VNPay' || order.paymentMethod === 'BankTransfer') && (
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-yellow-100 text-yellow-700">Chờ thanh toán</span>
+              )}
+              {order.paymentStatus === 'Pending' && order.paymentMethod === 'COD' && (
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600">Thanh toán khi nhận</span>
+              )}
+              {order.paymentStatus === 'Refunded' && (
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-700">Đã hoàn tiền</span>
+              )}
+            </p>
+          )}
+          {order.paidAt && (
+            <p><span className="font-medium text-gray-800">Ngày thanh toán:</span> {formatDateTime(order.paidAt)}</p>
+          )}
+        </div>
+
         <div className="space-y-3 mb-6">
           {order.items.map((item) => (
             <div key={item.productId} className="flex items-center justify-between gap-3 border-b pb-3">
@@ -107,16 +161,29 @@ export default function OrderDetailPage() {
           ))}
         </div>
 
-        <div className="flex items-center justify-between">
-          {order.status === 'Pending' ? (
-            <button
-              onClick={handleCancel}
-              disabled={cancelling}
-              className="text-sm text-red-500 border border-red-300 px-4 py-2 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
-            >
-              {cancelling ? 'Đang huỷ...' : 'Huỷ đơn'}
-            </button>
-          ) : <div />}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            {order.status === 'Pending' && (
+              <button
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="text-sm text-red-500 border border-red-300 px-4 py-2 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+              >
+                {cancelling ? 'Đang huỷ...' : 'Huỷ đơn'}
+              </button>
+            )}
+            {order.paymentMethod === 'VNPay' &&
+              (order.paymentStatus === 'Pending' || order.paymentStatus === 'Failed') &&
+              order.status !== 'Cancelled' && (
+                <button
+                  onClick={handleRetryPayment}
+                  disabled={retrying}
+                  className="text-sm px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-60 transition-colors"
+                >
+                  {retrying ? 'Đang xử lý...' : 'Thanh toán lại'}
+                </button>
+              )}
+          </div>
           <p className="text-xl font-bold text-rose-700">
             Tổng cộng: {formatPrice(order.totalAmount)}
           </p>

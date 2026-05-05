@@ -22,11 +22,20 @@ public class CreateVNPayPaymentCommandHandler(
         if (order.PaymentMethod != PaymentMethod.VNPay)
             throw new ConflictException("Đơn hàng này không sử dụng phương thức thanh toán VNPay.");
 
-        if (order.PaymentStatus != PaymentStatus.Pending)
-            throw new ConflictException("Đơn hàng này đã được xử lý thanh toán.");
+        if (order.PaymentStatus == PaymentStatus.Paid)
+            throw new ConflictException("Đơn hàng này đã thanh toán thành công, không thể tạo lại link thanh toán.");
+
+        if (order.Status == OrderStatus.Cancelled)
+            throw new ConflictException("Đơn hàng đã bị hủy, không thể thực hiện thanh toán.");
+
+        if (order.PaymentStatus != PaymentStatus.Pending && order.PaymentStatus != PaymentStatus.Failed)
+            throw new ConflictException("Trạng thái thanh toán không hợp lệ để tạo link thanh toán.");
+
+        var txnRef = $"{order.Id}_{DateTime.UtcNow:yyyyMMddHHmmss}";
 
         var paymentRequest = new CreatePaymentRequest(
             OrderId: order.Id.ToString(),
+            TxnRef: txnRef,
             Amount: (long)order.TotalAmount,
             OrderDescription: $"Thanh toan don hang {order.Id}",
             ReturnUrl: command.ReturnUrl,

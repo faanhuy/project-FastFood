@@ -14,6 +14,7 @@ public class OrderDto
 {
     public Guid Id { get; init; }
     public Guid UserId { get; init; }
+    public string UserName { get; init; } = string.Empty;
     public string Status { get; init; } = string.Empty;
     public decimal TotalAmount { get; init; }
     public decimal DiscountAmount { get; init; }

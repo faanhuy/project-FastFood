@@ -19,7 +19,8 @@ public class GetWishlistQueryHandler(
             ProductName: i.Product?.Name ?? string.Empty,
             Price: i.Product?.Price ?? 0,
             ImageUrl: i.Product?.ImageUrl,
-            IsInStock: (i.Product?.Stock ?? 0) > 0
+            IsInStock: (i.Product?.Stock ?? 0) > 0,
+            Slug: i.Product?.Slug ?? string.Empty
         )).ToList();
 
         return ApiResponse<List<WishlistItemDto>>.Ok(dtos);

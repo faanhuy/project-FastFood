@@ -45,6 +45,7 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
     {
         var query = context.Orders
             .AsNoTracking()
+            .Include(o => o.User)
             .Include(o => o.Items)
             .ThenInclude(i => i.Product)
             .AsQueryable();

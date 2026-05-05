@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { orderService } from '../services/orderService';
+import { paymentService } from '../services/paymentService';
 import type { OrderDto } from '../types/order';
 import { ORDER_STATUSES } from '../types/order';
 import { formatPrice, formatDate } from '../utils/formatters';
@@ -14,7 +16,21 @@ export default function OrderHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [retryingOrderId, setRetryingOrderId] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  const handleRetryPayment = async (e: React.MouseEvent, orderId: string) => {
+    e.stopPropagation();
+    setRetryingOrderId(orderId);
+    try {
+      const url = await paymentService.createVNPayUrl(orderId);
+      window.location.href = url;
+    } catch (error: any) {
+      toast.error(error.response?.data?.message ?? 'Không thể tạo link thanh toán');
+    } finally {
+      setRetryingOrderId(null);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -69,9 +85,26 @@ export default function OrderHistoryPage() {
                       <span className="text-sm text-gray-500">
                         #{order.id.slice(0, 8).toUpperCase()}
                       </span>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusInfo?.color ?? 'bg-gray-100 text-gray-700'}`}>
-                        {statusInfo?.label ?? order.status}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {order.paymentStatus === 'Paid' && (
+                          <span className="text-xs px-2 py-1 rounded-full font-medium bg-green-100 text-green-700">
+                            Đã thanh toán
+                          </span>
+                        )}
+                        {order.paymentStatus === 'Failed' && (
+                          <span className="text-xs px-2 py-1 rounded-full font-medium bg-red-100 text-red-700">
+                            Thanh toán thất bại
+                          </span>
+                        )}
+                        {order.paymentStatus === 'Pending' && (order.paymentMethod === 'VNPay' || order.paymentMethod === 'BankTransfer') && (
+                          <span className="text-xs px-2 py-1 rounded-full font-medium bg-yellow-100 text-yellow-700">
+                            Chờ thanh toán
+                          </span>
+                        )}
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusInfo?.color ?? 'bg-gray-100 text-gray-700'}`}>
+                          {statusInfo?.label ?? order.status}
+                        </span>
+                      </div>
                     </div>
                     <p className="text-sm text-gray-600 mb-1">
                       {order.items.length} món · {formatDate(order.createdAt)}
@@ -97,7 +130,20 @@ export default function OrderHistoryPage() {
                         <span className="text-xs text-gray-400">+{order.items.length - previewItems.length} món</span>
                       )}
                     </div>
-                    <p className="font-semibold text-rose-700">{formatPrice(order.totalAmount)}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold text-rose-700">{formatPrice(order.totalAmount)}</p>
+                      {order.paymentMethod === 'VNPay' &&
+                        (order.paymentStatus === 'Pending' || order.paymentStatus === 'Failed') &&
+                        order.status !== 'Cancelled' && (
+                          <button
+                            onClick={(e) => handleRetryPayment(e, order.id)}
+                            disabled={retryingOrderId === order.id}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-60 transition-colors"
+                          >
+                            {retryingOrderId === order.id ? 'Đang xử lý...' : 'Thanh toán lại'}
+                          </button>
+                        )}
+                    </div>
                   </div>
                 );
               })}

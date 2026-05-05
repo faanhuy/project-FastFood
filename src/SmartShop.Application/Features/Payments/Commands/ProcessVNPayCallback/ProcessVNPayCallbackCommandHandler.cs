@@ -16,15 +16,18 @@ public class ProcessVNPayCallbackCommandHandler(
     {
         var callbackResult = paymentGateway.ProcessCallback(command.QueryParams);
 
-        if (!Guid.TryParse(callbackResult.OrderId, out var orderId))
-            throw new NotFoundException(nameof(Domain.Entities.Order), callbackResult.OrderId);
+        var txnRef = callbackResult.OrderId; // vnp_TxnRef = orderId_timestamp hoặc orderId (backward compat)
+        var rawOrderId = txnRef.Contains('_') ? txnRef[..txnRef.LastIndexOf('_')] : txnRef;
+
+        if (!Guid.TryParse(rawOrderId, out var orderId))
+            throw new NotFoundException(nameof(Domain.Entities.Order), rawOrderId);
 
         var order = await orderRepository.GetByIdAsync(orderId, ct)
             ?? throw new NotFoundException(nameof(Domain.Entities.Order), orderId);
 
-        // Idempotency: nếu đã xử lý rồi thì bỏ qua
-        if (order.PaymentStatus != PaymentStatus.Pending)
-            return ApiResponse<bool>.Ok(order.PaymentStatus == PaymentStatus.Paid);
+        // Idempotency: chỉ skip nếu đã Paid — Failed vẫn cho retry
+        if (order.PaymentStatus == PaymentStatus.Paid)
+            return ApiResponse<bool>.Ok(true);
 
         if (callbackResult.IsSuccess)
         {

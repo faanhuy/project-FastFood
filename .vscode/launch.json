@@ -3,13 +3,11 @@
     "configurations": [
         {
             "name": "Debug React Frontend",
-            "type": "msedge",
-            "request": "attach",
-            "port": 9222,
+            "type": "chrome",
+            "request": "launch",
             "url": "http://localhost:5173",
             "webRoot": "${workspaceFolder}/smartshop-frontend",
-            "preLaunchTask": "launch-edge-debug",
-            "timeout": 10000,
+            "timeout": 30000,
             "sourceMapPathOverrides": {
                 "/@fs/*": "/*"
             }

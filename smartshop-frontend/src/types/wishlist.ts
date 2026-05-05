@@ -4,4 +4,5 @@ export interface WishlistItem {
   price: number;
   imageUrl?: string;
   isInStock: boolean;
+  slug: string;
 }

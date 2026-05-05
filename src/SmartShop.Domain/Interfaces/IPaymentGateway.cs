@@ -8,6 +8,7 @@ public interface IPaymentGateway
 
 public record CreatePaymentRequest(
     string OrderId,
+    string TxnRef,
     long Amount,
     string OrderDescription,
     string ReturnUrl,

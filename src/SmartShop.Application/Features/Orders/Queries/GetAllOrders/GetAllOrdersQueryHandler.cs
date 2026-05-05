@@ -17,6 +17,7 @@ public class GetCouponsQueryHandler(IOrderRepository orderRepository)
         {
             Id              = o.Id,
             UserId          = o.UserId,
+            UserName        = o.User != null ? $"{o.User.FirstName} {o.User.LastName}".Trim() : string.Empty,
             Status          = o.Status.ToString(),
             TotalAmount     = o.TotalAmount,
             ShippingAddress = o.ShippingAddress,

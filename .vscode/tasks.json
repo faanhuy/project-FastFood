@@ -26,13 +26,13 @@
             "isBackground": true
         },
         {
-            "label": "launch-edge-debug",
+            "label": "launch-chrome-debug",
             "type": "shell",
             "command": "Start-Process",
             "args": [
-                "'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'",
+                "'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'",
                 "-ArgumentList",
-                "'--remote-debugging-port=9222 --user-data-dir=${workspaceFolder}\\.vscode\\edge-profile http://localhost:5173'"
+                "'--remote-debugging-port=9222 --user-data-dir=$env:TEMP\\smartshop-chrome-debug http://localhost:5173'"
             ],
             "problemMatcher": []
         },

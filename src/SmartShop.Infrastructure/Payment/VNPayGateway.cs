@@ -31,7 +31,7 @@ public class VNPayGateway(IConfiguration configuration) : IPaymentGateway
             ["vnp_OrderInfo"] = request.OrderDescription,
             ["vnp_OrderType"] = "other",
             ["vnp_ReturnUrl"] = request.ReturnUrl,
-            ["vnp_TxnRef"] = request.OrderId,
+            ["vnp_TxnRef"] = request.TxnRef,
             ["vnp_ExpireDate"] = expireDate.ToString("yyyyMMddHHmmss")
         };
 

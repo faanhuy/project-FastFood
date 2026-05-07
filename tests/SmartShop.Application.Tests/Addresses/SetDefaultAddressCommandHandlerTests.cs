@@ -42,7 +42,7 @@ public class SetDefaultAddressCommandHandlerTests
 
         var result = await CreateHandler().Handle(new SetDefaultAddressCommand(address2.Id, userId), default);
 
-        result.IsSuccess.Should().BeTrue();
+        result.Success.Should().BeTrue();
         address2.IsDefault.Should().BeTrue();
         address1.IsDefault.Should().BeFalse();
         address3.IsDefault.Should().BeFalse();

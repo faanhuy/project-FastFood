@@ -39,7 +39,7 @@ public class CreateVNPayPaymentCommandHandlerTests
             new CreateVNPayPaymentCommand(order.Id, userId.ToString(), "https://return.url", "127.0.0.1"),
             default);
 
-        result.IsSuccess.Should().BeTrue();
+        result.Success.Should().BeTrue();
         result.Data.Should().Be(expectedUrl);
     }
 
@@ -95,7 +95,7 @@ public class CreateVNPayPaymentCommandHandlerTests
     {
         var userId = Guid.NewGuid();
         var order = CreateVNPayOrder(userId);
-        order.MarkAsPaid("TXN001");
+        order.MarkAsPaid("TXN001", DateTime.UtcNow);
 
         _orderRepo.Setup(r => r.GetByIdAsync(order.Id, default)).ReturnsAsync(order);
 

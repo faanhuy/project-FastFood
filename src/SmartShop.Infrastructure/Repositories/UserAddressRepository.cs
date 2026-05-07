@@ -10,7 +10,7 @@ public class UserAddressRepository(ApplicationDbContext context) : IUserAddressR
     public async Task<IReadOnlyList<UserAddress>> GetByUserIdAsync(string userId, CancellationToken ct = default)
     {
         return await context.UserAddresses
-            .AsNoTracking()
+            //.AsNoTracking()
             .Where(a => a.UserId == userId)
             .OrderByDescending(a => a.IsDefault)
             .ThenBy(a => a.CreatedAt)

@@ -11,6 +11,7 @@ using SmartShop.Infrastructure.Caching;
 using SmartShop.Infrastructure.Data;
 using SmartShop.Infrastructure.Email;
 using SmartShop.Infrastructure.Payment;
+using SmartShop.Infrastructure.RateLimit;
 using SmartShop.Infrastructure.Repositories;
 using SmartShop.Infrastructure.Services;
 using SmartShop.Infrastructure.UnitOfWork;
@@ -95,6 +96,37 @@ public static class DependencyInjection
                 logger.LogWarning(ex, "Redis unavailable. Falling back to NoOpCacheService.");
                 return new NoOpCacheService();
             }
+        });
+
+        // Rate limit store registration — reuses same Redis connection as cache, falls back to in-memory.
+        services.AddSingleton<IRateLimitStore>(serviceProvider =>
+        {
+            var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("RateLimitRegistration");
+            var cacheEnabled = configuration.GetValue("Cache:Enabled", true);
+            var cacheProvider = configuration.GetValue<string>("Cache:Provider") ?? "Redis";
+
+            if (cacheEnabled && cacheProvider.Equals("Redis", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var redisConnection = configuration.GetConnectionString("Redis") ?? "localhost:6379";
+                    var redisConfig = ConfigurationOptions.Parse(redisConnection);
+                    redisConfig.AbortOnConnectFail = false;
+
+                    var multiplexer = ConnectionMultiplexer.Connect(redisConfig);
+                    var rlLogger = serviceProvider.GetRequiredService<ILoggerFactory>()
+                        .CreateLogger<RedisRateLimitStore>();
+                    logger.LogInformation("Rate limit store: using Redis.");
+                    return new RedisRateLimitStore(multiplexer, rlLogger);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Redis unavailable for rate limiting. Falling back to InMemoryRateLimitStore.");
+                }
+            }
+
+            logger.LogWarning("Rate limit store: using InMemoryRateLimitStore.");
+            return new InMemoryRateLimitStore();
         });
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

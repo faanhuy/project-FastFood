@@ -31,7 +31,7 @@ public class AddAddressCommandHandlerTests
         var result = await CreateHandler().Handle(ValidCommand(userId), default);
 
         result.Should().NotBeNull();
-        result.IsSuccess.Should().BeTrue();
+        result.Success.Should().BeTrue();
         result.Data.Should().NotBeNull();
         result.Data!.Label.Should().Be("Nhà riêng");
         result.Data.RecipientName.Should().Be("Nguyen Van A");

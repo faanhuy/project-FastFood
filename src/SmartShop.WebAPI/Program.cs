@@ -11,6 +11,7 @@ using SmartShop.Infrastructure.Email;
 using SmartShop.Infrastructure.Repositories;
 using SmartShop.WebAPI.Hubs;
 using SmartShop.WebAPI.Middleware;
+using SmartShop.WebAPI.Options;
 using SmartShop.WebAPI.Services;
 using System.Text;
 
@@ -47,6 +48,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+builder.Services.Configure<RateLimitOptions>(builder.Configuration.GetSection("RateLimit"));
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -131,6 +133,7 @@ app.UseCors("AllowFrontend");
 app.UseStaticFiles(); // serve wwwroot/images/...
 app.UseHttpsRedirection();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<RateLimitingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

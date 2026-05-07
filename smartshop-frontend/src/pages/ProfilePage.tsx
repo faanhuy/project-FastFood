@@ -10,6 +10,7 @@ import { userService, type UserProfileDto } from '../services/userService';
 import { addressService } from '../services/addressService';
 import { useAuthStore } from '../store/authStore';
 import type { AddressDto } from '../types/order';
+import { formatDate } from '@/utils/formatters';
 
 type Tab = 'profile' | 'addresses';
 
@@ -330,7 +331,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex items-center gap-3 text-sm text-gray-600">
                 <FiCalendar size={16} className="text-gray-400 shrink-0" />
-                <span>Tham gia {profile ? new Date(profile.createdAt).toLocaleDateString('vi-VN') : '—'}</span>
+                <span>Tham gia {profile ? formatDate(profile.createdAt) : '—'}</span>
               </div>
             </div>
 

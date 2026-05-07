@@ -43,7 +43,7 @@ public class ProcessVNPayCallbackCommandHandlerTests
 
         var result = await CreateHandler().Handle(AnyCallback(), default);
 
-        result.IsSuccess.Should().BeTrue();
+        result.Success.Should().BeTrue();
         result.Data.Should().BeTrue();
         order.PaymentStatus.Should().Be(PaymentStatus.Paid);
         order.VnpayTransactionId.Should().Be("TXN_SUCCESS_001");
@@ -64,7 +64,7 @@ public class ProcessVNPayCallbackCommandHandlerTests
 
         var result = await CreateHandler().Handle(AnyCallback(), default);
 
-        result.IsSuccess.Should().BeTrue();
+        result.Success.Should().BeTrue();
         result.Data.Should().BeFalse();
         order.PaymentStatus.Should().Be(PaymentStatus.Failed);
         _uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
@@ -75,7 +75,7 @@ public class ProcessVNPayCallbackCommandHandlerTests
     {
         var userId = Guid.NewGuid();
         var order = CreatePendingVNPayOrder(userId);
-        order.MarkAsPaid("TXN_EXISTING"); // already Paid
+        order.MarkAsPaid("TXN_EXISTING", DateTime.UtcNow); // already Paid
         var callbackResult = new VNPayCallbackResult(true, "TXN_DUPLICATE", order.Id.ToString(), "00");
 
         _paymentGateway.Setup(g => g.ProcessCallback(It.IsAny<IDictionary<string, string>>()))
@@ -84,7 +84,7 @@ public class ProcessVNPayCallbackCommandHandlerTests
 
         var result = await CreateHandler().Handle(AnyCallback(), default);
 
-        result.IsSuccess.Should().BeTrue();
+        result.Success.Should().BeTrue();
         result.Data.Should().BeTrue();
         // SaveChanges should NOT be called — idempotent early return
         _uow.Verify(u => u.SaveChangesAsync(default), Times.Never);

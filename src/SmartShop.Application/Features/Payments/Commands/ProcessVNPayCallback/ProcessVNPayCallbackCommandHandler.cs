@@ -25,9 +25,12 @@ public class ProcessVNPayCallbackCommandHandler(
         var order = await orderRepository.GetByIdAsync(orderId, ct)
             ?? throw new NotFoundException(nameof(Domain.Entities.Order), orderId);
 
-        // Idempotency: chỉ skip nếu đã Paid — Failed vẫn cho retry
+        // Idempotency: skip nếu đã Paid, hoặc đã Failed + callback cũng Failed (tránh ghi DB thừa)
         if (order.PaymentStatus == PaymentStatus.Paid)
             return ApiResponse<bool>.Ok(true);
+
+        if (order.PaymentStatus == PaymentStatus.Failed && !callbackResult.IsSuccess)
+            return ApiResponse<bool>.Ok(false);
 
         if (callbackResult.IsSuccess)
         {

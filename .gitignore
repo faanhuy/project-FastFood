@@ -365,6 +365,13 @@ FodyWeavers.xsd
 CLAUDE.local.md
 .claude/settings.local.json
 
+# Secrets & environment files — NEVER commit these
+.env
+.env.*
+!.env.example
+appsettings.Production.json
+appsettings.Staging.json
+
 # VS Code browser profile (Edge/Chrome profile data - should never be committed)
 .vscode/edge-profile/
 .vscode/chrome-profile/

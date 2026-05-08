@@ -8,14 +8,14 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: smartshop-sqlserver
     environment:
-      SA_PASSWORD: "SmartShop@123"
+      SA_PASSWORD: "${SA_PASSWORD}"
       ACCEPT_EULA: "Y"
     ports:
       - "1433:1433"
     volumes:
       - sqldata:/var/opt/mssql
     healthcheck:
-      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P SmartShop@123 -Q 'SELECT 1' -No
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${SA_PASSWORD}" -Q 'SELECT 1' -No
       interval: 10s
       retries: 10
 
@@ -43,7 +43,7 @@ services:
       - "8080:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=SmartShop;User Id=sa;Password=SmartShop@123;TrustServerCertificate=True;"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=SmartShop;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
       ConnectionStrings__Redis: "redis:6379"
       Jwt__Key: "${JWT_KEY}"
       Jwt__Issuer: "SmartShop"

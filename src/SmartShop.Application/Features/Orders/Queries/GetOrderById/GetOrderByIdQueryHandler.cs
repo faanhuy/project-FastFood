@@ -33,18 +33,7 @@ public class GetOrderByIdQueryHandler(IOrderRepository orderRepository)
             PaymentStatus = order.PaymentStatus.ToString(),
             PaidAt = order.PaidAt,
             VnpayTransactionId = order.VnpayTransactionId,
-            Items = order.Items.Select(i => new OrderItemDto
-            {
-                ProductId = i.ProductId,
-                ProductName = i.ProductName,
-                ProductImageUrl = i.Product?.ImageUrl,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                SubTotal = i.SubTotal,
-                SizeId = i.SizeId,
-                SizeLabel = i.SizeLabel,
-                OriginalUnitPrice = i.OriginalUnitPrice
-            }).ToList(),
+            Items = order.Items.Select(OrderMapper.ToDto).ToList(),
             CreatedAt = order.CreatedAt
         };
     }

@@ -10,10 +10,16 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
     {
         builder.HasKey(e => e.Id);
 
-        // Snapshot of product name at order time — not a FK to Product.Name
+        builder.Property(e => e.ItemType)
+            .HasMaxLength(20)
+            .IsRequired();
+
         builder.Property(e => e.ProductName)
             .IsRequired()
             .HasMaxLength(255);
+
+        builder.Property(e => e.ImageUrl)
+            .HasMaxLength(500);
 
         builder.Property(e => e.Quantity)
             .IsRequired();
@@ -27,14 +33,17 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
         builder.Property(e => e.OriginalUnitPrice)
             .HasPrecision(18, 2);
 
-        // SubTotal is a C# computed property (UnitPrice * Quantity) — not a DB column
         builder.Ignore(e => e.SubTotal);
 
-        // many:1 OrderItem → Product (restrict: don't delete product referenced by orders)
-        // Order → Items relationship is configured in OrderConfiguration
         builder.HasOne(e => e.Product)
             .WithMany()
             .HasForeignKey(e => e.ProductId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(e => e.Components)
+            .WithOne(c => c.OrderItem)
+            .HasForeignKey(c => c.OrderItemId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

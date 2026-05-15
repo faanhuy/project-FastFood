@@ -361,9 +361,22 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-# Claude Code personal overrides
+# Claude Code (local only — not for public repo)
+.md
+CLAUDE.md
 CLAUDE.local.md
-.claude/settings.local.json
+.claude/
+
+# OpenAI Codex (local only — not for public repo)
+AGENTS.md
+.codex/
+
+# GitHub Copilot (local only — not for public repo)
+.github/copilot-instructions.md
+.copilot/
+
+# Internal documentation (local only — not for public repo)
+docs/
 
 # Secrets & environment files — NEVER commit these
 .env

@@ -10,8 +10,8 @@ import AdminCouponsPage from '../pages/AdminCouponsPage';
 import InventoryManagementPage from '../pages/admin/InventoryManagementPage';
 import AdminStoresPage from '../pages/admin/AdminStoresPage';
 import AdminPromotionalPricePage from '../pages/admin/AdminPromotionalPricePage';
-import AdminComboPage from '../pages/admin/AdminComboPage';
 import SizeManagementPage from '../pages/admin/SizeManagementPage';
+import AdminComboPage from '../pages/admin/AdminComboPage';
 import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
@@ -127,18 +127,18 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/combos',
-    element: (
-      <AdminRoute>
-        <AdminComboPage />
-      </AdminRoute>
-    ),
-  },
-  {
     path: '/admin/sizes',
     element: (
       <AdminRoute>
         <SizeManagementPage />
+      </AdminRoute>
+    ),
+  },
+  {
+    path: '/admin/combos',
+    element: (
+      <AdminRoute>
+        <AdminComboPage />
       </AdminRoute>
     ),
   },

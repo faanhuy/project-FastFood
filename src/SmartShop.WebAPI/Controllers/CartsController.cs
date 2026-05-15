@@ -4,9 +4,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Features.Cart;
+using SmartShop.Application.Features.Cart.Commands.AddComboToCart;
 using SmartShop.Application.Features.Cart.Commands.AddToCart;
 using SmartShop.Application.Features.Cart.Commands.ClearCart;
+using SmartShop.Application.Features.Cart.Commands.RemoveCartItemById;
 using SmartShop.Application.Features.Cart.Commands.RemoveFromCart;
+using SmartShop.Application.Features.Cart.Commands.UpdateCartItemById;
 using SmartShop.Application.Features.Cart.Commands.UpdateCartItem;
 using SmartShop.Application.Features.Cart.Queries.GetCart;
 
@@ -20,7 +23,6 @@ public class CartsController(IMediator mediator) : ControllerBase
     private Guid CurrentUserId =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-    /// <summary>Lấy giỏ hàng của user hiện tại</summary>
     [HttpGet]
     public async Task<ActionResult<ApiResponse<CartDto>>> GetCart(CancellationToken ct)
     {
@@ -28,7 +30,6 @@ public class CartsController(IMediator mediator) : ControllerBase
         return Ok(ApiResponse<CartDto>.Ok(result));
     }
 
-    /// <summary>Thêm sản phẩm vào giỏ hàng</summary>
     [HttpPost("items")]
     public async Task<ActionResult<ApiResponse<CartDto>>> AddToCart(
         [FromBody] AddToCartRequest request, CancellationToken ct)
@@ -38,7 +39,35 @@ public class CartsController(IMediator mediator) : ControllerBase
         return Ok(ApiResponse<CartDto>.Ok(result));
     }
 
-    /// <summary>Cập nhật số lượng sản phẩm trong giỏ</summary>
+    [HttpPost("combo-items")]
+    public async Task<ActionResult<ApiResponse<CartDto>>> AddComboToCart(
+        [FromBody] AddComboToCartRequest request, CancellationToken ct)
+    {
+        var result = await mediator.Send(
+            new AddComboToCartCommand(CurrentUserId, request.ComboId, request.Quantity), ct);
+        return Ok(ApiResponse<CartDto>.Ok(result));
+    }
+
+    /// <summary>Cập nhật số lượng theo CartItem.Id (dùng cho cả product và combo)</summary>
+    [HttpPut("items/line/{cartItemId:guid}")]
+    public async Task<ActionResult<ApiResponse<CartDto>>> UpdateCartItemById(
+        Guid cartItemId, [FromBody] UpdateByLineIdRequest request, CancellationToken ct)
+    {
+        var result = await mediator.Send(
+            new UpdateCartItemByIdCommand(CurrentUserId, cartItemId, request.Quantity), ct);
+        return Ok(ApiResponse<CartDto>.Ok(result));
+    }
+
+    /// <summary>Xoá theo CartItem.Id (dùng cho cả product và combo)</summary>
+    [HttpDelete("items/line/{cartItemId:guid}")]
+    public async Task<ActionResult<ApiResponse<CartDto>>> RemoveCartItemById(
+        Guid cartItemId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new RemoveCartItemByIdCommand(CurrentUserId, cartItemId), ct);
+        return Ok(ApiResponse<CartDto>.Ok(result));
+    }
+
+    /// <summary>Cập nhật số lượng theo productId (backward compat)</summary>
     [HttpPut("items/{productId:guid}")]
     public async Task<ActionResult<ApiResponse<CartDto>>> UpdateCartItem(
         Guid productId, [FromBody] UpdateQuantityRequest request, CancellationToken ct)
@@ -48,7 +77,7 @@ public class CartsController(IMediator mediator) : ControllerBase
         return Ok(ApiResponse<CartDto>.Ok(result));
     }
 
-    /// <summary>Xoá sản phẩm khỏi giỏ hàng</summary>
+    /// <summary>Xoá theo productId (backward compat)</summary>
     [HttpDelete("items/{productId:guid}")]
     public async Task<ActionResult<ApiResponse<CartDto>>> RemoveFromCart(
         Guid productId, [FromQuery] Guid? sizeId, CancellationToken ct)
@@ -57,7 +86,6 @@ public class CartsController(IMediator mediator) : ControllerBase
         return Ok(ApiResponse<CartDto>.Ok(result));
     }
 
-    /// <summary>Xoá toàn bộ giỏ hàng</summary>
     [HttpDelete]
     public async Task<ActionResult<ApiResponse<object?>>> ClearCart(CancellationToken ct)
     {
@@ -67,4 +95,6 @@ public class CartsController(IMediator mediator) : ControllerBase
 }
 
 public record AddToCartRequest(Guid ProductId, int Quantity, Guid? SizeId = null);
+public record AddComboToCartRequest(Guid ComboId, int Quantity = 1);
 public record UpdateQuantityRequest(int Quantity, Guid? SizeId = null);
+public record UpdateByLineIdRequest(int Quantity);

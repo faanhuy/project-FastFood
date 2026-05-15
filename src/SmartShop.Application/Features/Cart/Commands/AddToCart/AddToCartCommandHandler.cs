@@ -1,6 +1,7 @@
 using MediatR;
 using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Application.Interfaces;
+using SmartShop.Domain.Enums;
 using SmartShop.Domain.Interfaces;
 using CartEntity = SmartShop.Domain.Entities.Cart;
 
@@ -20,7 +21,6 @@ public class AddToCartCommandHandler(
         if (!product.IsActive)
             throw new NotFoundException("Product", request.ProductId);
 
-        // Validate size
         Guid? sizeId = null;
         string? sizeLabel = null;
 
@@ -41,26 +41,26 @@ public class AddToCartCommandHandler(
             sizeId = productSize.Id;
             sizeLabel = productSize.SizeLabel;
         }
-        // If product.HasSizes == false, SizeId is ignored (lenient)
 
         var cart = await cartRepository.GetByUserIdAsync(request.UserId, cancellationToken);
 
         if (cart == null)
         {
             cart = CartEntity.Create(request.UserId);
-            cart.AddItem(product.Id, request.Quantity, product.Price, sizeId, sizeLabel);
+            cart.AddItem(product.Id, product.Name, product.ImageUrl, request.Quantity, product.Price, sizeId, sizeLabel);
             await cartRepository.AddAsync(cart, cancellationToken);
         }
         else
         {
-            // Uniqueness by (ProductId, SizeId)
-            var isNewItem = !cart.Items.Any(i => i.ProductId == product.Id && i.SizeId == sizeId);
+            var isNewItem = !cart.Items.Any(i =>
+                i.ItemType == CartItemType.Product && i.ProductId == product.Id && i.SizeId == sizeId);
 
-            cart.AddItem(product.Id, request.Quantity, product.Price, sizeId, sizeLabel);
+            cart.AddItem(product.Id, product.Name, product.ImageUrl, request.Quantity, product.Price, sizeId, sizeLabel);
 
             if (isNewItem)
             {
-                var newItem = cart.Items.First(i => i.ProductId == product.Id && i.SizeId == sizeId);
+                var newItem = cart.Items.First(i =>
+                    i.ItemType == CartItemType.Product && i.ProductId == product.Id && i.SizeId == sizeId);
                 await cartRepository.AddCartItemAsync(newItem, cancellationToken);
             }
         }

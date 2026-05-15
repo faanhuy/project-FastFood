@@ -1,13 +1,26 @@
-export interface CartItemDto {
+export interface CartItemComponentDto {
   productId: string;
   productName: string;
-  productImageUrl: string | null;
+  sizeId: string | null;
+  sizeLabel: string | null;
+  quantityPerCombo: number;
+  totalQuantity: number;
+  unitPriceSnapshot: number;
+}
+
+export interface CartItemDto {
+  id: string;
+  itemType: 'Product' | 'Combo';
+  productId: string | null;
+  comboId: string | null;
+  displayName: string;
+  imageUrl: string | null;
   quantity: number;
   unitPrice: number;
-  originalUnitPrice: number | null;
   subTotal: number;
   sizeId: string | null;
   sizeLabel: string | null;
+  components: CartItemComponentDto[];
 }
 
 export interface CartDto {

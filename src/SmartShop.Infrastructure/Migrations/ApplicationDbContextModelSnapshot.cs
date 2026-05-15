@@ -90,7 +90,23 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Property<Guid>("CartId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ProductId")
+                    b.Property<Guid?>("ComboId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ItemType")
+                        .HasMaxLength(20)
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Quantity")
@@ -114,6 +130,48 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("CartItems");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.CartItemComponent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CartItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("QuantityPerCombo")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SizeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SizeLabel")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("TotalQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPriceSnapshot")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CartItemId")
+                        .HasDatabaseName("IX_CartItemComponents_CartItemId");
+
+                    b.ToTable("CartItemComponents");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Category", b =>
@@ -233,6 +291,110 @@ namespace SmartShop.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("ChatSessions");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.Combo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("EndsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal>("OriginalPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SalePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive", "StartsAt", "EndsAt")
+                        .HasDatabaseName("IX_Combo_Active");
+
+                    b.ToTable("Combos");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.ComboItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ComboId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SizeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SizeLabel")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("UnitPriceSnapshot")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComboId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ComboItems");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.ComboPromotion", b =>
@@ -495,14 +657,6 @@ namespace SmartShop.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal>("ComboDiscountAmount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(18,2)")
-                        .HasDefaultValue(0m);
-
-                    b.Property<Guid?>("ComboPromotionId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("CouponCode")
                         .HasColumnType("nvarchar(max)");
 
@@ -589,6 +743,17 @@ namespace SmartShop.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("ComboId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ItemType")
+                        .HasMaxLength(20)
+                        .HasColumnType("int");
+
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
 
@@ -596,7 +761,7 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<Guid>("ProductId")
+                    b.Property<Guid?>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ProductName")
@@ -628,6 +793,52 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("OrderItems");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.OrderItemComponent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OrderItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ProductImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("QuantityPerCombo")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SizeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SizeLabel")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("TotalQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPriceSnapshot")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderItemId")
+                        .HasDatabaseName("IX_OrderItemComponents_OrderItemId");
+
+                    b.ToTable("OrderItemComponents");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.PriceCampaign", b =>
@@ -1445,12 +1656,22 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasOne("SmartShop.Domain.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Cart");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.CartItemComponent", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.CartItem", "CartItem")
+                        .WithMany("Components")
+                        .HasForeignKey("CartItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CartItem");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.ChatMessage", b =>
@@ -1460,6 +1681,25 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasForeignKey("ChatSessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.ComboItem", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.Combo", "Combo")
+                        .WithMany("Items")
+                        .HasForeignKey("ComboId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SmartShop.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Combo");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.CouponUsage", b =>
@@ -1530,12 +1770,22 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasOne("SmartShop.Domain.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Order");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.OrderItemComponent", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.OrderItem", "OrderItem")
+                        .WithMany("Components")
+                        .HasForeignKey("OrderItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OrderItem");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.PriceCampaignItem", b =>
@@ -1744,6 +1994,11 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Navigation("Items");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.CartItem", b =>
+                {
+                    b.Navigation("Components");
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Products");
@@ -1754,6 +2009,11 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Navigation("Messages");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.Combo", b =>
+                {
+                    b.Navigation("Items");
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.Coupon", b =>
                 {
                     b.Navigation("Usages");
@@ -1762,6 +2022,11 @@ namespace SmartShop.Infrastructure.Migrations
             modelBuilder.Entity("SmartShop.Domain.Entities.Order", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.OrderItem", b =>
+                {
+                    b.Navigation("Components");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.PriceCampaign", b =>

@@ -10,6 +10,17 @@ public class CartItemConfiguration : IEntityTypeConfiguration<CartItem>
     {
         builder.HasKey(e => e.Id);
 
+        builder.Property(e => e.ItemType)
+            .HasMaxLength(20)
+            .IsRequired();
+
+        builder.Property(e => e.DisplayName)
+            .HasMaxLength(300)
+            .IsRequired();
+
+        builder.Property(e => e.ImageUrl)
+            .HasMaxLength(500);
+
         builder.Property(e => e.Quantity)
             .IsRequired();
 
@@ -19,14 +30,17 @@ public class CartItemConfiguration : IEntityTypeConfiguration<CartItem>
         builder.Property(e => e.SizeLabel)
             .HasMaxLength(20);
 
-        // SubTotal is a C# computed property (UnitPrice * Quantity) — not a DB column
         builder.Ignore(e => e.SubTotal);
 
-        // many:1 CartItem → Product (restrict: don't delete product in someone's cart)
-        // Cart → Items relationship is configured in CartConfiguration
         builder.HasOne(e => e.Product)
             .WithMany()
             .HasForeignKey(e => e.ProductId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(e => e.Components)
+            .WithOne(c => c.CartItem)
+            .HasForeignKey(c => c.CartItemId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiPackage } from 'react-icons/fi';
 import { orderService } from '../services/orderService';
 import { paymentService } from '../services/paymentService';
 import type { OrderDto } from '../types/order';
@@ -76,6 +76,14 @@ export default function OrderDetailPage() {
     </div>
   );
 
+  const [expandedComponents, setExpandedComponents] = useState<Set<number>>(new Set());
+  const toggleComponents = (idx: number) =>
+    setExpandedComponents((prev) => {
+      const next = new Set(prev);
+      next.has(idx) ? next.delete(idx) : next.add(idx);
+      return next;
+    });
+
   const statusInfo = ORDER_STATUSES.find((s) => s.key === order.status);
 
   return (
@@ -139,29 +147,68 @@ export default function OrderDetailPage() {
           )}
         </div>
 
-        <div className="space-y-3 mb-6">
-          {order.items.map((item) => (
-            <div key={item.productId} className="flex items-center justify-between gap-3 border-b pb-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-100">
-                  {item.productImageUrl ? (
-                    <img
-                      src={getImageUrl(item.productImageUrl)}
-                      alt={item.productName}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-2xl">🍔</div>
-                  )}
+        <div className="space-y-2 mb-6">
+          {order.items.map((item, idx) => (
+            <div key={idx} className="border rounded-lg overflow-hidden bg-white">
+              <div className="flex items-center justify-between gap-3 p-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-100">
+                    {item.productImageUrl ? (
+                      <img
+                        src={getImageUrl(item.productImageUrl)}
+                        alt={item.productName}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-2xl">
+                        {item.itemType === 'Combo' ? '📦' : '🍔'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      {item.itemType === 'Combo' && (
+                        <span className="bg-orange-100 text-orange-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                          COMBO
+                        </span>
+                      )}
+                      <p className="truncate font-medium">{item.productName}</p>
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      {formatPrice(item.unitPrice)} × {item.quantity}
+                    </p>
+                    {item.itemType === 'Combo' && item.components.length > 0 && (
+                      <button
+                        onClick={() => toggleComponents(idx)}
+                        className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 mt-0.5"
+                      >
+                        <FiPackage size={10} />
+                        {expandedComponents.has(idx) ? 'Ẩn' : 'Xem'} {item.components.length} món con
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{item.productName}</p>
-                  <p className="text-sm text-gray-500">
-                    {formatPrice(item.unitPrice)} × {item.quantity}
-                  </p>
-                </div>
+                <p className="shrink-0 font-semibold">{formatPrice(item.subTotal)}</p>
               </div>
-              <p className="shrink-0 font-semibold">{formatPrice(item.subTotal)}</p>
+
+              {item.itemType === 'Combo' && expandedComponents.has(idx) && item.components.length > 0 && (
+                <div className="border-t bg-orange-50 px-4 py-2">
+                  <ul className="space-y-1">
+                    {item.components.map((c, ci) => (
+                      <li key={ci} className="flex justify-between text-xs text-gray-600">
+                        <span>
+                          {c.productName}
+                          {c.sizeLabel && <span className="text-gray-400"> ({c.sizeLabel})</span>}
+                          {' '}× {c.quantityPerCombo}
+                        </span>
+                        <span className="text-gray-400">
+                          {c.unitPriceSnapshot.toLocaleString('vi-VN')} đ/cái
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           ))}
         </div>

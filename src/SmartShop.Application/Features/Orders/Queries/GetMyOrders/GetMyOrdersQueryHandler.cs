@@ -30,15 +30,7 @@ public class GetMyOrdersQueryHandler(IOrderRepository orderRepository)
             PaymentStatus = order.PaymentStatus.ToString(),
             PaidAt = order.PaidAt,
             VnpayTransactionId = order.VnpayTransactionId,
-            Items = order.Items.Select(i => new OrderItemDto
-            {
-                ProductId = i.ProductId,
-                ProductName = i.ProductName,
-                ProductImageUrl = i.Product?.ImageUrl,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                SubTotal = i.SubTotal
-            }).ToList(),
+            Items = order.Items.Select(OrderMapper.ToDto).ToList(),
             CreatedAt = order.CreatedAt
         }).ToList();
 

@@ -12,14 +12,27 @@ internal static class CartMapper
             UserId = cart.UserId,
             Items = cart.Items.Select(i => new CartItemDto
             {
+                Id = i.Id,
+                ItemType = i.ItemType.ToString(),
                 ProductId = i.ProductId,
-                ProductName = i.Product?.Name ?? string.Empty,
-                ProductImageUrl = i.Product?.ImageUrl,
+                ComboId = i.ComboId,
+                DisplayName = i.DisplayName,
+                ImageUrl = i.ImageUrl,
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice,
                 SubTotal = i.SubTotal,
                 SizeId = i.SizeId,
-                SizeLabel = i.SizeLabel
+                SizeLabel = i.SizeLabel,
+                Components = i.Components.Select(c => new CartItemComponentDto
+                {
+                    ProductId = c.ProductId,
+                    ProductName = c.ProductName,
+                    SizeId = c.SizeId,
+                    SizeLabel = c.SizeLabel,
+                    QuantityPerCombo = c.QuantityPerCombo,
+                    TotalQuantity = c.TotalQuantity,
+                    UnitPriceSnapshot = c.UnitPriceSnapshot
+                }).ToList()
             }).ToList(),
             TotalAmount = cart.TotalAmount
         };

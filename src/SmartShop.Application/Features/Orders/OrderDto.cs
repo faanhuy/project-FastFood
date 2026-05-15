@@ -1,8 +1,22 @@
 namespace SmartShop.Application.Features.Orders;
 
-public class OrderItemDto
+public class OrderItemComponentDto
 {
     public Guid ProductId { get; init; }
+    public string ProductName { get; init; } = string.Empty;
+    public string? ProductImageUrl { get; init; }
+    public Guid? SizeId { get; init; }
+    public string? SizeLabel { get; init; }
+    public int QuantityPerCombo { get; init; }
+    public int TotalQuantity { get; init; }
+    public decimal UnitPriceSnapshot { get; init; }
+}
+
+public class OrderItemDto
+{
+    public string ItemType { get; init; } = "Product";
+    public Guid? ProductId { get; init; }
+    public Guid? ComboId { get; init; }
     public string ProductName { get; init; } = string.Empty;
     public string? ProductImageUrl { get; init; }
     public int Quantity { get; init; }
@@ -11,6 +25,7 @@ public class OrderItemDto
     public Guid? SizeId { get; init; }
     public string? SizeLabel { get; init; }
     public decimal? OriginalUnitPrice { get; init; }
+    public List<OrderItemComponentDto> Components { get; init; } = [];
 }
 
 public class OrderDto
@@ -31,8 +46,6 @@ public class OrderDto
     public string? ShippingProvinceName { get; init; }
     public string? Notes { get; init; }
     public string? CouponCode { get; init; }
-    public Guid? ComboPromotionId { get; init; }
-    public decimal ComboDiscountAmount { get; init; }
     public string PaymentMethod { get; init; } = string.Empty;
     public string PaymentStatus { get; init; } = string.Empty;
     public DateTime? PaidAt { get; init; }

@@ -17,7 +17,9 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
     {
         return await context.Orders
             .Include(o => o.Items)
-            .ThenInclude(i => i.Product)
+                .ThenInclude(i => i.Product)
+            .Include(o => o.Items)
+                .ThenInclude(i => i.Components)
             .Include(o => o.ShippingWard)
             .Include(o => o.ShippingProvince)
             .FirstOrDefaultAsync(o => o.Id == id, ct);
@@ -29,7 +31,9 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
         var query = context.Orders
             .AsNoTracking()
             .Include(o => o.Items)
-            .ThenInclude(i => i.Product)
+                .ThenInclude(i => i.Product)
+            .Include(o => o.Items)
+                .ThenInclude(i => i.Components)
             .Include(o => o.ShippingWard)
             .Include(o => o.ShippingProvince)
             .Where(o => o.UserId == userId)
@@ -51,7 +55,9 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
             .AsNoTracking()
             .Include(o => o.User)
             .Include(o => o.Items)
-            .ThenInclude(i => i.Product)
+                .ThenInclude(i => i.Product)
+            .Include(o => o.Items)
+                .ThenInclude(i => i.Components)
             .Include(o => o.ShippingWard)
             .Include(o => o.ShippingProvince)
             .AsQueryable();
@@ -135,24 +141,52 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
     public async Task<IEnumerable<(Guid ProductId, string ProductName, int TotalQuantity, decimal TotalRevenue)>> GetTopProductsAsync(
         DateTime from, DateTime to, int limit, CancellationToken ct = default)
     {
-        var rows = await context.Orders
+        // Product items: direct purchases
+        var productRows = await context.Orders
             .Where(o => o.Status != OrderStatus.Cancelled
                         && o.CreatedAt.Date >= from.Date
                         && o.CreatedAt.Date <= to.Date)
-            .SelectMany(o => o.Items)
+            .SelectMany(o => o.Items.Where(i => i.ItemType == CartItemType.Product))
             .GroupBy(i => new { i.ProductId, i.ProductName })
             .Select(g => new
             {
-                g.Key.ProductId,
+                ProductId = g.Key.ProductId!.Value,
                 g.Key.ProductName,
                 TotalQuantity = g.Sum(i => i.Quantity),
                 TotalRevenue = g.Sum(i => i.UnitPrice * i.Quantity)
             })
-            .OrderByDescending(r => r.TotalRevenue)
-            .Take(limit)
             .ToListAsync(ct);
 
-        return rows.Select(r => (r.ProductId, r.ProductName, r.TotalQuantity, r.TotalRevenue));
+        // Combo items: product consumption via OrderItemComponents
+        var comboRows = await context.Orders
+            .Where(o => o.Status != OrderStatus.Cancelled
+                        && o.CreatedAt.Date >= from.Date
+                        && o.CreatedAt.Date <= to.Date)
+            .SelectMany(o => o.Items.Where(i => i.ItemType == CartItemType.Combo))
+            .SelectMany(i => i.Components)
+            .GroupBy(c => new { c.ProductId, c.ProductName })
+            .Select(g => new
+            {
+                g.Key.ProductId,
+                g.Key.ProductName,
+                TotalQuantity = g.Sum(c => c.TotalQuantity),
+                TotalRevenue = g.Sum(c => c.UnitPriceSnapshot * c.TotalQuantity)
+            })
+            .ToListAsync(ct);
+
+        // Merge by ProductId
+        var merged = productRows.Concat(comboRows)
+            .GroupBy(r => r.ProductId)
+            .Select(g => (
+                ProductId: g.Key,
+                ProductName: g.First().ProductName,
+                TotalQuantity: g.Sum(r => r.TotalQuantity),
+                TotalRevenue: g.Sum(r => r.TotalRevenue)
+            ))
+            .OrderByDescending(r => r.TotalRevenue)
+            .Take(limit);
+
+        return merged;
     }
 
     public async Task<IEnumerable<(string Status, int Count)>> GetOrderStatusBreakdownAsync(

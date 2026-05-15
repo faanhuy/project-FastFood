@@ -1,60 +1,58 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { FiEdit2, FiTrash2, FiPlus, FiX, FiCheck, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiPlus, FiX } from 'react-icons/fi';
 import AdminLayout from '../../components/AdminLayout';
 import { promotionService } from '../../services/promotionService';
 import { productService } from '../../services/productService';
 import { sizeService } from '../../services/sizeService';
-import type { ComboPromotion, CreateComboRequest } from '../../types/promotion';
+import type {
+  ComboSummaryDto,
+  ComboDto,
+  CreateComboRequest,
+  CreateComboItemRequest,
+} from '../../types/promotion';
 import type { ProductDto } from '../../types/product';
 import type { ProductSize } from '../../types/size';
 
-const REWARD_TYPES = [
-  { value: 0, label: 'Tặng sản phẩm miễn phí' },
-  { value: 1, label: 'Giảm số tiền cố định' },
-];
+interface ComboItemForm {
+  productId: string;
+  sizeId: string | null;
+  quantity: string;
+}
 
 const defaultForm = (): {
   name: string;
-  triggerProductId: string;
-  triggerSizeId: string;
-  triggerMinQuantity: string;
-  rewardType: number;
-  rewardProductId: string;
-  rewardSizeId: string;
-  rewardQuantity: string;
-  rewardAmount: string;
-  storeId: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  salePrice: string;
   startsAt: string;
   endsAt: string;
+  items: ComboItemForm[];
 } => ({
   name: '',
-  triggerProductId: '',
-  triggerSizeId: '',
-  triggerMinQuantity: '1',
-  rewardType: 0,
-  rewardProductId: '',
-  rewardSizeId: '',
-  rewardQuantity: '1',
-  rewardAmount: '',
-  storeId: '',
+  title: '',
+  description: '',
+  imageUrl: '',
+  salePrice: '',
   startsAt: '',
   endsAt: '',
+  items: [],
 });
 
-export default function AdminComboPage() {
-  const [combos, setCombos] = useState<ComboPromotion[]>([]);
-  const [loading, setLoading] = useState(true);
+function toDatetimeLocal(iso: string) {
+  return iso ? iso.slice(0, 16) : '';
+}
 
-  const [editingId, setEditingId] = useState<string | null>(null);
+export default function AdminComboPage() {
+  const [combos, setCombos] = useState<ComboSummaryDto[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(defaultForm());
-
   const [products, setProducts] = useState<ProductDto[]>([]);
-  const [triggerSizes, setTriggerSizes] = useState<ProductSize[]>([]);
-  const [rewardSizes, setRewardSizes] = useState<ProductSize[]>([]);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [itemSizes, setItemSizes] = useState<Record<number, ProductSize[]>>({});
 
   const loadCombos = async () => {
     setLoading(true);
@@ -62,7 +60,7 @@ export default function AdminComboPage() {
       const result = await promotionService.getCombos();
       setCombos(result.items);
     } catch {
-      toast.error('Không tải được danh sách combo.');
+      toast.error('Không tải được danh sách combo');
     } finally {
       setLoading(false);
     }
@@ -70,417 +68,401 @@ export default function AdminComboPage() {
 
   useEffect(() => {
     loadCombos();
-    productService.getProducts({ pageSize: 200 }).then((r) => setProducts(r?.items ?? [])).catch(() => {});
+    productService.getProducts({ page: 1, pageSize: 200 }).then((r) => setProducts(r.items));
   }, []);
 
-  const loadTriggerSizes = async (productId: string) => {
-    if (!productId) { setTriggerSizes([]); return; }
-    const p = products.find((pr) => pr.id === productId);
-    if (!p?.hasSizes) { setTriggerSizes([]); return; }
+  const loadSizesForItem = async (index: number, productId: string) => {
+    if (!productId) return;
     try {
       const sizes = await sizeService.getProductSizes(productId);
-      setTriggerSizes(sizes.filter((s) => s.isActive));
+      setItemSizes((prev) => ({ ...prev, [index]: sizes }));
     } catch {
-      setTriggerSizes([]);
-    }
-  };
-
-  const loadRewardSizes = async (productId: string) => {
-    if (!productId) { setRewardSizes([]); return; }
-    const p = products.find((pr) => pr.id === productId);
-    if (!p?.hasSizes) { setRewardSizes([]); return; }
-    try {
-      const sizes = await sizeService.getProductSizes(productId);
-      setRewardSizes(sizes.filter((s) => s.isActive));
-    } catch {
-      setRewardSizes([]);
+      /* ignore */
     }
   };
 
   const openCreate = () => {
     setEditingId(null);
-    const f = defaultForm();
-    if (products.length > 0) {
-      f.triggerProductId = products[0].id;
-      f.rewardProductId = products[0].id;
-    }
-    setForm(f);
-    setTriggerSizes([]);
-    setRewardSizes([]);
+    setForm(defaultForm());
+    setItemSizes({});
     setShowForm(true);
   };
 
   const openEdit = async (id: string) => {
     try {
-      const combo = await promotionService.getComboById(id);
+      const dto: ComboDto = await promotionService.getComboById(id);
       setEditingId(id);
       setForm({
-        name: combo.name,
-        triggerProductId: combo.triggerProductId,
-        triggerSizeId: combo.triggerSizeId ?? '',
-        triggerMinQuantity: String(combo.triggerMinQuantity),
-        rewardType: combo.rewardType,
-        rewardProductId: combo.rewardProductId ?? '',
-        rewardSizeId: combo.rewardSizeId ?? '',
-        rewardQuantity: String(combo.rewardQuantity ?? 1),
-        rewardAmount: String(combo.rewardAmount ?? ''),
-        storeId: combo.storeId ?? '',
-        startsAt: combo.startsAt ? combo.startsAt.slice(0, 16) : '',
-        endsAt: combo.endsAt ? combo.endsAt.slice(0, 16) : '',
+        name: dto.name,
+        title: dto.title,
+        description: dto.description ?? '',
+        imageUrl: dto.imageUrl,
+        salePrice: String(dto.salePrice),
+        startsAt: toDatetimeLocal(dto.startsAt),
+        endsAt: dto.endsAt ? toDatetimeLocal(dto.endsAt) : '',
+        items: dto.items.map((it) => ({
+          productId: it.productId,
+          sizeId: it.sizeId,
+          quantity: String(it.quantity),
+        })),
       });
-      await Promise.all([
-        loadTriggerSizes(combo.triggerProductId),
-        loadRewardSizes(combo.rewardProductId ?? ''),
-      ]);
+      const sizesMap: Record<number, ProductSize[]> = {};
+      await Promise.all(
+        dto.items.map(async (it, i) => {
+          const sizes = await sizeService.getProductSizes(it.productId);
+          sizesMap[i] = sizes;
+        }),
+      );
+      setItemSizes(sizesMap);
       setShowForm(true);
     } catch {
-      toast.error('Không tải được combo.');
+      toast.error('Không tải được combo');
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Xóa combo này?')) return;
-    setDeletingId(id);
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Xóa combo "${name}"?`)) return;
     try {
       await promotionService.deleteCombo(id);
-      setCombos((prev) => prev.filter((c) => c.id !== id));
-      toast.success('Đã xóa combo.');
+      toast.success('Đã xóa combo');
+      loadCombos();
     } catch {
-      toast.error('Xóa thất bại.');
-    } finally {
-      setDeletingId(null);
+      toast.error('Xóa thất bại');
+    }
+  };
+
+  const addItem = () => {
+    setForm((f) => ({ ...f, items: [...f.items, { productId: '', sizeId: null, quantity: '1' }] }));
+  };
+
+  const removeItem = (i: number) => {
+    setForm((f) => ({ ...f, items: f.items.filter((_, idx) => idx !== i) }));
+    setItemSizes((prev) => {
+      const next: Record<number, ProductSize[]> = {};
+      Object.entries(prev).forEach(([k, v]) => {
+        const ki = Number(k);
+        if (ki < i) next[ki] = v;
+        else if (ki > i) next[ki - 1] = v;
+      });
+      return next;
+    });
+  };
+
+  const updateItem = async (i: number, field: keyof ComboItemForm, value: string | null) => {
+    setForm((f) => {
+      const items = f.items.map((it, idx) => (idx === i ? { ...it, [field]: value } : it));
+      return { ...f, items };
+    });
+    if (field === 'productId' && value) {
+      await loadSizesForItem(i, value);
+      setForm((f) => {
+        const items = f.items.map((it, idx) => (idx === i ? { ...it, sizeId: null } : it));
+        return { ...f, items };
+      });
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim()) { toast.error('Vui lòng nhập tên combo.'); return; }
-    if (!form.triggerProductId) { toast.error('Vui lòng chọn sản phẩm trigger.'); return; }
-    const body: CreateComboRequest = {
+    if (!form.name.trim() || !form.title.trim() || !form.salePrice || !form.startsAt) {
+      toast.error('Vui lòng điền đủ thông tin bắt buộc');
+      return;
+    }
+    if (form.items.length === 0) {
+      toast.error('Combo phải có ít nhất 1 sản phẩm');
+      return;
+    }
+
+    const payload: CreateComboRequest = {
       name: form.name.trim(),
-      triggerProductId: form.triggerProductId,
-      triggerSizeId: form.triggerSizeId || null,
-      triggerMinQuantity: parseInt(form.triggerMinQuantity) || 1,
-      rewardType: form.rewardType,
-      rewardProductId: form.rewardType === 0 ? (form.rewardProductId || null) : null,
-      rewardSizeId: form.rewardType === 0 ? (form.rewardSizeId || null) : null,
-      rewardQuantity: form.rewardType === 0 ? (parseInt(form.rewardQuantity) || 1) : null,
-      rewardAmount: form.rewardType === 1 ? (parseFloat(form.rewardAmount) || 0) : null,
-      storeId: form.storeId || null,
-      startsAt: form.startsAt ? new Date(form.startsAt).toISOString() : null,
+      title: form.title.trim(),
+      description: form.description.trim() || null,
+      imageUrl: form.imageUrl.trim(),
+      salePrice: Number(form.salePrice),
+      startsAt: new Date(form.startsAt).toISOString(),
       endsAt: form.endsAt ? new Date(form.endsAt).toISOString() : null,
+      items: form.items.map(
+        (it): CreateComboItemRequest => ({
+          productId: it.productId,
+          sizeId: it.sizeId || null,
+          quantity: Number(it.quantity) || 1,
+        }),
+      ),
     };
+
     setSaving(true);
     try {
       if (editingId) {
-        await promotionService.updateCombo(editingId, body);
-        toast.success('Đã cập nhật combo.');
+        await promotionService.updateCombo(editingId, payload);
+        toast.success('Đã cập nhật combo');
       } else {
-        await promotionService.createCombo(body);
-        toast.success('Đã tạo combo mới.');
+        await promotionService.createCombo(payload);
+        toast.success('Đã tạo combo mới');
       }
       setShowForm(false);
-      await loadCombos();
-    } catch (e: any) {
-      toast.error(e.response?.data?.message ?? 'Lưu thất bại.');
+      loadCombos();
+    } catch {
+      toast.error('Lưu thất bại');
     } finally {
       setSaving(false);
     }
   };
 
-  return (
-    <AdminLayout title="Quản lý Combo Khuyến mãi">
-      <div className="flex items-center justify-between mb-6">
-        <p className="text-sm text-gray-500">Tạo combo tặng quà hoặc giảm giá khi mua đủ số lượng.</p>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors"
-        >
-          <FiPlus size={14} />
-          Tạo combo
-        </button>
-      </div>
+  const fmt = (n: number) => n.toLocaleString('vi-VN') + 'đ';
+  const fmtDate = (s: string) => new Date(s).toLocaleDateString('vi-VN');
 
-      {/* Combo list */}
-      <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+  return (
+    <AdminLayout title="Quản lý Combo">
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <p className="text-sm text-gray-500">{combos.length} combo</p>
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 bg-rose-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-rose-700"
+          >
+            <FiPlus size={15} /> Thêm combo
+          </button>
+        </div>
+
         {loading ? (
-          <div className="p-8 text-center text-gray-400 text-sm">Đang tải...</div>
+          <p className="text-center py-12 text-gray-400">Đang tải...</p>
         ) : combos.length === 0 ? (
-          <div className="p-8 text-center text-gray-400 text-sm">Chưa có combo nào.</div>
+          <p className="text-center py-12 text-gray-400">Chưa có combo nào</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="text-left px-5 py-3 font-semibold text-gray-600">Tên combo</th>
-                <th className="text-center px-5 py-3 font-semibold text-gray-600">Trigger (SP / Qty)</th>
-                <th className="text-center px-5 py-3 font-semibold text-gray-600">Phần thưởng</th>
-                <th className="text-center px-5 py-3 font-semibold text-gray-600">Trạng thái</th>
-                <th className="text-right px-5 py-3 font-semibold text-gray-600">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {combos.map((c) => {
-                const triggerProduct = products.find((p) => p.id === c.triggerProductId);
-                const rewardProduct = products.find((p) => p.id === c.rewardProductId);
-                return (
-                  <tr key={c.id} className="hover:bg-gray-50">
-                    <td className="px-5 py-3 font-medium text-gray-800">{c.name}</td>
-                    <td className="px-5 py-3 text-center text-gray-600 text-xs">
-                      {triggerProduct?.name ?? c.triggerProductId} x{c.triggerMinQuantity}
-                    </td>
-                    <td className="px-5 py-3 text-center text-xs">
-                      {c.rewardType === 0 ? (
-                        <span className="text-green-700">
-                          Tặng: {rewardProduct?.name ?? c.rewardProductId} x{c.rewardQuantity}
-                        </span>
-                      ) : (
-                        <span className="text-rose-700">
-                          Giảm: {c.rewardAmount?.toLocaleString('vi-VN')} đ
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-5 py-3 text-center">
-                      {c.isActive ? (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1 justify-center w-fit mx-auto">
-                          <FiToggleRight size={12} />
-                          Bật
-                        </span>
-                      ) : (
-                        <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex items-center gap-1 justify-center w-fit mx-auto">
-                          <FiToggleLeft size={12} />
-                          Tắt
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => openEdit(c.id)}
-                          className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-rose-600 transition-colors"
-                          title="Sửa"
-                        >
-                          <FiEdit2 size={14} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(c.id)}
-                          disabled={deletingId === c.id}
-                          className="p-1.5 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
-                          title="Xóa"
-                        >
-                          <FiTrash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="grid gap-3">
+            {combos.map((c) => (
+              <div
+                key={c.id}
+                className="bg-white rounded-xl border px-4 py-3 flex items-center gap-4"
+              >
+                {c.imageUrl && (
+                  <img
+                    src={c.imageUrl}
+                    alt={c.name}
+                    className="w-14 h-14 rounded-lg object-cover shrink-0"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-800 truncate">{c.name}</p>
+                  <p className="text-xs text-gray-500 truncate">{c.title}</p>
+                  <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                    <span>{c.itemCount} món</span>
+                    <span className="text-gray-300">|</span>
+                    <span className="line-through">{fmt(c.originalPrice)}</span>
+                    <span className="text-rose-600 font-semibold">{fmt(c.salePrice)}</span>
+                    <span className="text-gray-300">|</span>
+                    <span>
+                      {fmtDate(c.startsAt)} {c.endsAt ? `→ ${fmtDate(c.endsAt)}` : '(không hạn)'}
+                    </span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                        c.isCurrentlyActive
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-100 text-gray-500'
+                      }`}
+                    >
+                      {c.isCurrentlyActive ? 'Đang chạy' : 'Không hoạt động'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => openEdit(c.id)}
+                    className="p-2 text-gray-500 hover:text-blue-600"
+                  >
+                    <FiEdit2 size={15} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(c.id, c.name)}
+                    className="p-2 text-gray-500 hover:text-red-600"
+                  >
+                    <FiTrash2 size={15} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
       {/* Form modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/50 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl my-8">
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h3 className="text-base font-semibold text-gray-800">
-                {editingId ? 'Sửa combo' : 'Tạo combo mới'}
-              </h3>
-              <button onClick={() => setShowForm(false)} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100">
-                <FiX size={16} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b">
+              <h2 className="font-semibold text-gray-800">
+                {editingId ? 'Sửa combo' : 'Thêm combo mới'}
+              </h2>
+              <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">
+                <FiX size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-              {/* Name */}
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-600">Tên combo *</label>
+                  <input
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                    value={form.name}
+                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    placeholder="combo-ga-lon"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600">Tiêu đề hiển thị *</label>
+                  <input
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                    value={form.title}
+                    onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                    placeholder="Combo Gà Lớn"
+                    required
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tên combo <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
-                  placeholder="VD: Mua 2 tặng 1"
+                <label className="text-xs font-medium text-gray-600">Mô tả</label>
+                <textarea
+                  className="mt-1 w-full border rounded-lg px-3 py-2 text-sm resize-none"
+                  rows={2}
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Mô tả ngắn về combo..."
                 />
               </div>
 
-              {/* Trigger */}
-              <div className="p-4 bg-amber-50 rounded-xl space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Điều kiện kích hoạt</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Sản phẩm</label>
-                    <select
-                      value={form.triggerProductId}
-                      onChange={(e) => {
-                        setForm((p) => ({ ...p, triggerProductId: e.target.value, triggerSizeId: '' }));
-                        loadTriggerSizes(e.target.value);
-                      }}
-                      className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400 bg-white"
-                    >
-                      <option value="">-- Chọn sản phẩm --</option>
-                      {products.map((p) => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Số lượng tối thiểu</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={form.triggerMinQuantity}
-                      onChange={(e) => setForm((p) => ({ ...p, triggerMinQuantity: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400"
-                    />
-                  </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-600">URL hình ảnh</label>
+                  <input
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                    value={form.imageUrl}
+                    onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
+                    placeholder="https://..."
+                  />
                 </div>
-                {triggerSizes.length > 0 && (
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Size (tùy chọn)</label>
-                    <select
-                      value={form.triggerSizeId}
-                      onChange={(e) => setForm((p) => ({ ...p, triggerSizeId: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400 bg-white"
-                    >
-                      <option value="">Tất cả size</option>
-                      {triggerSizes.map((s) => (
-                        <option key={s.id} value={s.id}>{s.sizeLabel}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                <div>
+                  <label className="text-xs font-medium text-gray-600">Giá khuyến mãi (đ) *</label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                    value={form.salePrice}
+                    onChange={(e) => setForm((f) => ({ ...f, salePrice: e.target.value }))}
+                    required
+                  />
+                </div>
               </div>
 
-              {/* Reward type */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-600">Bắt đầu *</label>
+                  <input
+                    type="datetime-local"
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                    value={form.startsAt}
+                    onChange={(e) => setForm((f) => ({ ...f, startsAt: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600">Kết thúc (tùy chọn)</label>
+                  <input
+                    type="datetime-local"
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                    value={form.endsAt}
+                    onChange={(e) => setForm((f) => ({ ...f, endsAt: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {/* Items */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Loại phần thưởng</label>
-                <div className="flex gap-4">
-                  {REWARD_TYPES.map((rt) => (
-                    <label key={rt.value} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                      <input
-                        type="radio"
-                        name="rewardType"
-                        value={rt.value}
-                        checked={form.rewardType === rt.value}
-                        onChange={() => setForm((p) => ({ ...p, rewardType: rt.value }))}
-                        className="accent-rose-600"
-                      />
-                      {rt.label}
-                    </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-medium text-gray-600">Sản phẩm trong combo</label>
+                  <button
+                    type="button"
+                    onClick={addItem}
+                    className="text-xs text-rose-600 hover:underline flex items-center gap-1"
+                  >
+                    <FiPlus size={12} /> Thêm món
+                  </button>
+                </div>
+
+                {form.items.length === 0 && (
+                  <p className="text-xs text-gray-400 italic">Chưa có món nào — nhấn "Thêm món"</p>
+                )}
+
+                <div className="space-y-2">
+                  {form.items.map((item, i) => (
+                    <div key={i} className="flex items-start gap-2 bg-gray-50 rounded-lg p-2">
+                      <div className="flex-1 grid grid-cols-3 gap-2">
+                        <select
+                          className="border rounded px-2 py-1.5 text-xs col-span-1"
+                          value={item.productId}
+                          onChange={(e) => updateItem(i, 'productId', e.target.value)}
+                        >
+                          <option value="">-- Chọn sản phẩm --</option>
+                          {products.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name}
+                            </option>
+                          ))}
+                        </select>
+
+                        <select
+                          className="border rounded px-2 py-1.5 text-xs"
+                          value={item.sizeId ?? ''}
+                          onChange={(e) => updateItem(i, 'sizeId', e.target.value || null)}
+                        >
+                          <option value="">Không có size</option>
+                          {(itemSizes[i] ?? []).map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.label}
+                            </option>
+                          ))}
+                        </select>
+
+                        <input
+                          type="number"
+                          min={1}
+                          placeholder="SL"
+                          className="border rounded px-2 py-1.5 text-xs"
+                          value={item.quantity}
+                          onChange={(e) => updateItem(i, 'quantity', e.target.value)}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeItem(i)}
+                        className="text-gray-400 hover:text-red-500 mt-1"
+                      >
+                        <FiX size={14} />
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
-
-              {/* Reward fields */}
-              {form.rewardType === 0 ? (
-                <div className="p-4 bg-green-50 rounded-xl space-y-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-green-700">Sản phẩm tặng</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Sản phẩm tặng</label>
-                      <select
-                        value={form.rewardProductId}
-                        onChange={(e) => {
-                          setForm((p) => ({ ...p, rewardProductId: e.target.value, rewardSizeId: '' }));
-                          loadRewardSizes(e.target.value);
-                        }}
-                        className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400 bg-white"
-                      >
-                        <option value="">-- Chọn sản phẩm --</option>
-                        {products.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Số lượng tặng</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={form.rewardQuantity}
-                        onChange={(e) => setForm((p) => ({ ...p, rewardQuantity: e.target.value }))}
-                        className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400"
-                      />
-                    </div>
-                  </div>
-                  {rewardSizes.length > 0 && (
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Size sản phẩm tặng</label>
-                      <select
-                        value={form.rewardSizeId}
-                        onChange={(e) => setForm((p) => ({ ...p, rewardSizeId: e.target.value }))}
-                        className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400 bg-white"
-                      >
-                        <option value="">Tất cả size</option>
-                        {rewardSizes.map((s) => (
-                          <option key={s.id} value={s.id}>{s.sizeLabel}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="p-4 bg-rose-50 rounded-xl">
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-rose-700 mb-2">Số tiền giảm (VND)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.rewardAmount}
-                    onChange={(e) => setForm((p) => ({ ...p, rewardAmount: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
-                    placeholder="VD: 50000"
-                  />
-                </div>
-              )}
-
-              {/* Optional fields */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Ngày bắt đầu (tùy chọn)</label>
-                  <input
-                    type="datetime-local"
-                    value={form.startsAt}
-                    onChange={(e) => setForm((p) => ({ ...p, startsAt: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Ngày kết thúc (tùy chọn)</label>
-                  <input
-                    type="datetime-local"
-                    value={form.endsAt}
-                    onChange={(e) => setForm((p) => ({ ...p, endsAt: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-2 border-t">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg disabled:opacity-50 flex items-center gap-2"
-                >
-                  {saving ? (
-                    <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                  ) : (
-                    <FiCheck size={14} />
-                  )}
-                  {editingId ? 'Cập nhật' : 'Tạo mới'}
-                </button>
-              </div>
             </form>
+
+            <div className="px-5 py-3 border-t flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="px-4 py-2 text-sm rounded-lg border text-gray-600 hover:bg-gray-50"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={saving}
+                className="px-4 py-2 text-sm rounded-lg bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50"
+              >
+                {saving ? 'Đang lưu...' : editingId ? 'Cập nhật' : 'Tạo combo'}
+              </button>
+            </div>
           </div>
         </div>
       )}

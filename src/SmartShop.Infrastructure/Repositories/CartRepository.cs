@@ -12,6 +12,8 @@ public class CartRepository(ApplicationDbContext context) : ICartRepository
         return await context.Carts
             .Include(c => c.Items)
                 .ThenInclude(i => i.Product)
+            .Include(c => c.Items)
+                .ThenInclude(i => i.Components)
             .FirstOrDefaultAsync(c => c.UserId == userId, ct);
     }
 
@@ -23,6 +25,11 @@ public class CartRepository(ApplicationDbContext context) : ICartRepository
     public async Task AddCartItemAsync(CartItem item, CancellationToken ct = default)
     {
         await context.CartItems.AddAsync(item, ct);
+    }
+
+    public async Task AddCartItemComponentAsync(CartItemComponent component, CancellationToken ct = default)
+    {
+        await context.CartItemComponents.AddAsync(component, ct);
     }
 
     public void Update(Cart cart)

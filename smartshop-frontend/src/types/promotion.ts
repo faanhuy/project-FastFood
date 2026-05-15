@@ -44,34 +44,62 @@ export interface CreatePriceCampaignRequest {
   }[];
 }
 
-export interface ComboPromotion {
+// Combo
+export interface ComboItemDto {
+  id: string;
+  productId: string;
+  productName: string;
+  sizeId: string | null;
+  sizeLabel: string | null;
+  quantity: number;
+  unitPriceSnapshot: number;
+}
+
+export interface ComboDto {
   id: string;
   name: string;
-  triggerProductId: string;
-  triggerSizeId: string | null;
-  triggerMinQuantity: number;
-  rewardType: number; // 0=FreeProduct, 1=DiscountAmount
-  rewardProductId: string | null;
-  rewardSizeId: string | null;
-  rewardQuantity: number | null;
-  rewardAmount: number | null;
-  storeId: string | null;
-  startsAt: string | null;
-  endsAt: string | null;
+  title: string;
+  description: string | null;
+  imageUrl: string;
+  originalPrice: number;
+  salePrice: number;
   isActive: boolean;
+  startsAt: string;
+  endsAt: string | null;
+  isCurrentlyActive: boolean;
+  items: ComboItemDto[];
+  createdAt: string;
+}
+
+export interface ComboSummaryDto {
+  id: string;
+  name: string;
+  title: string;
+  imageUrl: string;
+  originalPrice: number;
+  salePrice: number;
+  isActive: boolean;
+  startsAt: string;
+  endsAt: string | null;
+  isCurrentlyActive: boolean;
+  itemCount: number;
+  createdAt: string;
+}
+
+export interface CreateComboItemRequest {
+  productId: string;
+  sizeId: string | null;
+  quantity: number;
 }
 
 export interface CreateComboRequest {
   name: string;
-  triggerProductId: string;
-  triggerSizeId: string | null;
-  triggerMinQuantity: number;
-  rewardType: number;
-  rewardProductId: string | null;
-  rewardSizeId: string | null;
-  rewardQuantity: number | null;
-  rewardAmount: number | null;
-  storeId: string | null;
-  startsAt: string | null;
+  title: string;
+  description: string | null;
+  imageUrl: string;
+  salePrice: number;
+  startsAt: string;
   endsAt: string | null;
+  items: CreateComboItemRequest[];
 }
+

@@ -17,7 +17,7 @@ public class CancelOrderCommandHandler(
 {
     public async Task Handle(CancelOrderCommand request, CancellationToken cancellationToken)
     {
-        var order = await orderRepository.GetByIdAsync(request.OrderId, cancellationToken)
+        var order = await orderRepository.GetByIdWithItemsAsync(request.OrderId, cancellationToken)
             ?? throw new NotFoundException("Order", request.OrderId);
 
         if (order.UserId != request.UserId)
@@ -28,7 +28,6 @@ public class CancelOrderCommandHandler(
 
         order.Cancel();
 
-        // Hoàn lại UsedQuantity nếu đơn hàng có dùng coupon
         if (!string.IsNullOrEmpty(order.CouponCode))
         {
             var coupon = await couponRepository.GetByCodeAsync(order.CouponCode, cancellationToken);
@@ -43,32 +42,17 @@ public class CancelOrderCommandHandler(
                 couponUsageRepository.Delete(usage);
         }
 
-        // Restore inventory nếu order có StoreId
         if (order.StoreId.HasValue)
         {
             foreach (var item in order.Items)
             {
-                if (item.SizeId.HasValue)
+                if (item.ItemType == CartItemType.Product)
                 {
-                    var sizeInv = await storeSizeInventoryRepository.GetAsync(
-                        order.StoreId.Value, item.ProductId, item.SizeId.Value, cancellationToken);
-
-                    if (sizeInv is not null)
-                    {
-                        sizeInv.RestoreStock(item.Quantity);
-                        storeSizeInventoryRepository.Update(sizeInv);
-                    }
-
-                    await RestoreStoreInventoryAsync(
-                        order.StoreId.Value, item.ProductId, item.Quantity, cancellationToken);
+                    await RestoreProductItemStockAsync(order.StoreId.Value, item, cancellationToken);
                 }
-                else
+                else if (item.ItemType == CartItemType.Combo)
                 {
-                    var inventory = await storeInventoryRepository.GetByStoreAndProductAsync(
-                        order.StoreId.Value, item.ProductId, cancellationToken);
-
-                    if (inventory is not null)
-                        inventory.RestoreStock(item.Quantity);
+                    await RestoreComboItemStockAsync(order.StoreId.Value, item, cancellationToken);
                 }
             }
         }
@@ -76,16 +60,62 @@ public class CancelOrderCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task RestoreStoreInventoryAsync(
-        Guid storeId, Guid productId, int quantity, CancellationToken cancellationToken)
+    private async Task RestoreProductItemStockAsync(
+        Guid storeId, Domain.Entities.OrderItem item, CancellationToken ct)
     {
-        var inventory = await storeInventoryRepository.GetByStoreAndProductAsync(
-            storeId, productId, cancellationToken);
+        if (item.SizeId.HasValue)
+        {
+            var sizeInv = await storeSizeInventoryRepository.GetAsync(
+                storeId, item.ProductId!.Value, item.SizeId.Value, ct);
+
+            if (sizeInv is not null)
+            {
+                sizeInv.RestoreStock(item.Quantity);
+                storeSizeInventoryRepository.Update(sizeInv);
+            }
+
+            await RestoreStoreInventoryAsync(storeId, item.ProductId!.Value, item.Quantity, ct);
+        }
+        else
+        {
+            await RestoreStoreInventoryAsync(storeId, item.ProductId!.Value, item.Quantity, ct);
+        }
+    }
+
+    private async Task RestoreComboItemStockAsync(
+        Guid storeId, Domain.Entities.OrderItem item, CancellationToken ct)
+    {
+        foreach (var c in item.Components)
+        {
+            if (c.SizeId.HasValue)
+            {
+                var sizeInv = await storeSizeInventoryRepository.GetAsync(
+                    storeId, c.ProductId, c.SizeId.Value, ct);
+
+                if (sizeInv is not null)
+                {
+                    sizeInv.RestoreStock(c.TotalQuantity);
+                    storeSizeInventoryRepository.Update(sizeInv);
+                }
+
+                await RestoreStoreInventoryAsync(storeId, c.ProductId, c.TotalQuantity, ct);
+            }
+            else
+            {
+                await RestoreStoreInventoryAsync(storeId, c.ProductId, c.TotalQuantity, ct);
+            }
+        }
+    }
+
+    private async Task RestoreStoreInventoryAsync(
+        Guid storeId, Guid productId, int quantity, CancellationToken ct)
+    {
+        var inventory = await storeInventoryRepository.GetByStoreAndProductAsync(storeId, productId, ct);
 
         if (inventory is null)
         {
             inventory = Domain.Entities.StoreInventory.Create(storeId, productId, quantity);
-            await storeInventoryRepository.AddAsync(inventory, cancellationToken);
+            await storeInventoryRepository.AddAsync(inventory, ct);
             return;
         }
 

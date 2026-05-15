@@ -1,10 +1,27 @@
-export interface OrderItemDto {
+export interface OrderItemComponentDto {
   productId: string;
+  productName: string;
+  productImageUrl: string | null;
+  sizeId: string | null;
+  sizeLabel: string | null;
+  quantityPerCombo: number;
+  totalQuantity: number;
+  unitPriceSnapshot: number;
+}
+
+export interface OrderItemDto {
+  itemType: 'Product' | 'Combo';
+  productId: string | null;
+  comboId: string | null;
   productName: string;
   productImageUrl: string | null;
   quantity: number;
   unitPrice: number;
   subTotal: number;
+  sizeId: string | null;
+  sizeLabel: string | null;
+  originalUnitPrice: number | null;
+  components: OrderItemComponentDto[];
 }
 
 export type PaymentMethod = 'COD' | 'VNPay' | 'BankTransfer';
@@ -16,6 +33,8 @@ export interface OrderDto {
   userName: string;
   status: string;
   totalAmount: number;
+  discountAmount?: number;
+  originalAmount?: number;
   shippingAddressId?: string;
   shippingAddress: string;
   shippingStreet?: string;
@@ -24,6 +43,7 @@ export interface OrderDto {
   shippingWardName?: string;
   shippingProvinceName?: string;
   notes: string | null;
+  couponCode?: string | null;
   items: OrderItemDto[];
   createdAt: string;
   paymentMethod?: PaymentMethod;
@@ -69,12 +89,6 @@ export const ORDER_STATUSES = [
 
 export type OrderStatusValue = (typeof ORDER_STATUSES)[number]['value'];
 
-/** Chuẩn hoá status từ bất kỳ format nào backend trả về:
- *  - C# enum name : "Pending", "Confirmed", ...
- *  - Số nguyên    : 1, 2, ...
- *  - Numeric string: "1", "2", ...
- *  - Label tiếng Việt: "Chờ xác nhận", ...
- */
 export function resolveOrderStatus(status: string | number): OrderStatusValue {
   if (typeof status === 'number') return status as OrderStatusValue;
   const n = Number(status);

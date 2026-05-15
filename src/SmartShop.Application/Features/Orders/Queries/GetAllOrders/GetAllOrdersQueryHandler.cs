@@ -32,15 +32,7 @@ public class GetCouponsQueryHandler(IOrderRepository orderRepository)
             PaymentStatus       = o.PaymentStatus.ToString(),
             PaidAt              = o.PaidAt,
             VnpayTransactionId  = o.VnpayTransactionId,
-            Items               = o.Items.Select(i => new OrderItemDto
-            {
-                ProductId       = i.ProductId,
-                ProductName     = i.ProductName,
-                ProductImageUrl = i.Product?.ImageUrl,
-                Quantity        = i.Quantity,
-                UnitPrice       = i.UnitPrice,
-                SubTotal        = i.SubTotal
-            }).ToList(),
+            Items               = o.Items.Select(OrderMapper.ToDto).ToList(),
             CreatedAt = o.CreatedAt
         });
 

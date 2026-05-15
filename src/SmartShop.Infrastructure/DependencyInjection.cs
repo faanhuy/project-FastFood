@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Interfaces;
+using SmartShop.Application.Services;
 using SmartShop.Domain.Interfaces;
 using SmartShop.Infrastructure.Caching;
 using SmartShop.Infrastructure.Data;
@@ -57,10 +58,11 @@ public static class DependencyInjection
         services.AddScoped<IProvinceRepository, ProvinceRepository>();
         services.AddScoped<IWardRepository, WardRepository>();
         services.AddScoped<IPriceCampaignRepository, PriceCampaignRepository>();
-        services.AddScoped<IComboPromotionRepository, ComboPromotionRepository>();
-        services.AddScoped<SmartShop.Application.Services.IComboPromotionService, ComboPromotionService>();
         services.AddScoped<ISizeRepository, SizeRepository>();
         services.AddScoped<IStockReceiptRepository, StockReceiptRepository>();
+        services.AddScoped<IComboRepository, ComboRepository>();
+        services.AddScoped<IComboPromotionRepository, ComboPromotionRepository>();
+        services.AddScoped<IComboPromotionService, ComboPromotionService>();
 
         services.AddScoped<IDataSeeder, AppSettingsSeeder>();
         services.AddScoped<IDataSeeder, AdminUserSeeder>();

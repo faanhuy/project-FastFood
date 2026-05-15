@@ -2,16 +2,19 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { categoryService, productService } from '../services/productService';
+import { catalogService } from '../services/catalogService';
 import { cartService } from '../services/cartService';
 import { storeService } from '../services/storeService';
 import { useAuthStore } from '../store/authStore';
 import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
 import type { CategoryDto, PagedResult, ProductDto } from '../types/product';
+import type { CatalogItemDto } from '../types/catalog';
 import { FiSearch, FiCpu } from 'react-icons/fi';
 import AISearchBar from '../components/AISearchBar';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import WishlistButton from '../components/WishlistButton';
+import ComboCard from '../components/ComboCard';
 
 import { formatPrice } from '../utils/formatters';
 import { getImageUrl } from '../utils/imageUrl';
@@ -22,6 +25,7 @@ export default function ProductListPage() {
   const { selectedStore } = useStoreSelectionStore();
 
   const [products, setProducts] = useState<PagedResult<ProductDto> | null>(null);
+  const [combos, setCombos] = useState<CatalogItemDto[]>([]);
   const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -30,12 +34,23 @@ export default function ProductListPage() {
   const [sortBy, setSortBy] = useState<number>(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [combosLoading, setCombosLoading] = useState(false);
   const [stockLoading, setStockLoading] = useState(false);
   const [stockByProductId, setStockByProductId] = useState<Record<string, number>>({});
   const [addingId, setAddingId] = useState<string | null>(null);
 
   useEffect(() => {
     categoryService.getCategories().then(setCategories).catch(console.error);
+    // Fetch combos on mount
+    setCombosLoading(true);
+    catalogService
+      .getCatalog(1, 8)
+      .then((result) => setCombos(result.combos))
+      .catch((error) => {
+        console.warn('Failed to fetch combos:', error);
+        setCombos([]);
+      })
+      .finally(() => setCombosLoading(false));
   }, []);
 
   useEffect(() => {
@@ -257,10 +272,23 @@ export default function ProductListPage() {
             </div>
           </div>
 
+          {/* Combos Section */}
+          {!combosLoading && combos.length > 0 && (
+            <div className="mb-10">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Combo đặc biệt</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {combos.map((combo) => (
+                  <ComboCard key={combo.id} combo={combo} />
+                ))}
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className="flex items-center justify-center h-64 text-gray-400">Đang tải...</div>
           ) : (
             <>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Tất cả sản phẩm</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {products?.items.map((product) => {
                   const stock = selectedStore ? stockByProductId[product.id] : null;

@@ -1,19 +1,21 @@
 using MediatR;
 using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.DTOs;
+using SmartShop.Domain.Enums;
 using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.Application.Products.Queries.GetProducts;
 
 public class GetProductsQueryHandler(
     IProductRepository repository,
+    IPriceCampaignRepository priceCampaignRepository,
     ICacheService cache
 ) : IRequestHandler<GetProductsQuery, PagedResult<ProductDto>>
 {
     public async Task<PagedResult<ProductDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
     {
         var sortByKey = request.SortBy.ToString().ToLower();
-        var cacheKey = $"products:list:p{request.Page}:ps{request.PageSize}:cat{request.CategoryId}:q{request.Search}:s{sortByKey}";
+        var cacheKey = $"products:list:p{request.Page}:ps{request.PageSize}:cat{request.CategoryId}:q{request.Search}:s{sortByKey}:store{request.StoreId ?? Guid.Empty}";
 
         var cached = await cache.GetAsync<PagedResult<ProductDto>>(cacheKey, cancellationToken);
         if (cached is not null) return cached;
@@ -31,10 +33,36 @@ public class GetProductsQueryHandler(
         var (items, totalCount) = await repository.GetPagedAsync(
             request.Page, request.PageSize, request.CategoryId, request.Search, sortByStr, cancellationToken);
 
-        var dtos = items.Select(p => new ProductDto(
-            p.Id, p.Name, p.Description, p.Price, p.OriginalPrice,
-            p.Slug, p.ImageUrl, p.IsActive, p.CategoryId, p.CreatedAt,
-            p.HasSizes, p.SizeType?.ToString()));
+        List<ProductDto> dtos;
+
+        // Load effective prices if storeId provided
+        if (request.StoreId.HasValue)
+        {
+            var at = DateTime.UtcNow;
+            var keys = items.Select(p => (p.Id, (Guid?)null)).ToList();
+
+            var rules = await priceCampaignRepository.GetEffectivePriceItemsAsync(
+                request.StoreId.Value, keys, at, cancellationToken);
+
+            dtos = items.Select(p =>
+            {
+                var effectivePrice = rules.TryGetValue((p.Id, null), out var rule)
+                    ? ComputePrice(p.Price, rule)
+                    : p.Price;
+
+                return new ProductDto(
+                    p.Id, p.Name, p.Description, p.Price, p.OriginalPrice,
+                    p.Slug, p.ImageUrl, p.IsActive, p.CategoryId, p.CreatedAt,
+                    p.HasSizes, p.SizeType?.ToString(), effectivePrice);
+            }).ToList();
+        }
+        else
+        {
+            dtos = items.Select(p => new ProductDto(
+                p.Id, p.Name, p.Description, p.Price, p.OriginalPrice,
+                p.Slug, p.ImageUrl, p.IsActive, p.CategoryId, p.CreatedAt,
+                p.HasSizes, p.SizeType?.ToString())).ToList();
+        }
 
         var result = new PagedResult<ProductDto>(dtos, totalCount, request.Page, request.PageSize);
 
@@ -42,4 +70,12 @@ public class GetProductsQueryHandler(
 
         return result;
     }
+
+    private static decimal ComputePrice(decimal basePrice, (int ruleType, decimal discountValue) rule) =>
+        (PriceRuleType)rule.ruleType switch
+        {
+            PriceRuleType.Coefficient => basePrice * rule.discountValue,
+            PriceRuleType.FixedPrice => rule.discountValue,
+            _ => basePrice
+        };
 }

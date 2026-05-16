@@ -83,13 +83,13 @@ export default function AdminPromotionalPricePage() {
         startsAt: dto.startsAt.slice(0, 16),
         endsAt: dto.endsAt.slice(0, 16),
         appliesToAll: dto.appliesToAll,
-        storeIds: dto.stores.map((s) => s.id),
-        items: dto.items.map((it) => ({
+        storeIds: dto.stores?.map((s) => s.id) ?? [],
+        items: dto.items?.map((it) => ({
           productId: it.productId,
           sizeId: it.sizeId,
           ruleType: it.ruleType,
           discountValue: String(it.discountValue),
-        })),
+        })) ?? [],
       });
       setItemSizes({});
       setShowForm(true);
@@ -157,6 +157,7 @@ export default function AdminPromotionalPricePage() {
       return;
     }
     const body: CreatePriceCampaignRequest = {
+      id: editingId ?? '', // API sẽ ignore trường này khi tạo mới
       name: form.name.trim(),
       startsAt: new Date(form.startsAt).toISOString(),
       endsAt: new Date(form.endsAt).toISOString(),

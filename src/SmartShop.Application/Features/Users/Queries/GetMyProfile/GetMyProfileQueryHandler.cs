@@ -20,7 +20,8 @@ public class GetMyProfileQueryHandler(IUserRepository userRepository)
             FirstName = user.FirstName,
             LastName  = user.LastName,
             Role      = user.Role,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            AvatarUrl = user.AvatarUrl
         };
     }
 }

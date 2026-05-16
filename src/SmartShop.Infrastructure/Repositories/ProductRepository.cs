@@ -36,6 +36,13 @@ public class ProductRepository : IProductRepository
         return await _context.Products.FirstOrDefaultAsync(p => p.Slug == slug, ct);
     }
 
+    public async Task<Product?> GetBySlugWithSizesAsync(string slug, CancellationToken ct = default)
+    {
+        return await _context.Products
+            .Include(p => p.Sizes.OrderBy(s => s.DisplayOrder))
+            .FirstOrDefaultAsync(p => p.Slug == slug, ct);
+    }
+
     public async Task<(IEnumerable<Product> Items, int TotalCount)> GetPagedAsync(
         int page, int pageSize, Guid? categoryId = null, string? search = null,
         string sortBy = "newest", CancellationToken ct = default)

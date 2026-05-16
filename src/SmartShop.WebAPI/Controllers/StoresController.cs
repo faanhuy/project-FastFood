@@ -65,6 +65,31 @@ public class StoresController(
         return Ok(ApiResponse<List<SizeStockDto>>.Ok(result));
     }
 
+    /// <summary>Tồn kho hàng loạt theo danh sách sản phẩm tại chi nhánh</summary>
+    [HttpGet("api/stores/{storeId:guid}/bulk-stock")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<Dictionary<string, int>>>> GetBulkStock(
+        Guid storeId, [FromQuery] List<Guid> productIds, CancellationToken ct)
+    {
+        if (productIds == null || productIds.Count == 0)
+            return BadRequest(ApiResponse<Dictionary<string, int>>.Fail("Danh sách sản phẩm không được trống"));
+
+        if (productIds.Count > 100)
+            return BadRequest(ApiResponse<Dictionary<string, int>>.Fail("Không thể truy vấn quá 100 sản phẩm cùng lúc"));
+
+        var inventories = await inventoryRepository.GetByStoreAndProductsAsync(storeId, productIds, ct);
+        var inventoryDict = inventories.ToDictionary(i => i.ProductId.ToString("d").ToLower(), i => i.Quantity);
+
+        var result = new Dictionary<string, int>();
+        foreach (var productId in productIds)
+        {
+            var key = productId.ToString("d").ToLower();
+            result[key] = inventoryDict.TryGetValue(key, out var qty) ? qty : 0;
+        }
+
+        return Ok(ApiResponse<Dictionary<string, int>>.Ok(result));
+    }
+
     // ── Admin endpoints ───────────────────────────────────────────────────
 
     /// <summary>Tạo chi nhánh mới (Admin only)</summary>

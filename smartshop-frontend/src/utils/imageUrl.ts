@@ -1,11 +1,12 @@
 /**
  * Chuyển đổi image path thành URL đầy đủ.
  * - Nếu path đã là http/https → giữ nguyên (external URL)
+ * - Nếu BE trả path dạng /images/products/... hoặc images/products/... → prepend API host
  * - Nếu path có prefix local: → dùng asset trong public/images/products
  * - Nếu path là relative bắt đầu bằng / → prepend API host
  * - Nếu null/undefined → trả về ''
  */
-const API_BASE = (import.meta.env.VITE_API_URL ?? 'https://localhost:7046/api')
+const API_BASE = (import.meta.env.VITE_API_URL ?? 'https://localhost:7046 /api')
   .replace(/\/api$/, ''); // "http://localhost:5284"
 
 export function getImageUrl(path?: string | null): string {
@@ -19,6 +20,11 @@ export function getImageUrl(path?: string | null): string {
 
   if (normalizedPath.startsWith('http://') || normalizedPath.startsWith('https://')) {
     return normalizedPath;
+  }
+
+  if (normalizedPath.startsWith('/images/') || normalizedPath.startsWith('images/')) {
+    const imagePath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
+    return `${imagePath}`;
   }
 
   const backendRelativePath = `/${normalizedPath.replace(/^\.?\/+/, '')}`;

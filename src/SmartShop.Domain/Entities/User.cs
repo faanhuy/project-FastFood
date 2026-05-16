@@ -11,6 +11,7 @@ public class User : BaseAuditableEntity
     public string Role { get; private set; } = "Customer";
     public string? RefreshToken { get; private set; }
     public DateTime? RefreshTokenExpiry { get; private set; }
+    public string? AvatarUrl { get; private set; }
 
     private User() { }
 
@@ -46,5 +47,10 @@ public class User : BaseAuditableEntity
     {
         FirstName = firstName;
         LastName = lastName;
+    }
+
+    public void SetAvatarUrl(string? avatarUrl)
+    {
+        AvatarUrl = avatarUrl;
     }
 }

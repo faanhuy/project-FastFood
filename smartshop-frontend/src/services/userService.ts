@@ -8,6 +8,7 @@ export interface UserProfileDto {
   lastName: string;
   role: string;
   createdAt: string;
+  avatarUrl?: string;
 }
 
 export interface UpdateProfileRequest {

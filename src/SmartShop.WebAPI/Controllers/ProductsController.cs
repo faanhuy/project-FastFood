@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.DTOs;
+using SmartShop.Application.Features.Products.Commands.BulkImportProducts;
 using SmartShop.Application.Products.Commands.CreateProduct;
 using SmartShop.Application.Products.Commands.DeleteProduct;
 using SmartShop.Application.Products.Commands.UpdateProduct;
@@ -24,26 +25,33 @@ public class ProductsController(IMediator mediator) : ControllerBase
         [FromQuery] Guid? categoryId = null,
         [FromQuery] string? search = null,
         [FromQuery] ProductSortBy sortBy = ProductSortBy.Newest,
+        [FromQuery] Guid? storeId = null,
         CancellationToken ct = default)
     {
-        var result = await mediator.Send(new GetProductsQuery(page, pageSize, categoryId, search, sortBy), ct);
+        var result = await mediator.Send(new GetProductsQuery(page, pageSize, categoryId, search, sortBy, storeId), ct);
         return Ok(ApiResponse<PagedResult<ProductDto>>.Ok(result));
     }
 
     /// <summary>Lấy chi tiết một sản phẩm theo Id</summary>
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<ApiResponse<ProductDetailDto>>> GetById(Guid id, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<ProductDetailDto>>> GetById(
+        Guid id,
+        [FromQuery] Guid? storeId = null,
+        CancellationToken ct = default)
     {
-        var result = await mediator.Send(new GetProductByIdQuery(id), ct);
+        var result = await mediator.Send(new GetProductByIdQuery(id, storeId), ct);
         return Ok(ApiResponse<ProductDetailDto>.Ok(result));
     }
 
     /// <summary>Lấy chi tiết một sản phẩm theo Slug</summary>
     [HttpGet("{slug}")]
-    public async Task<ActionResult<ApiResponse<ProductDto>>> GetBySlug(string slug, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<ProductDetailDto>>> GetBySlug(
+        string slug,
+        [FromQuery] Guid? storeId = null,
+        CancellationToken ct = default)
     {
-        var result = await mediator.Send(new GetProductBySlugQuery(slug), ct);
-        return Ok(ApiResponse<ProductDto>.Ok(result));
+        var result = await mediator.Send(new GetProductBySlugQuery(slug, storeId), ct);
+        return Ok(ApiResponse<ProductDetailDto>.Ok(result));
     }
 
     /// <summary>Tạo sản phẩm mới (Admin only)</summary>
@@ -71,6 +79,19 @@ public class ProductsController(IMediator mediator) : ControllerBase
     {
         await mediator.Send(new DeleteProductCommand(id), ct);
         return Ok(ApiResponse.Ok("Sản phẩm đã được xoá."));
+    }
+
+    /// <summary>Nhập sản phẩm từ file CSV (Admin only)</summary>
+    [HttpPost("import")]
+    [Authorize(Roles = "Admin")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<ApiResponse<BulkImportProductsResult>>> BulkImportProducts(
+        IFormFile file,
+        CancellationToken ct)
+    {
+        var command = new BulkImportProductsCommand(file);
+        var result = await mediator.Send(command, ct);
+        return Ok(ApiResponse<BulkImportProductsResult>.Ok(result));
     }
 }
 

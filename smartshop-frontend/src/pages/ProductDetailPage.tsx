@@ -7,9 +7,8 @@ import { storeService } from '../services/storeService';
 import { sizeService } from '../services/sizeService';
 import { useAuthStore } from '../store/authStore';
 import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
-import type { ProductDto } from '../types/product';
+import type { ProductDetailDto, SizeWithPrice } from '../types/product';
 import type { StockInfo } from '../types/store';
-import type { ProductSize, EffectivePriceItem } from '../types/size';
 import { FiArrowLeft, FiMapPin } from 'react-icons/fi';
 import RecommendationCarousel from '../components/RecommendationCarousel';
 import ProductReviews from '../components/ProductReviews';
@@ -27,7 +26,7 @@ export default function ProductDetailPage() {
   const { isAuthenticated, refreshCartCount } = useAuthStore();
   const { selectedStore, fetchStores } = useStoreSelectionStore();
 
-  const [product, setProduct] = useState<ProductDto | null>(null);
+  const [product, setProduct] = useState<ProductDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -38,36 +37,21 @@ export default function ProductDetailPage() {
 
   const [storeModalOpen, setStoreModalOpen] = useState(false);
 
-  const [sizes, setSizes] = useState<ProductSize[]>([]);
   const [selectedSizeId, setSelectedSizeId] = useState<string | null>(null);
-  const [sizesLoading, setSizesLoading] = useState(false);
   const [sizeStockById, setSizeStockById] = useState<Record<string, number>>({});
   const [sizeStockLoading, setSizeStockLoading] = useState(false);
-
-  const [effectivePriceInfo, setEffectivePriceInfo] = useState<EffectivePriceItem | null>(null);
-  const [effectivePriceLoading, setEffectivePriceLoading] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
     productService
-      .getProductBySlug(slug)
-      .then((p) => {
-        setProduct(p);
-        if (p?.hasSizes && p.id) {
-          setSizesLoading(true);
-          sizeService
-            .getProductSizes(p.id)
-            .then((s) => setSizes(s.filter((sz) => sz.isActive)))
-            .catch(() => {})
-            .finally(() => setSizesLoading(false));
-        }
-      })
+      .getProductBySlug(slug, selectedStore?.id)
+      .then(setProduct)
       .catch(() => setError('Không tìm thấy sản phẩm.'))
       .finally(() => setLoading(false));
 
     fetchStores().catch(() => {});
-  }, [slug, fetchStores]);
+  }, [slug, selectedStore?.id, fetchStores]);
 
   useEffect(() => {
     if (!product || !selectedStore) {
@@ -100,23 +84,6 @@ export default function ProductDetailPage() {
       setSizeStockById({});
     }
   }, [product, selectedStore]);
-
-  useEffect(() => {
-    if (!product || !selectedStore || !product.hasSizes) {
-      setEffectivePriceInfo(null);
-      return;
-    }
-    if (!selectedSizeId) {
-      setEffectivePriceInfo(null);
-      return;
-    }
-    setEffectivePriceLoading(true);
-    sizeService
-      .getBulkEffectivePrices(selectedStore.id, [{ productId: product.id, sizeId: selectedSizeId }])
-      .then((prices) => setEffectivePriceInfo(prices[0] ?? null))
-      .catch(() => setEffectivePriceInfo(null))
-      .finally(() => setEffectivePriceLoading(false));
-  }, [product, selectedStore, selectedSizeId]);
 
   const selectedSizeStock = selectedSizeId ? sizeStockById[selectedSizeId] ?? 0 : null;
   const availableQuantity = product?.hasSizes && selectedSizeId
@@ -200,18 +167,17 @@ export default function ProductDetailPage() {
     }
   };
 
-  const displayPrice = effectivePriceInfo?.effectivePrice ?? product.effectivePrice ?? product.price;
-  const originalDisplayPrice = effectivePriceInfo
-    ? effectivePriceInfo.originalPrice
-    : product.originalPrice > product.price
-    ? product.originalPrice
+  const selectedSize = selectedSizeId && product?.sizes
+    ? product.sizes.find((sz) => sz.id === selectedSizeId)
     : null;
 
-  const hasDiscount = effectivePriceInfo?.hasDiscount
-    ?? (product.effectivePrice !== null && product.effectivePrice !== undefined && product.effectivePrice < product.price)
-    ?? (product.originalPrice > product.price);
+  const displayPrice = product?.hasSizes && selectedSize
+    ? selectedSize.effectivePrice ?? product.price
+    : product?.effectivePrice ?? product?.price ?? 0;
 
-  const discountPercent = hasDiscount && originalDisplayPrice
+  const originalDisplayPrice = displayPrice < product!.price ? product!.price : null;
+  const hasDiscount = originalDisplayPrice !== null;
+  const discountPercent = hasDiscount
     ? Math.round(((originalDisplayPrice - displayPrice) / originalDisplayPrice) * 100)
     : 0;
 
@@ -244,24 +210,13 @@ export default function ProductDetailPage() {
             <h1 className="text-xl font-bold text-gray-900">{product.name}</h1>
 
             <div className="mt-3 flex items-center gap-3">
-              {effectivePriceLoading ? (
-                <span className="text-gray-400 text-sm">Đang tính giá...</span>
-              ) : (
+              <span className="text-2xl font-bold text-rose-600">{formatPrice(displayPrice)}</span>
+              {hasDiscount && originalDisplayPrice && (
                 <>
-                  <span className="text-2xl font-bold text-rose-600">{formatPrice(displayPrice)}</span>
-                  {hasDiscount && originalDisplayPrice && (
-                    <>
-                      <span className="text-gray-400 line-through text-sm">{formatPrice(originalDisplayPrice)}</span>
-                      {discountPercent > 0 && (
-                        <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-medium">
-                          -{discountPercent}%
-                        </span>
-                      )}
-                    </>
-                  )}
-                  {effectivePriceInfo?.campaignName && (
-                    <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                      {effectivePriceInfo.campaignName}
+                  <span className="text-gray-400 line-through text-sm">{formatPrice(originalDisplayPrice)}</span>
+                  {discountPercent > 0 && (
+                    <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-medium">
+                      -{discountPercent}%
                     </span>
                   )}
                 </>
@@ -301,13 +256,11 @@ export default function ProductDetailPage() {
                   Chọn size
                   <span className="text-red-500 ml-1">*</span>
                 </p>
-                {sizesLoading ? (
-                  <p className="text-sm text-gray-400">Đang tải size...</p>
-                ) : sizes.length === 0 ? (
+                {product.sizes.length === 0 ? (
                   <p className="text-sm text-gray-400">Không có size khả dụng.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {sizes.map((sz) => {
+                    {product.sizes.map((sz) => {
                       const sizeStock = sizeStockById[sz.id] ?? 0;
                       return (
                         <button
@@ -322,7 +275,7 @@ export default function ProductDetailPage() {
                               : 'border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50'
                           }`}
                         >
-                          <span className="block">{sz.sizeLabel}</span>
+                          <span className="block">{sz.label}</span>
                           {selectedStore && (
                             <span className={`block text-[11px] ${selectedSizeId === sz.id ? 'text-white/80' : 'text-gray-400'}`}>
                               {sizeStockLoading ? '...' : sizeStock > 0 ? `Còn ${sizeStock}` : 'Hết hàng'}

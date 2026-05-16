@@ -9,6 +9,7 @@ public class ComboItemDto
     public string? SizeLabel { get; init; }
     public int Quantity { get; init; }
     public decimal UnitPriceSnapshot { get; init; }
+    public decimal CurrentUnitPrice { get; init; }
 }
 
 public class ComboDto
@@ -19,6 +20,7 @@ public class ComboDto
     public string? Description { get; init; }
     public string ImageUrl { get; init; } = string.Empty;
     public decimal OriginalPrice { get; init; }
+    public decimal CurrentOriginalPrice { get; init; }
     public decimal SalePrice { get; init; }
     public bool IsActive { get; init; }
     public DateTime StartsAt { get; init; }
@@ -35,6 +37,7 @@ public class ComboSummaryDto
     public string Title { get; init; } = string.Empty;
     public string ImageUrl { get; init; } = string.Empty;
     public decimal OriginalPrice { get; init; }
+    public decimal CurrentOriginalPrice { get; init; }
     public decimal SalePrice { get; init; }
     public bool IsActive { get; init; }
     public DateTime StartsAt { get; init; }

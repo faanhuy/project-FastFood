@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { categoryService, productService } from '../services/productService';
 import { sizeService } from '../services/sizeService';
+import { imageService } from '../services/imageService';
 import { getApiError } from '../utils/errorHandler';
 import { formatPrice } from '../utils/formatters';
 import { slugify } from '../utils/slugify';
-import type { CategoryDto, CreateProductRequest, ProductDto, UpdateProductRequest } from '../types/product';
+import type { BulkImportResult, CategoryDto, CreateProductRequest, ProductDto, UpdateProductRequest } from '../types/product';
 import type { ProductSize, SizeDto, SizeCategory } from '../types/size';
 import { SIZE_CATEGORY_LABELS } from '../types/size';
 import GenerateDescriptionButton from '../components/GenerateDescriptionButton';
@@ -49,6 +50,10 @@ export default function AdminProductPage() {
   const [checkedSizeIds, setCheckedSizeIds] = useState<Set<string>>(new Set());
   const [sizesLoading,   setSizesLoading]   = useState(false);
   const [savingSize,     setSavingSize]     = useState(false);
+
+  // CSV import
+  const [importing,     setImporting]     = useState(false);
+  const [importResult,  setImportResult]  = useState<BulkImportResult | null>(null);
 
   const loadProducts = async (p: number) => {
     setLoading(true);
@@ -182,6 +187,31 @@ export default function AdminProductPage() {
     }
   };
 
+  /* ── CSV Import ── */
+  const handleImportCsv = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const result = await productService.bulkImportProducts(file);
+      setImportResult(result);
+      if (result.created > 0) {
+        toast.success(`Import xong: ${result.created} sản phẩm đã tạo.`);
+        await loadProducts(1);
+        setPage(1);
+      }
+      if (result.failed > 0) {
+        toast.error(`${result.failed} dòng thất bại.`);
+      }
+    } catch (err) {
+      toast.error(getApiError(err, 'Import thất bại.'));
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
+  };
+
   /* ── Shared description field ── */
   const DescField = ({ value, onChange, categoryName, productName }: {
     value: string; onChange: (v: string) => void;
@@ -203,7 +233,19 @@ export default function AdminProductPage() {
 
   return (
     <AdminLayout title="Quản lý món ăn">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end gap-2 mb-4">
+        <label className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
+          importing ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'
+        }`}>
+          {importing ? 'Đang import...' : 'Import CSV'}
+          <input
+            type="file"
+            accept=".csv"
+            className="hidden"
+            disabled={importing}
+            onChange={handleImportCsv}
+          />
+        </label>
         <button
           onClick={() => { setShowCreate(true); setCreateError(null); setCreateForm(EMPTY_CREATE); setCreateKey((k) => k + 1); }}
           className="bg-rose-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-rose-700"
@@ -211,6 +253,44 @@ export default function AdminProductPage() {
           + Thêm món
         </button>
       </div>
+
+      {/* Import Result Panel */}
+      {importResult && (
+        <div className="mb-4 p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-700">Kết quả Import</h3>
+            <button onClick={() => setImportResult(null)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+          </div>
+          <div className="flex gap-4 mb-3">
+            <span className="text-sm text-green-600 font-medium">✓ Tạo thành công: {importResult.created}</span>
+            {importResult.failed > 0 && (
+              <span className="text-sm text-red-600 font-medium">✗ Thất bại: {importResult.failed}</span>
+            )}
+          </div>
+          {importResult.errors.length > 0 && (
+            <div className="max-h-48 overflow-y-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-gray-500 border-b border-gray-100">
+                    <th className="text-left pb-1 w-12">Dòng</th>
+                    <th className="text-left pb-1 w-24">Trường</th>
+                    <th className="text-left pb-1">Lỗi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {importResult.errors.map((err, i) => (
+                    <tr key={i} className="border-b border-gray-50">
+                      <td className="py-1 text-gray-400">{err.row}</td>
+                      <td className="py-1 text-gray-600">{err.field}</td>
+                      <td className="py-1 text-red-600">{err.message}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Create Modal */}
       {showCreate && (
@@ -279,6 +359,7 @@ export default function AdminProductPage() {
                 key={createKey}
                 currentUrl={createForm.imageUrl}
                 onUploaded={(url) => setCreateForm((f) => ({ ...f, imageUrl: url }))}
+                uploadFn={imageService.uploadProductImage}
               />
               {createError && <p className="text-sm text-red-500">{createError}</p>}
               <div className="flex justify-end gap-2 pt-2">
@@ -349,6 +430,7 @@ export default function AdminProductPage() {
                 key={editProduct?.id}
                 currentUrl={editForm.imageUrl}
                 onUploaded={(url) => setEditForm((f) => ({ ...f, imageUrl: url }))}
+                uploadFn={imageService.uploadProductImage}
               />
               {editError && <p className="text-sm text-red-500">{editError}</p>}
               <div className="flex justify-end gap-2 pt-2">

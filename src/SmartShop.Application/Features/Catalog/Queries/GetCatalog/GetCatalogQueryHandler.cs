@@ -42,26 +42,30 @@ public class GetCatalogQueryHandler(
         }).ToList();
 
         // Map combos to CatalogItemDto
-        var comboDtos = activeCombos.Select(c => new CatalogItemDto
+        var comboDtos = activeCombos.Select(c =>
         {
-            Id = c.Id,
-            ItemType = "Combo",
-            Name = c.Title,
-            Slug = string.Empty,
-            Description = c.Description,
-            ImageUrl = c.ImageUrl,
-            Price = c.SalePrice,
-            OriginalPrice = c.OriginalPrice,
-            DiscountPercent = c.OriginalPrice > 0
-                ? Math.Round((c.OriginalPrice - c.SalePrice) / c.OriginalPrice * 100, 1)
-                : null,
-            CategoryId = null,
-            CategoryName = null,
-            HasSizes = false,
-            ComboItemCount = c.Items.Count,
-            StartsAt = c.StartsAt,
-            EndsAt = c.EndsAt,
-            CreatedAt = c.CreatedAt
+            var currentOriginalPrice = c.Items.Sum(i => (i.Product?.Price ?? i.UnitPriceSnapshot) * i.Quantity);
+            return new CatalogItemDto
+            {
+                Id = c.Id,
+                ItemType = "Combo",
+                Name = c.Title,
+                Slug = string.Empty,
+                Description = c.Description,
+                ImageUrl = c.ImageUrl,
+                Price = c.SalePrice,
+                OriginalPrice = currentOriginalPrice > c.SalePrice ? currentOriginalPrice : null,
+                DiscountPercent = currentOriginalPrice > c.SalePrice
+                    ? Math.Round((currentOriginalPrice - c.SalePrice) / currentOriginalPrice * 100, 1)
+                    : null,
+                CategoryId = null,
+                CategoryName = null,
+                HasSizes = false,
+                ComboItemCount = c.Items.Count,
+                StartsAt = c.StartsAt,
+                EndsAt = c.EndsAt,
+                CreatedAt = c.CreatedAt
+            };
         }).ToList();
 
         var result = new GetCatalogResult

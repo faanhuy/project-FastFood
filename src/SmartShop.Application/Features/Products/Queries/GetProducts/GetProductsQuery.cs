@@ -18,7 +18,8 @@ public record GetProductsQuery(
     int PageSize = 12,
     Guid? CategoryId = null,
     string? Search = null,
-    ProductSortBy SortBy = ProductSortBy.Newest
+    ProductSortBy SortBy = ProductSortBy.Newest,
+    Guid? StoreId = null
 ) : IRequest<PagedResult<ProductDto>>;
 
 public record PagedResult<T>(

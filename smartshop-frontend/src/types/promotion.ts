@@ -31,6 +31,7 @@ export interface PriceCampaignSummaryDto {
 }
 
 export interface CreatePriceCampaignRequest {
+  id: string;
   name: string;
   startsAt: string;
   endsAt: string;
@@ -53,6 +54,7 @@ export interface ComboItemDto {
   sizeLabel: string | null;
   quantity: number;
   unitPriceSnapshot: number;
+  currentUnitPrice: number;
 }
 
 export interface ComboDto {
@@ -62,6 +64,7 @@ export interface ComboDto {
   description: string | null;
   imageUrl: string;
   originalPrice: number;
+  currentOriginalPrice: number;
   salePrice: number;
   isActive: boolean;
   startsAt: string;
@@ -77,6 +80,7 @@ export interface ComboSummaryDto {
   title: string;
   imageUrl: string;
   originalPrice: number;
+  currentOriginalPrice: number;
   salePrice: number;
   isActive: boolean;
   startsAt: string;

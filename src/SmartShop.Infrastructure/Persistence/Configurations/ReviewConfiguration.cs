@@ -26,5 +26,11 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
             .WithMany()
             .HasForeignKey(e => e.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // one:many Review → ReviewImages (cascade delete)
+        builder.HasMany(e => e.Images)
+            .WithOne(img => img.Review)
+            .HasForeignKey(img => img.ReviewId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -45,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IProductEmbeddingRepository, ProductEmbeddingRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<IReviewImageRepository, ReviewImageRepository>();
         services.AddScoped<IAppSettingRepository, AppSettingRepository>();
         services.AddScoped<IFaqDocumentRepository, FaqDocumentRepository>();
         services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
@@ -148,6 +149,14 @@ public static class DependencyInjection
             logger.LogWarning("Rate limit store: using InMemoryRateLimitStore.");
             return new InMemoryRateLimitStore();
         });
+
+        // File Storage — Local (dev) hoặc có thể swap sang cloud qua config "FileStorage:Provider"
+        var storageProvider = configuration.GetValue<string>("FileStorage:Provider") ?? "Local";
+        if (storageProvider.Equals("Local", StringComparison.OrdinalIgnoreCase))
+            services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        // Future: else if (storageProvider == "AzureBlob") services.AddScoped<IFileStorageService, AzureBlobStorageService>();
+        else
+            services.AddScoped<IFileStorageService, LocalFileStorageService>(); // fallback
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>

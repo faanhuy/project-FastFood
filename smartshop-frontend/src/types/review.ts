@@ -6,6 +6,7 @@ export interface ReviewDto {
   rating: number;
   comment: string;
   createdAt: string;
+  imageUrls: string[];
 }
 
 export interface AddReviewRequest {

@@ -1,6 +1,6 @@
 import api from './api';
 import type { ApiResponse } from '../types/auth';
-import type { CategoryDto, CreateProductRequest, PagedResult, ProductDto, UpdateProductRequest } from '../types/product';
+import type { BulkImportResult, CategoryDto, CreateProductRequest, PagedResult, ProductDetailDto, ProductDto, UpdateProductRequest } from '../types/product';
 
 export const productService = {
   getProducts: async (params: {
@@ -9,6 +9,7 @@ export const productService = {
     categoryId?: string;
     search?: string;
     sortBy?: number; // maps to ProductSortBy enum value on backend
+    storeId?: string;
   }) => {
     const { data } = await api.get<ApiResponse<PagedResult<ProductDto>>>('/products', { params });
     return data.data;
@@ -19,8 +20,10 @@ export const productService = {
     return data.data;
   },
 
-  getProductBySlug: async (slug: string) => {
-    const { data } = await api.get<ApiResponse<ProductDto>>(`/products/${slug}`);
+  getProductBySlug: async (slug: string, storeId?: string) => {
+    const { data } = await api.get<ApiResponse<ProductDetailDto>>(`/products/${slug}`, {
+      params: storeId ? { storeId } : undefined,
+    });
     return data.data;
   },
 
@@ -36,6 +39,17 @@ export const productService = {
 
   deleteProduct: async (id: string) => {
     await api.delete(`/products/${id}`);
+  },
+
+  bulkImportProducts: async (file: File): Promise<BulkImportResult> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const { data } = await api.post<ApiResponse<BulkImportResult>>(
+      '/products/import',
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    return data.data;
   },
 };
 

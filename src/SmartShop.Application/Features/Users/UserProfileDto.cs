@@ -8,4 +8,5 @@ public class UserProfileDto
     public string LastName { get; init; } = string.Empty;
     public string Role { get; init; } = string.Empty;
     public DateTime CreatedAt { get; init; }
+    public string? AvatarUrl { get; init; }
 }

@@ -10,9 +10,10 @@ const MAX_SIZE_MB = 5;
 interface ImageUploadFieldProps {
   currentUrl: string | null | undefined;
   onUploaded: (url: string | null) => void;
+  uploadFn?: (file: File) => Promise<string>; // NEW — default: imageService.upload
 }
 
-export default function ImageUploadField({ currentUrl, onUploaded }: ImageUploadFieldProps) {
+export default function ImageUploadField({ currentUrl, onUploaded, uploadFn }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(getImageUrl(currentUrl) || null);
   const [uploading, setUploading] = useState(false);
@@ -29,7 +30,8 @@ export default function ImageUploadField({ currentUrl, onUploaded }: ImageUpload
     setPreview(URL.createObjectURL(file));
     setUploading(true);
     try {
-      const url = await imageService.upload(file);
+      const upload = uploadFn ?? imageService.upload;
+      const url = await upload(file);
       onUploaded(url);
       toast.success('Tải ảnh lên thành công');
     } catch {

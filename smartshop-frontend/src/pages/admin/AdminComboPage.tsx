@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { FiEdit2, FiTrash2, FiPlus, FiX } from 'react-icons/fi';
 import AdminLayout from '../../components/AdminLayout';
 import { promotionService } from '../../services/promotionService';
 import { productService } from '../../services/productService';
 import { sizeService } from '../../services/sizeService';
+import { imageService } from '../../services/imageService';
+import { getImageUrl } from '../../utils/imageUrl';
+import ImageUploadField from '../../components/common/ImageUploadField';
 import type {
   ComboSummaryDto,
   ComboDto,
@@ -18,6 +21,10 @@ interface ComboItemForm {
   productId: string;
   sizeId: string | null;
   quantity: string;
+}
+
+interface ItemSearchState {
+  [key: number]: string;
 }
 
 const defaultForm = (): {
@@ -53,6 +60,9 @@ export default function AdminComboPage() {
   const [form, setForm] = useState(defaultForm());
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [itemSizes, setItemSizes] = useState<Record<number, ProductSize[]>>({});
+  const [itemSearches, setItemSearches] = useState<ItemSearchState>({});
+  const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+  const dropdownRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   const loadCombos = async () => {
     setLoading(true);
@@ -85,6 +95,8 @@ export default function AdminComboPage() {
     setEditingId(null);
     setForm(defaultForm());
     setItemSizes({});
+    setItemSearches({});
+    setActiveDropdown(null);
     setShowForm(true);
   };
 
@@ -114,6 +126,8 @@ export default function AdminComboPage() {
         }),
       );
       setItemSizes(sizesMap);
+      setItemSearches({});
+      setActiveDropdown(null);
       setShowForm(true);
     } catch {
       toast.error('Không tải được combo');
@@ -137,6 +151,7 @@ export default function AdminComboPage() {
 
   const removeItem = (i: number) => {
     setForm((f) => ({ ...f, items: f.items.filter((_, idx) => idx !== i) }));
+    // Re-index itemSizes
     setItemSizes((prev) => {
       const next: Record<number, ProductSize[]> = {};
       Object.entries(prev).forEach(([k, v]) => {
@@ -146,6 +161,17 @@ export default function AdminComboPage() {
       });
       return next;
     });
+    // Re-index itemSearches
+    setItemSearches((prev) => {
+      const next: Record<number, string> = {};
+      Object.entries(prev).forEach(([k, v]) => {
+        const ki = Number(k);
+        if (ki < i) next[ki] = v;
+        else if (ki > i) next[ki - 1] = v;
+      });
+      return next;
+    });
+    if (activeDropdown === i) setActiveDropdown(null);
   };
 
   const updateItem = async (i: number, field: keyof ComboItemForm, value: string | null) => {
@@ -160,6 +186,17 @@ export default function AdminComboPage() {
         return { ...f, items };
       });
     }
+  };
+
+  const resetProductItem = (i: number) => {
+    setForm((f) => {
+      const items = f.items.map((it, idx) =>
+        idx === i ? { ...it, productId: '', sizeId: null } : it
+      );
+      return { ...f, items };
+    });
+    setItemSearches((prev) => ({ ...prev, [i]: '' }));
+    setActiveDropdown(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -211,6 +248,40 @@ export default function AdminComboPage() {
   const fmt = (n: number) => n.toLocaleString('vi-VN') + 'đ';
   const fmtDate = (s: string) => new Date(s).toLocaleDateString('vi-VN');
 
+  // Helper: Filter products by search query
+  const getFilteredProducts = (query: string): ProductDto[] => {
+    if (!query.trim()) return products.slice(0, 8);
+    const lowerQuery = query.toLowerCase();
+    return products
+      .filter((p) => p.name.toLowerCase().includes(lowerQuery))
+      .slice(0, 8);
+  };
+
+  // Helper: Calculate original price
+  const calculateOriginalPrice = (): number => {
+    return form.items.reduce((acc, item) => {
+      const product = products.find((p) => p.id === item.productId);
+      if (!product) return acc;
+      const qty = parseInt(item.quantity) || 1;
+      return acc + product.price * qty;
+    }, 0);
+  };
+
+  // Helper: Calculate discount percentage
+  const calculateDiscountPercent = (): number => {
+    const original = calculateOriginalPrice();
+    if (original === 0) return 0;
+    const salePrice = Number(form.salePrice) || 0;
+    return Math.round(((original - salePrice) / original) * 100);
+  };
+
+  const originalPrice = calculateOriginalPrice();
+  const discountPercent = calculateDiscountPercent();
+  const hasValidItems = form.items.some((it) => {
+    const product = products.find((p) => p.id === it.productId);
+    return !!product;
+  });
+
   return (
     <AdminLayout title="Quản lý Combo">
       <div className="space-y-4">
@@ -237,7 +308,7 @@ export default function AdminComboPage() {
               >
                 {c.imageUrl && (
                   <img
-                    src={c.imageUrl}
+                    src={getImageUrl(c.imageUrl)}
                     alt={c.name}
                     className="w-14 h-14 rounded-lg object-cover shrink-0"
                   />
@@ -335,12 +406,10 @@ export default function AdminComboPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-gray-600">URL hình ảnh</label>
-                  <input
-                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
-                    value={form.imageUrl}
-                    onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
-                    placeholder="https://..."
+                  <ImageUploadField
+                    currentUrl={form.imageUrl || null}
+                    onUploaded={(url) => setForm((f) => ({ ...f, imageUrl: url ?? '' }))}
+                    uploadFn={imageService.uploadComboImage}
                   />
                 </div>
                 <div>
@@ -355,6 +424,27 @@ export default function AdminComboPage() {
                   />
                 </div>
               </div>
+
+              {hasValidItems && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-gray-600">
+                        Tổng giá gốc: <span className="font-semibold text-gray-800">{fmt(originalPrice)}</span>
+                      </div>
+                      <div className="text-gray-600 mt-1">
+                        Giá combo: <span className="font-semibold text-gray-800">{fmt(Number(form.salePrice) || 0)}</span>
+                      </div>
+                    </div>
+                    {discountPercent > 0 && (
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-amber-600">{discountPercent}%</div>
+                        <div className="text-xs text-gray-600">Tiết kiệm</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -395,54 +485,169 @@ export default function AdminComboPage() {
                   <p className="text-xs text-gray-400 italic">Chưa có món nào — nhấn "Thêm món"</p>
                 )}
 
-                <div className="space-y-2">
-                  {form.items.map((item, i) => (
-                    <div key={i} className="flex items-start gap-2 bg-gray-50 rounded-lg p-2">
-                      <div className="flex-1 grid grid-cols-3 gap-2">
-                        <select
-                          className="border rounded px-2 py-1.5 text-xs col-span-1"
-                          value={item.productId}
-                          onChange={(e) => updateItem(i, 'productId', e.target.value)}
-                        >
-                          <option value="">-- Chọn sản phẩm --</option>
-                          {products.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.name}
-                            </option>
-                          ))}
-                        </select>
+                <div className="space-y-3">
+                  {form.items.map((item, i) => {
+                    const selectedProduct = products.find((p) => p.id === item.productId);
+                    const filteredProducts = getFilteredProducts(itemSearches[i] ?? '');
+                    const isDropdownOpen = activeDropdown === i;
+                    const isProductSelected = item.productId !== '';
 
-                        <select
-                          className="border rounded px-2 py-1.5 text-xs"
-                          value={item.sizeId ?? ''}
-                          onChange={(e) => updateItem(i, 'sizeId', e.target.value || null)}
-                        >
-                          <option value="">Không có size</option>
-                          {(itemSizes[i] ?? []).map((s) => (
-                            <option key={s.id} value={s.id}>
-                              {s.label}
-                            </option>
-                          ))}
-                        </select>
-
-                        <input
-                          type="number"
-                          min={1}
-                          placeholder="SL"
-                          className="border rounded px-2 py-1.5 text-xs"
-                          value={item.quantity}
-                          onChange={(e) => updateItem(i, 'quantity', e.target.value)}
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeItem(i)}
-                        className="text-gray-400 hover:text-red-500 mt-1"
+                    return (
+                      <div
+                        key={i}
+                        className="bg-gray-50 rounded-lg p-3 border border-gray-200"
                       >
-                        <FiX size={14} />
-                      </button>
-                    </div>
-                  ))}
+                        {/* State A: Product not selected - Search input */}
+                        {!isProductSelected ? (
+                          <div className="flex items-start gap-3">
+                            {/* Product search */}
+                            <div className="flex-1">
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  className="w-full border rounded px-2.5 py-1.5 text-xs bg-white"
+                                  placeholder="Tìm tên sản phẩm..."
+                                  value={itemSearches[i] ?? ''}
+                                  onChange={(e) => {
+                                    setItemSearches((prev) => ({ ...prev, [i]: e.target.value }));
+                                    setActiveDropdown(i);
+                                  }}
+                                  onFocus={() => setActiveDropdown(i)}
+                                />
+
+                                {/* Dropdown */}
+                                {isDropdownOpen && (
+                                  <div
+                                    ref={(el) => {
+                                      if (el) dropdownRefs.current[i] = el;
+                                    }}
+                                    className="absolute top-full left-0 right-0 z-10 mt-1 bg-white border rounded shadow-lg max-h-40 overflow-y-auto"
+                                  >
+                                    {filteredProducts.length === 0 ? (
+                                      <div className="px-3 py-2 text-xs text-gray-400">
+                                        Không tìm thấy sản phẩm
+                                      </div>
+                                    ) : (
+                                      filteredProducts.map((p) => (
+                                        <button
+                                          key={p.id}
+                                          type="button"
+                                          onClick={() => {
+                                            updateItem(i, 'productId', p.id);
+                                            setItemSearches((prev) => ({ ...prev, [i]: '' }));
+                                            setActiveDropdown(null);
+                                          }}
+                                          className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 border-b last:border-b-0 flex items-center gap-2"
+                                        >
+                                          <img
+                                            src={getImageUrl(p.imageUrl)}
+                                            alt={p.name}
+                                            className="h-6 w-6 rounded object-cover border border-gray-200"
+                                            onError={(e) => {
+                                              (e.target as HTMLImageElement).src =
+                                                'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%226%22 height=%226%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23D1D5DB%22 stroke-width=%222%22%3E%3Crect x=%222%22 y=%222%22 width=%2220%22 height=%2220%22 rx=%222%22/%3E%3C/svg%3E';
+                                            }}
+                                          />
+                                          <div className="flex-1 min-w-0">
+                                            <p className="truncate font-medium">{p.name}</p>
+                                            <p className="text-gray-500">{fmt(p.price)}</p>
+                                          </div>
+                                        </button>
+                                      ))
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Delete button */}
+                            <button
+                              type="button"
+                              onClick={() => removeItem(i)}
+                              className="text-gray-400 hover:text-red-500 shrink-0 mt-0.5"
+                            >
+                              <FiX size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          /* State B: Product selected - Show thumbnail + name + reset */
+                          <>
+                            <div className="flex items-center gap-3 mb-3">
+                              {selectedProduct && (
+                                <div className="shrink-0">
+                                  <img
+                                    src={getImageUrl(selectedProduct.imageUrl)}
+                                    alt={selectedProduct.name}
+                                    className="h-7 w-7 rounded object-cover border border-gray-300"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src =
+                                        'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%227%22 height=%227%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23D1D5DB%22 stroke-width=%222%22%3E%3Crect x=%222%22 y=%222%22 width=%2220%22 height=%2220%22 rx=%222%22/%3E%3C/svg%3E';
+                                    }}
+                                  />
+                                </div>
+                              )}
+
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-800 truncate">
+                                  {selectedProduct?.name}
+                                </p>
+                                <p className="text-xs text-gray-500">{fmt(selectedProduct?.price || 0)}</p>
+                              </div>
+
+                              {/* Reset button */}
+                              <button
+                                type="button"
+                                onClick={() => resetProductItem(i)}
+                                className="text-gray-400 hover:text-red-500 shrink-0"
+                              >
+                                <FiX size={16} />
+                              </button>
+                            </div>
+
+                            {/* Size & Quantity row */}
+                            <div className="flex items-center gap-2">
+                              <select
+                                className="flex-1 border rounded px-2.5 py-1.5 text-xs bg-white"
+                                value={item.sizeId ?? ''}
+                                onChange={(e) => updateItem(i, 'sizeId', e.target.value || null)}
+                              >
+                                <option value="">Không có size</option>
+                                {(itemSizes[i] ?? []).map((s) => (
+                                  <option key={s.id} value={s.id}>
+                                    {s.sizeLabel}
+                                  </option>
+                                ))}
+                              </select>
+
+                              <input
+                                type="number"
+                                min={1}
+                                placeholder="SL"
+                                className="w-16 border rounded px-2.5 py-1.5 text-xs bg-white"
+                                value={item.quantity}
+                                onChange={(e) => updateItem(i, 'quantity', e.target.value)}
+                              />
+
+                              {selectedProduct && (
+                                <div className="text-xs text-gray-600 whitespace-nowrap">
+                                  {fmt(selectedProduct.price)}
+                                </div>
+                              )}
+
+                              {/* Delete item button */}
+                              <button
+                                type="button"
+                                onClick={() => removeItem(i)}
+                                className="text-gray-400 hover:text-red-500 shrink-0"
+                              >
+                                <FiX size={14} />
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </form>

@@ -12,14 +12,16 @@ public record ProductDto(
     Guid CategoryId,
     DateTime CreatedAt,
     bool HasSizes = false,
-    string? SizeType = null
+    string? SizeType = null,
+    decimal? EffectivePrice = null
 );
 
 public record SizeDto(
     Guid Id,
     string Label,
     int DisplayOrder,
-    bool IsActive
+    bool IsActive,
+    decimal? EffectivePrice = null
 );
 
 public record ProductDetailDto(

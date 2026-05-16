@@ -23,6 +23,19 @@ export interface ProductDto {
   promotionEndsAt: string | null;
 }
 
+export interface SizeWithPrice {
+  id: string;
+  label: string;
+  displayOrder: number;
+  isActive: boolean;
+  effectivePrice: number | null;
+}
+
+export interface ProductDetailDto extends ProductDto {
+  sizes: SizeWithPrice[];
+  effectivePrice: number;
+}
+
 export interface CategoryDto {
   id: string;
   name: string;
@@ -59,4 +72,16 @@ export interface UpdateProductRequest {
   imageUrl: string | null;
   hasSizes?: boolean;
   sizeType?: string | null;
+}
+
+export interface ImportRowError {
+  row: number;
+  field: string;
+  message: string;
+}
+
+export interface BulkImportResult {
+  created: number;
+  failed: number;
+  errors: ImportRowError[];
 }

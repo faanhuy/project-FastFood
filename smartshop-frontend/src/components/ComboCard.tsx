@@ -27,7 +27,10 @@ export default function ComboCard({ combo }: ComboCardProps) {
     }
   };
 
-  const discountPercent = combo.discountPercent ? Math.round(combo.discountPercent * 10) / 10 : null;
+  const discountPercent =
+    combo.originalPrice && combo.originalPrice > combo.price
+      ? Math.round(((combo.originalPrice - combo.price) / combo.originalPrice) * 100)
+      : null;
 
   const hasEndDate = combo.endsAt && new Date(combo.endsAt) > new Date();
   let endDateText = '';
@@ -42,21 +45,13 @@ export default function ComboCard({ combo }: ComboCardProps) {
 
   return (
     <Link
-      to="#"
-      onClick={(e) => e.preventDefault()}
+      to={`/combos/${combo.id}`}
       className="relative bg-white rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-orange-200 border border-transparent transition-all duration-200 p-3 flex flex-col group cursor-pointer"
     >
       {/* COMBO Badge */}
       <span className="absolute left-2 top-2 rounded-full bg-orange-500 px-2.5 py-0.5 text-[11px] font-bold text-white uppercase tracking-wide">
         Combo
       </span>
-
-      {/* Discount Badge */}
-      {discountPercent && discountPercent > 0 && (
-        <span className="absolute right-2 top-2 rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white">
-          -{discountPercent}%
-        </span>
-      )}
 
       {/* Image */}
       <div className="bg-gray-100 rounded-lg h-36 flex items-center justify-center mb-3 overflow-hidden">
@@ -77,7 +72,14 @@ export default function ComboCard({ combo }: ComboCardProps) {
 
       {/* Price Section */}
       <div className="mt-2">
-        <p className="text-rose-600 font-bold text-sm">{formatPrice(combo.price)}</p>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-rose-600 font-bold text-sm">{formatPrice(combo.price)}</span>
+          {discountPercent && discountPercent > 0 && (
+            <span className="rounded-full bg-red-100 text-red-600 px-1.5 py-0.5 text-[10px] font-bold">
+              -{discountPercent}%
+            </span>
+          )}
+        </div>
         {combo.originalPrice && combo.originalPrice > combo.price && (
           <p className="text-gray-400 text-xs line-through">{formatPrice(combo.originalPrice)}</p>
         )}

@@ -8,9 +8,12 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { userService, type UserProfileDto } from '../services/userService';
 import { addressService } from '../services/addressService';
+import { imageService } from '../services/imageService';
 import { useAuthStore } from '../store/authStore';
 import type { AddressDto } from '../types/order';
 import { formatDate } from '@/utils/formatters';
+import { getImageUrl } from '@/utils/imageUrl';
+import ImageUploadField from '@/components/common/ImageUploadField';
 import { AddressSelector, type AddressSelection } from '@/components/AddressSelector';
 
 type Tab = 'profile' | 'addresses';
@@ -322,6 +325,32 @@ export default function ProfilePage() {
         {/* Tab: Profile */}
         {activeTab === 'profile' && (
           <>
+            {/* Avatar */}
+            <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 flex flex-col items-center gap-4">
+              <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-rose-100 bg-rose-50 flex items-center justify-center shrink-0">
+                {profile?.avatarUrl ? (
+                  <img
+                    src={getImageUrl(profile.avatarUrl)}
+                    alt="avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-rose-600 text-2xl font-bold select-none">
+                    {(profile?.firstName?.[0] ?? '') + (profile?.lastName?.[0] ?? '')}
+                  </span>
+                )}
+              </div>
+              <div className="w-full max-w-xs">
+                <ImageUploadField
+                  currentUrl={profile?.avatarUrl}
+                  onUploaded={(url) => {
+                    if (url) setProfile((p) => (p ? { ...p, avatarUrl: url } : p));
+                  }}
+                  uploadFn={imageService.uploadAvatar}
+                />
+              </div>
+            </div>
+
             <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 space-y-3">
               <div className="flex items-center gap-3 text-sm text-gray-600">
                 <FiMail size={16} className="text-gray-400 shrink-0" />

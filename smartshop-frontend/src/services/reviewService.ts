@@ -17,6 +17,17 @@ export const reviewService = {
     return data.data;
   },
 
+  uploadReviewImages: async (reviewId: string, files: File[]): Promise<{ urls: string[] }> => {
+    const formData = new FormData();
+    files.forEach(f => formData.append('files', f));
+    const { data } = await api.post<ApiResponse<{ urls: string[] }>>(
+      `/files/upload/review-images?reviewId=${reviewId}`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    return data.data;
+  },
+
   deleteReview: async (id: string): Promise<void> => {
     await api.delete(`/reviews/${id}`);
   },

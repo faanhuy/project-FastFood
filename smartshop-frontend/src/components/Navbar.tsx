@@ -7,7 +7,7 @@ import {
 import { useAuthStore } from '../store/authStore';
 import { cartService } from '../services/cartService';
 import { orderService } from '../services/orderService';
-import { wishlistService } from '../services/wishlistService';
+import { useWishlistStore } from '../store/useWishlistStore';
 import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
 import NotificationBell from './NotificationBell';
 
@@ -17,10 +17,10 @@ interface NavbarProps {
 
 export default function Navbar({ children }: NavbarProps) {
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout, cartVersion, wishlistVersion } = useAuthStore();
+  const { isAuthenticated, user, logout, cartVersion } = useAuthStore();
+  const wishlistCount = useWishlistStore((s) => s.productIds.size);
   const [cartCount, setCartCount] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
-  const [wishlistCount, setWishlistCount] = useState(0);
 
   // Store selection
   const { stores, selectedStore, setSelectedStore, fetchStores } = useStoreSelectionStore();
@@ -73,12 +73,6 @@ export default function Navbar({ children }: NavbarProps) {
       .catch(() => setOrderCount(0));
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    if (!isAuthenticated) { setWishlistCount(0); return; }
-    wishlistService.getWishlist()
-      .then((items) => setWishlistCount(items.length))
-      .catch(() => setWishlistCount(0));
-  }, [isAuthenticated, wishlistVersion]);
 
   const handleLogout = () => {
     logout();

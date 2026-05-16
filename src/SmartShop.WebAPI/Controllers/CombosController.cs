@@ -36,6 +36,17 @@ public class CombosController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>Chi tiết combo (public)</summary>
+    [HttpGet("api/combos/{id:guid}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<ComboDto>>> GetPublicComboById(
+        Guid id,
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetComboByIdQuery(id), ct);
+        return Ok(result);
+    }
+
     /// <summary>Tạo combo mới</summary>
     [HttpPost("api/admin/combos")]
     public async Task<ActionResult<ApiResponse<ComboDto>>> CreateCombo(

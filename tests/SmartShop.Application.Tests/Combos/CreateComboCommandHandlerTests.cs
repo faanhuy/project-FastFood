@@ -196,4 +196,68 @@ public class CreateComboCommandHandlerTests
         _comboRepo.Verify(r => r.AddAsync(It.IsAny<Combo>(), default), Times.Once);
         _uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }
+
+    [Fact]
+    public async Task Handle_MultipleItems_CalculatesOriginalPriceCorrectly()
+    {
+        var categoryId = Guid.NewGuid();
+        var product1 = CreateTestProduct(categoryId); // price = 50m
+        var product2 = Product.Create("Product2", "Desc", 75m, categoryId, "product2-slug"); // price = 75m
+
+        var command = new CreateComboCommand(
+            "Multi Combo",
+            "Multi Title",
+            "Description",
+            "image.jpg",
+            199.99m,
+            DateTime.UtcNow.AddDays(1),
+            DateTime.UtcNow.AddDays(30),
+            new List<CreateComboItemRequest>
+            {
+                new(product1.Id, null, 2), // 50 * 2 = 100
+                new(product2.Id, null, 3)  // 75 * 3 = 225
+            }
+        );
+
+        _productRepo.Setup(r => r.GetByIdWithSizesAsync(product1.Id, default))
+            .ReturnsAsync(product1);
+        _productRepo.Setup(r => r.GetByIdWithSizesAsync(product2.Id, default))
+            .ReturnsAsync(product2);
+        _comboRepo.Setup(r => r.AddAsync(It.IsAny<Combo>(), default))
+            .Returns(Task.CompletedTask);
+        _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+
+        var result = await CreateHandler().Handle(command, default);
+
+        result.Data.Should().NotBeNull();
+        result.Data.OriginalPrice.Should().Be(325m); // 100 + 225
+    }
+
+    [Fact]
+    public async Task Handle_EndsAtBeforeStartsAt_ThrowsException()
+    {
+        var categoryId = Guid.NewGuid();
+        var product = CreateTestProduct(categoryId);
+        var startsAt = DateTime.UtcNow.AddDays(5);
+        var endsAt = DateTime.UtcNow.AddDays(2); // Before startsAt
+
+        var command = new CreateComboCommand(
+            "Test Combo",
+            "Test Title",
+            "Description",
+            "image.jpg",
+            99.99m,
+            startsAt,
+            endsAt,
+            new List<CreateComboItemRequest>
+            {
+                new(product.Id, null, 1)
+            }
+        );
+
+        var act = () => CreateHandler().Handle(command, default);
+
+        await act.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*EndsAt must be greater than StartsAt*");
+    }
 }

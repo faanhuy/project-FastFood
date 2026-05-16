@@ -9,4 +9,5 @@ public class ReviewDto
     public int Rating { get; init; }
     public string Comment { get; init; } = string.Empty;
     public DateTime CreatedAt { get; init; }
+    public List<string> ImageUrls { get; init; } = [];
 }

@@ -21,6 +21,8 @@ internal sealed class AppSettingsSeeder(
                 AppSetting.Create("AI:Recommendations:Count",    "5",         "number", "Số sản phẩm gợi ý tối đa"),
                 AppSetting.Create("AI:Recommendations:MinScore", "0.4",       "number", "Điểm tối thiểu để hiển thị gợi ý sản phẩm"),
                 AppSetting.Create("Site:Name",                   "FastFood",  "text",   "Tên hiển thị của website"),
+                AppSetting.Create("FileStorage:LocalBasePath",   "",          "text",   "Đường dẫn tuyệt đối lưu file upload (để trống = dùng wwwroot/uploads)"),
+                AppSetting.Create("FileStorage:LocalUrlPrefix",  "/uploads",  "text",   "Prefix URL trả về cho file upload (ví dụ /images)"),
             };
             await context.AppSettings.AddRangeAsync(defaults, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
@@ -34,6 +36,20 @@ internal sealed class AppSettingsSeeder(
         {
             siteNameSetting.SetValue("FastFood");
             await context.SaveChangesAsync(cancellationToken);
+        }
+
+        // Đảm bảo các keys mới luôn tồn tại (upsert khi table đã có data)
+        await EnsureKeyAsync("FileStorage:LocalBasePath", "",         "text", "Đường dẫn tuyệt đối lưu file upload (để trống = dùng wwwroot/uploads)", cancellationToken);
+        await EnsureKeyAsync("FileStorage:LocalUrlPrefix", "/uploads", "text", "Prefix URL trả về cho file upload (ví dụ /images)", cancellationToken);
+    }
+
+    private async Task EnsureKeyAsync(string key, string defaultValue, string dataType, string description, CancellationToken ct)
+    {
+        var existing = await context.AppSettings.FindAsync([key], ct);
+        if (existing is null)
+        {
+            context.AppSettings.Add(AppSetting.Create(key, defaultValue, dataType, description));
+            await context.SaveChangesAsync(ct);
         }
     }
 }

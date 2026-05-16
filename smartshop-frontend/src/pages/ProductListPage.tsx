@@ -56,11 +56,11 @@ export default function ProductListPage() {
   useEffect(() => {
     setLoading(true);
     productService
-      .getProducts({ page, pageSize: 12, categoryId, search: search || undefined, sortBy })
+      .getProducts({ page, pageSize: 12, categoryId, search: search || undefined, sortBy, storeId: selectedStore?.id })
       .then(setProducts)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [page, categoryId, search, sortBy]);
+  }, [page, categoryId, search, sortBy, selectedStore]);
 
   useEffect(() => {
     const visibleProducts = products?.items ?? [];
@@ -71,23 +71,16 @@ export default function ProductListPage() {
 
     let cancelled = false;
     setStockLoading(true);
-    Promise.all(
-      visibleProducts.map((product) =>
-        storeService
-          .getProductStock(selectedStore.id, product.id)
-          .then((stock) => [product.id, stock.quantity] as const)
-          .catch(() => [product.id, 0] as const),
-      ),
-    )
-      .then((entries) => {
-        if (!cancelled) {
-          setStockByProductId(Object.fromEntries(entries));
-        }
+    storeService
+      .getBulkStock(selectedStore.id, visibleProducts.map((p) => p.id))
+      .then((stock) => {
+        if (!cancelled) setStockByProductId(stock);
+      })
+      .catch(() => {
+        if (!cancelled) setStockByProductId({});
       })
       .finally(() => {
-        if (!cancelled) {
-          setStockLoading(false);
-        }
+        if (!cancelled) setStockLoading(false);
       });
 
     return () => {
@@ -320,9 +313,16 @@ export default function ProductListPage() {
                     </div>
                     <p className="text-sm font-medium text-gray-800 line-clamp-2 flex-1">{product.name}</p>
                     <div className="mt-2">
-                      <p className="text-rose-600 font-bold text-sm">{formatPrice(product.price)}</p>
-                      {product.originalPrice > product.price && (
-                        <p className="text-gray-400 text-xs line-through">{formatPrice(product.originalPrice)}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-rose-600 font-bold text-sm">{formatPrice(product.effectivePrice ?? product.price)}</span>
+                        {(product.effectivePrice ?? product.price) < product.price && (
+                          <span className="rounded-full bg-red-100 text-red-600 px-1.5 py-0.5 text-[10px] font-bold">
+                            -{Math.round((1 - (product.effectivePrice ?? product.price) / product.price) * 100)}%
+                          </span>
+                        )}
+                      </div>
+                      {(product.effectivePrice ?? product.price) < product.price && (
+                        <p className="text-gray-400 text-xs line-through">{formatPrice(product.price)}</p>
                       )}
                       {selectedStore && (
                         <p className={`mt-1 text-xs ${outOfStock ? 'text-red-500' : 'text-green-600'}`}>

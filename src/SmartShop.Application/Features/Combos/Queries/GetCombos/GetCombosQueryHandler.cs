@@ -12,20 +12,25 @@ public class GetCombosQueryHandler(IComboRepository comboRepository)
         var combos = await comboRepository.GetAllAsync(request.Page, request.PageSize, cancellationToken);
         var totalCount = await comboRepository.CountAsync(cancellationToken);
 
-        var items = combos.Select(combo => new ComboSummaryDto
+        var items = combos.Select(combo =>
         {
-            Id = combo.Id,
-            Name = combo.Name,
-            Title = combo.Title,
-            ImageUrl = combo.ImageUrl,
-            OriginalPrice = combo.OriginalPrice,
-            SalePrice = combo.SalePrice,
-            IsActive = combo.IsActive,
-            StartsAt = combo.StartsAt,
-            EndsAt = combo.EndsAt,
-            IsCurrentlyActive = combo.IsCurrentlyActive(),
-            ItemCount = combo.Items.Count,
-            CreatedAt = combo.CreatedAt
+            var currentOriginalPrice = combo.Items.Sum(i => (i.Product?.Price ?? i.UnitPriceSnapshot) * i.Quantity);
+            return new ComboSummaryDto
+            {
+                Id = combo.Id,
+                Name = combo.Name,
+                Title = combo.Title,
+                ImageUrl = combo.ImageUrl,
+                OriginalPrice = combo.OriginalPrice,
+                CurrentOriginalPrice = currentOriginalPrice,
+                SalePrice = combo.SalePrice,
+                IsActive = combo.IsActive,
+                StartsAt = combo.StartsAt,
+                EndsAt = combo.EndsAt,
+                IsCurrentlyActive = combo.IsCurrentlyActive(),
+                ItemCount = combo.Items.Count,
+                CreatedAt = combo.CreatedAt
+            };
         }).ToList();
 
         var totalPages = (totalCount + request.PageSize - 1) / request.PageSize;

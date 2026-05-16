@@ -3,11 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { cartService } from '../services/cartService';
 import { productService } from '../services/productService';
+import { sizeService } from '../services/sizeService';
 import { getApiError } from '../utils/errorHandler';
 import { formatPrice } from '../utils/formatters';
+import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
 import type { CartDto, CartItemDto } from '../types/cart';
 import type { ProductDto } from '../types/product';
-import { FiMinus, FiPlus, FiShoppingCart, FiPackage } from 'react-icons/fi';
+import type { EffectivePriceItem } from '../types/size';
+import { FiMinus, FiPlus, FiShoppingCart } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CouponInput from '../components/CouponInput';
@@ -25,7 +28,9 @@ export default function CartPage() {
   const [suggestions, setSuggestions] = useState<ProductDto[]>([]);
   const [addingId, setAddingId] = useState<string | null>(null);
   const [expandedComponents, setExpandedComponents] = useState<Set<string>>(new Set());
+  const [effectivePrices, setEffectivePrices] = useState<Map<string, EffectivePriceItem>>(new Map());
   const navigate = useNavigate();
+  const { selectedStore } = useStoreSelectionStore();
 
   useEffect(() => {
     const saved = couponSession.load();
@@ -35,8 +40,31 @@ export default function CartPage() {
     }
   }, []);
 
+  const loadEffectivePrices = async (cartData: CartDto, storeId: string) => {
+    const productItems = cartData.items.filter((i) => i.itemType === 'Product' && i.productId);
+    if (productItems.length === 0) {
+      setEffectivePrices(new Map());
+      return;
+    }
+    try {
+      const items = productItems.map((i) => ({ productId: i.productId!, sizeId: i.sizeId }));
+      const prices = await sizeService.getBulkEffectivePrices(storeId, items);
+      const map = new Map<string, EffectivePriceItem>();
+      prices.forEach((p) => map.set(`${p.productId}:${p.sizeId ?? ''}`, p));
+      setEffectivePrices(map);
+    } catch {
+      setEffectivePrices(new Map());
+    }
+  };
+
+  const getEffectiveUnitPrice = (item: CartItemDto): number => {
+    if (item.itemType !== 'Product' || !item.productId) return item.unitPrice;
+    const key = `${item.productId}:${item.sizeId ?? ''}`;
+    return effectivePrices.get(key)?.effectivePrice ?? item.unitPrice;
+  };
+
   const revalidateCoupon = async (updatedCart: CartDto, code: string) => {
-    const newTotal = updatedCart.items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+    const newTotal = updatedCart.items.reduce((sum, i) => sum + getEffectiveUnitPrice(i) * i.quantity, 0);
     try {
       const result = await couponService.validate(code, newTotal);
       setAppliedCoupon(result);
@@ -61,6 +89,15 @@ export default function CartPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!cart || !selectedStore) {
+      setEffectivePrices(new Map());
+      return;
+    }
+    loadEffectivePrices(cart, selectedStore.id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart, selectedStore]);
 
   const loadSuggestions = async (cartData: CartDto | null) => {
     if (!cartData || cartData.items.length === 0) return;
@@ -132,7 +169,7 @@ export default function CartPage() {
     });
   };
 
-  const originalTotal = cart ? cart.items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0) : 0;
+  const originalTotal = cart ? cart.items.reduce((sum, i) => sum + getEffectiveUnitPrice(i) * i.quantity, 0) : 0;
   const discountAmount = appliedCoupon?.discountAmount ?? 0;
   const finalTotal = Math.max(0, appliedCoupon?.finalAmount ?? originalTotal);
 
@@ -245,7 +282,12 @@ export default function CartPage() {
                           </div>
                         )}
                         <div className="flex gap-2 text-amber-600 font-bold items-center mb-1">
-                          <span className="text-xl">{item.subTotal.toLocaleString('vi-VN')} đ</span>
+                          <span className="text-xl">{(getEffectiveUnitPrice(item) * item.quantity).toLocaleString('vi-VN')} đ</span>
+                          {item.itemType === 'Product' && effectivePrices.get(`${item.productId}:${item.sizeId ?? ''}`)?.hasDiscount && (
+                            <span className="text-gray-400 line-through text-sm font-normal">
+                              {item.subTotal.toLocaleString('vi-VN')} đ
+                            </span>
+                          )}
                         </div>
                         <div className="flex gap-4 text-sm mt-1">
                           <button
@@ -259,8 +301,7 @@ export default function CartPage() {
                               className="text-gray-500 hover:underline flex items-center gap-1"
                               onClick={() => toggleComponents(item.id)}
                             >
-                              <FiPackage size={12} />
-                              {expandedComponents.has(item.id) ? 'Ẩn' : 'Xem'} món con
+                              {expandedComponents.has(item.id) ? 'Ẩn' : 'Xem'} chi tiết
                             </button>
                           )}
                         </div>

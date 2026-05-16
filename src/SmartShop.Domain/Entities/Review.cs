@@ -13,6 +13,9 @@ public class Review : BaseAuditableEntity
     public User? User { get; private set; }
     public Product? Product { get; private set; }
 
+    private readonly List<ReviewImage> _images = [];
+    public IReadOnlyCollection<ReviewImage> Images => _images.AsReadOnly();
+
     private Review() { }
 
     public static Review Create(Guid userId, Guid productId, int rating, string comment)

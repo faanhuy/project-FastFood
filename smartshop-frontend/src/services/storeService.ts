@@ -34,6 +34,16 @@ export const storeService = {
     return data.data ?? [];
   },
 
+  getBulkStock: async (storeId: string, productIds: string[]): Promise<Record<string, number>> => {
+    if (productIds.length === 0) return {};
+    const params = new URLSearchParams();
+    productIds.forEach((id) => params.append('productIds', id));
+    const { data } = await api.get<ApiResponse<Record<string, number>>>(
+      `/stores/${storeId}/bulk-stock?${params.toString()}`,
+    );
+    return data.data ?? {};
+  },
+
   // Admin endpoints
   getStoreInventory: async (storeId: string): Promise<StoreInventory[]> => {
     const { data } = await api.get<ApiResponse<StoreInventory[]>>(

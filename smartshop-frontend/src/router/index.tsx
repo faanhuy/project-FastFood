@@ -12,6 +12,7 @@ import AdminStoresPage from '../pages/admin/AdminStoresPage';
 import AdminPromotionalPricePage from '../pages/admin/AdminPromotionalPricePage';
 import SizeManagementPage from '../pages/admin/SizeManagementPage';
 import AdminComboPage from '../pages/admin/AdminComboPage';
+import ComboDetailPage from '../pages/ComboDetailPage';
 import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
@@ -38,6 +39,7 @@ const router = createBrowserRouter([
   { path: '/register', element: <RegisterPage /> },
   { path: '/products', element: <ProductListPage /> },
   { path: '/products/:slug', element: <ProductDetailPage /> },
+  { path: '/combos/:id', element: <ComboDetailPage /> },
   {
     path: '/cart',
     element: (

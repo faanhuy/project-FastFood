@@ -25,6 +25,7 @@ export default function OrderDetailPage() {
   const [error, setError] = useState('');
   const [cancelling, setCancelling] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [expandedComponents, setExpandedComponents] = useState<Set<number>>(new Set());
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -76,7 +77,6 @@ export default function OrderDetailPage() {
     </div>
   );
 
-  const [expandedComponents, setExpandedComponents] = useState<Set<number>>(new Set());
   const toggleComponents = (idx: number) =>
     setExpandedComponents((prev) => {
       const next = new Set(prev);
@@ -183,7 +183,7 @@ export default function OrderDetailPage() {
                         className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 mt-0.5"
                       >
                         <FiPackage size={10} />
-                        {expandedComponents.has(idx) ? 'Ẩn' : 'Xem'} {item.components.length} món con
+                        {expandedComponents.has(idx) ? 'Ẩn' : 'Xem'} chi tiết
                       </button>
                     )}
                   </div>

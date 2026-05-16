@@ -1130,6 +1130,51 @@ namespace SmartShop.Infrastructure.Migrations
                     b.ToTable("Reviews");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.ReviewImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<Guid>("ReviewId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ReviewId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewId");
+
+                    b.HasIndex("ReviewId1");
+
+                    b.HasIndex("ReviewId", "DisplayOrder");
+
+                    b.ToTable("ReviewImages");
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.Size", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1426,6 +1471,9 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -1856,6 +1904,21 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.ReviewImage", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.Review", "Review")
+                        .WithMany()
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SmartShop.Domain.Entities.Review", null)
+                        .WithMany("Images")
+                        .HasForeignKey("ReviewId1");
+
+                    b.Navigation("Review");
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.StockReceipt", b =>
                 {
                     b.HasOne("SmartShop.Domain.Entities.Store", "Store")
@@ -2044,6 +2107,11 @@ namespace SmartShop.Infrastructure.Migrations
             modelBuilder.Entity("SmartShop.Domain.Entities.Province", b =>
                 {
                     b.Navigation("Wards");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.Review", b =>
+                {
+                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.StockReceipt", b =>

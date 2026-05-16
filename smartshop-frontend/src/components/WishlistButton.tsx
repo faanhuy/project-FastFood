@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
-import { wishlistService } from '@/services/wishlistService';
+import { useWishlistStore } from '@/store/useWishlistStore';
 
 interface WishlistButtonProps {
   productId: string;
@@ -10,18 +10,19 @@ interface WishlistButtonProps {
 }
 
 export default function WishlistButton({ productId, className = '' }: WishlistButtonProps) {
-  const { isAuthenticated, refreshWishlistCount } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
-  const [isInWishlist, setIsInWishlist] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const { fetch, add, remove, reset, productIds, loading } = useWishlistStore();
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-    wishlistService
-      .getWishlist()
-      .then((items) => setIsInWishlist(items.some((i) => i.productId === productId)))
-      .catch(() => {});
-  }, [isAuthenticated, productId]);
+    if (!isAuthenticated) {
+      reset();
+      return;
+    }
+    fetch();
+  }, [isAuthenticated, fetch, reset]);
+
+  const isInWishlist = productIds.has(productId);
 
   const handleToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -33,23 +34,16 @@ export default function WishlistButton({ productId, className = '' }: WishlistBu
       return;
     }
 
-    setLoading(true);
     try {
       if (isInWishlist) {
-        await wishlistService.removeFromWishlist(productId);
-        setIsInWishlist(false);
-        refreshWishlistCount();
+        await remove(productId);
         toast.success('Đã xóa khỏi danh sách yêu thích');
       } else {
-        await wishlistService.addToWishlist(productId);
-        setIsInWishlist(true);
-        refreshWishlistCount();
+        await add(productId);
         toast.success('Đã thêm vào danh sách yêu thích');
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message ?? 'Có lỗi xảy ra');
-    } finally {
-      setLoading(false);
+    } catch {
+      toast.error('Có lỗi xảy ra');
     }
   };
 

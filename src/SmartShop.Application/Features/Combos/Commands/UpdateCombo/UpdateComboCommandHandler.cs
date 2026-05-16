@@ -22,7 +22,8 @@ public class UpdateComboCommandHandler(
         if (command.Items.Count == 0)
             throw new ConflictException("Combo phải có ít nhất 1 sản phẩm.");
 
-        // Update combo base properties
+        var oldItems = combo.Items.ToList();
+
         combo.Update(
             command.Name,
             command.Title,
@@ -33,8 +34,12 @@ public class UpdateComboCommandHandler(
             command.EndsAt
         );
 
-        // Load và validate products, tạo combo items mới
-        var newItems = new List<Domain.Entities.ComboItem>();
+        // Diff-based item update: giữ nguyên item nếu (ProductId, SizeId, Quantity) không đổi
+        var matchedOldIds = new HashSet<Guid>();
+        var itemsToDelete = new List<Domain.Entities.ComboItem>();
+        var itemsToAdd = new List<Domain.Entities.ComboItem>();
+        var keptItems = new List<Domain.Entities.ComboItem>();
+
         foreach (var itemRequest in command.Items)
         {
             var product = await productRepository.GetByIdWithSizesAsync(itemRequest.ProductId, cancellationToken)
@@ -49,26 +54,43 @@ public class UpdateComboCommandHandler(
                 var productSize = product.Sizes.FirstOrDefault(s => s.Id == itemRequest.SizeId.Value);
                 if (productSize == null)
                     throw new NotFoundException("Size", itemRequest.SizeId.Value);
-
                 sizeLabel = productSize.SizeLabel;
             }
 
-            var comboItem = Domain.Entities.ComboItem.Create(
-                combo.Id,
-                product.Id,
-                product.Name,
-                itemRequest.SizeId,
-                sizeLabel,
-                itemRequest.Quantity,
-                product.Price
-            );
+            var matchingOld = oldItems.FirstOrDefault(o =>
+                o.ProductId == itemRequest.ProductId &&
+                o.SizeId == itemRequest.SizeId &&
+                !matchedOldIds.Contains(o.Id));
 
-            newItems.Add(comboItem);
+            if (matchingOld != null && matchingOld.Quantity == itemRequest.Quantity)
+            {
+                // Không thay đổi gì — giữ nguyên
+                matchedOldIds.Add(matchingOld.Id);
+                keptItems.Add(matchingOld);
+            }
+            else
+            {
+                // Quantity thay đổi hoặc item mới — xóa cũ (nếu có), thêm mới
+                if (matchingOld != null)
+                {
+                    matchedOldIds.Add(matchingOld.Id);
+                    itemsToDelete.Add(matchingOld);
+                }
+                itemsToAdd.Add(Domain.Entities.ComboItem.Create(
+                    combo.Id, product.Id, product.Name,
+                    itemRequest.SizeId, sizeLabel,
+                    itemRequest.Quantity, product.Price));
+            }
         }
 
-        combo.ReplaceItems(newItems);
+        // Items cũ không còn trong request → xóa
+        foreach (var old in oldItems.Where(o => !matchedOldIds.Contains(o.Id)))
+            itemsToDelete.Add(old);
 
-        comboRepository.Update(combo);
+        comboRepository.RemoveItems(itemsToDelete);
+        comboRepository.AddItems(itemsToAdd);
+        combo.ReplaceItems([.. keptItems, .. itemsToAdd]);
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = MapToDto(combo);
@@ -77,6 +99,18 @@ public class UpdateComboCommandHandler(
 
     private static ComboDto MapToDto(Domain.Entities.Combo combo)
     {
+        var items = combo.Items.Select(item => new ComboItemDto
+        {
+            Id = item.Id,
+            ProductId = item.ProductId,
+            ProductName = item.ProductName,
+            SizeId = item.SizeId,
+            SizeLabel = item.SizeLabel,
+            Quantity = item.Quantity,
+            UnitPriceSnapshot = item.UnitPriceSnapshot,
+            CurrentUnitPrice = item.UnitPriceSnapshot
+        }).ToList();
+
         return new ComboDto
         {
             Id = combo.Id,
@@ -85,21 +119,13 @@ public class UpdateComboCommandHandler(
             Description = combo.Description,
             ImageUrl = combo.ImageUrl,
             OriginalPrice = combo.OriginalPrice,
+            CurrentOriginalPrice = combo.OriginalPrice,
             SalePrice = combo.SalePrice,
             IsActive = combo.IsActive,
             StartsAt = combo.StartsAt,
             EndsAt = combo.EndsAt,
             IsCurrentlyActive = combo.IsCurrentlyActive(),
-            Items = combo.Items.Select(item => new ComboItemDto
-            {
-                Id = item.Id,
-                ProductId = item.ProductId,
-                ProductName = item.ProductName,
-                SizeId = item.SizeId,
-                SizeLabel = item.SizeLabel,
-                Quantity = item.Quantity,
-                UnitPriceSnapshot = item.UnitPriceSnapshot
-            }).ToList(),
+            Items = items,
             CreatedAt = combo.CreatedAt
         };
     }

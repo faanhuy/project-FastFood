@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { FiTrash2 } from 'react-icons/fi';
+import { FiTrash2, FiImage } from 'react-icons/fi';
 import { useAuthStore } from '../store/authStore';
 import { reviewService } from '../services/reviewService';
 import { getApiError } from '../utils/errorHandler';
@@ -28,6 +28,9 @@ export default function ProductReviews({ productId }: Props) {
 
   const [rating,  setRating]  = useState(5);
   const [comment, setComment] = useState('');
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   const loadReviews = async (p: number) => {
     setLoading(true);
@@ -64,14 +67,47 @@ export default function ProductReviews({ productId }: Props) {
     (r) => r.userFullName === `${user?.firstName} ${user?.lastName}`.trim()
   );
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files ?? []);
+    const remaining = 5 - imageFiles.length;
+    const toAdd = selected.slice(0, remaining);
+    setImageFiles(prev => [...prev, ...toAdd]);
+    toAdd.forEach(f => {
+      const reader = new FileReader();
+      reader.onload = (ev) => setImagePreviews(prev => [...prev, ev.target?.result as string]);
+      reader.readAsDataURL(f);
+    });
+    e.target.value = '';
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!comment.trim()) return;
     setSubmitting(true);
     try {
-      await reviewService.addReview({ productId, rating, comment: comment.trim() });
+      const review = await reviewService.addReview({ productId, rating, comment: comment.trim() });
+
+      // Upload images if any
+      if (imageFiles.length > 0) {
+        setUploadingImages(true);
+        try {
+          await reviewService.uploadReviewImages(review.id, imageFiles);
+        } catch (imgErr) {
+          toast.error(getApiError(imgErr, 'Upload ảnh thất bại, nhưng đánh giá đã lưu.'));
+        } finally {
+          setUploadingImages(false);
+        }
+      }
+
       setComment('');
       setRating(5);
+      setImageFiles([]);
+      setImagePreviews([]);
       setPage(1);
       await Promise.all([loadReviews(1), loadAvgRating()]);
       toast.success('Đánh giá của bạn đã được ghi nhận!');
@@ -138,13 +174,45 @@ export default function ProductReviews({ productId }: Props) {
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white"
           />
 
-          <div className="flex justify-end mt-2">
+          <div className="mt-2">
+            <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-500 hover:text-rose-500 transition-colors w-fit">
+              <FiImage size={14} />
+              <span>Thêm ảnh ({imageFiles.length}/5)</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                className="hidden"
+                onChange={handleImageChange}
+                disabled={submitting || uploadingImages}
+              />
+            </label>
+            {imagePreviews.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {imagePreviews.map((src, i) => (
+                  <div key={i} className="relative w-16 h-16">
+                    <img src={src} alt={`Ảnh ${i + 1}`} className="w-full h-full object-cover rounded-lg border border-gray-200" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      disabled={submitting || uploadingImages}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none hover:bg-red-600 disabled:opacity-50 transition-colors"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end mt-3">
             <button
               type="submit"
-              disabled={submitting || !comment.trim()}
+              disabled={submitting || uploadingImages || !comment.trim()}
               className="px-4 py-2 bg-rose-600 text-white text-sm rounded-lg hover:bg-rose-700 disabled:opacity-50 transition-colors"
             >
-              {submitting ? 'Đang gửi...' : 'Gửi đánh giá'}
+              {submitting ? 'Đang gửi...' : uploadingImages ? 'Đang upload ảnh...' : 'Gửi đánh giá'}
             </button>
           </div>
         </form>
@@ -201,6 +269,19 @@ export default function ProductReviews({ productId }: Props) {
                     </div>
                   </div>
                   <p className="mt-1.5 text-sm text-gray-600 leading-relaxed">{review.comment}</p>
+                  {review.imageUrls?.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {review.imageUrls.map((url, i) => (
+                        <img
+                          key={i}
+                          src={url}
+                          alt={`Ảnh ${i + 1}`}
+                          className="w-16 h-16 object-cover rounded-lg border border-gray-100 cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => window.open(url, '_blank')}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             );

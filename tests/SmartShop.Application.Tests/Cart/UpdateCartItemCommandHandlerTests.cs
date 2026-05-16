@@ -36,7 +36,7 @@ public class UpdateCartItemCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 1, 50m);
+        cart.AddItem(productId, "Test Product", "image.jpg", 1, 50m);
 
         var callCount = 0;
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default))
@@ -54,7 +54,7 @@ public class UpdateCartItemCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 1, 50m);
+        cart.AddItem(productId, "Test Product", "image.jpg", 1, 50m);
 
         var callCount = 0;
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default))

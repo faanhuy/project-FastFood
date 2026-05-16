@@ -397,3 +397,5 @@ tools/mcp-server/.env
 
 # Learning dashboard (local only)
 learning/
+#tool                                                                                                                        
+tools/backup-drive.ps1  

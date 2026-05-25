@@ -26,6 +26,16 @@ public class StoreRepository(ApplicationDbContext context) : IStoreRepository
             .ToListAsync(ct);
     }
 
+    public async Task<IEnumerable<Store>> GetAllAsync(CancellationToken ct = default)
+    {
+        return await context.Stores
+            .AsNoTracking()
+            .Include(s => s.Province)
+            .Include(s => s.Ward)
+            .OrderBy(s => s.Name)
+            .ToListAsync(ct);
+    }
+
     public async Task AddAsync(Store store, CancellationToken ct = default)
     {
         await context.Stores.AddAsync(store, ct);

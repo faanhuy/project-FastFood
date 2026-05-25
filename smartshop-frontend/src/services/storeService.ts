@@ -2,6 +2,7 @@ import api from './api';
 import type { ApiResponse } from '../types/auth';
 import type {
   Store,
+  AdminStore,
   StoreInventory,
   StockInfo,
   SizeStockInfo,
@@ -12,6 +13,11 @@ import type {
 export const storeService = {
   getStores: async (): Promise<Store[]> => {
     const { data } = await api.get<ApiResponse<Store[]>>('/stores');
+    return data.data ?? [];
+  },
+
+  getAdminStores: async (): Promise<AdminStore[]> => {
+    const { data } = await api.get<ApiResponse<AdminStore[]>>('/admin/stores');
     return data.data ?? [];
   },
 

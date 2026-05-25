@@ -8,6 +8,7 @@ using SmartShop.Application.Features.Inventory.Queries.GetLowStockProducts;
 using SmartShop.Application.Features.Inventory.Queries.GetStoreInventory;
 using SmartShop.Application.Features.Stores.Commands.CreateStore;
 using SmartShop.Application.Features.Stores.Commands.UpdateStore;
+using SmartShop.Application.Features.Stores.Queries.GetAllStoresAdmin;
 using SmartShop.Application.Features.Stores.Queries.GetStoreById;
 using SmartShop.Application.Features.Stores.Queries.GetStores;
 using SmartShop.Domain.Interfaces;
@@ -91,6 +92,15 @@ public class StoresController(
     }
 
     // ── Admin endpoints ───────────────────────────────────────────────────
+
+    /// <summary>Toàn bộ chi nhánh (kể cả inactive) — Admin only</summary>
+    [HttpGet("api/admin/stores")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse<List<AdminStoreDto>>>> GetAllStores(CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetAllStoresAdminQuery(), ct);
+        return Ok(result);
+    }
 
     /// <summary>Tạo chi nhánh mới (Admin only)</summary>
     [HttpPost("api/admin/stores")]

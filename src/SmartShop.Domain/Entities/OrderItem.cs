@@ -3,7 +3,7 @@ using SmartShop.Domain.Enums;
 
 namespace SmartShop.Domain.Entities;
 
-public class OrderItem : BaseEntity
+public class OrderItem : BaseAuditableEntity
 {
     public Guid OrderId { get; private set; }
     public CartItemType ItemType { get; private set; } = CartItemType.Product;

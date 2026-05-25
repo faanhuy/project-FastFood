@@ -26,18 +26,18 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import AdminLayout from '../components/AdminLayout';
-import { productService } from '../services/productService';
-import { orderService } from '../services/orderService';
-import { storeService } from '../services/storeService';
-import { resolveOrderStatus } from '../types/order';
+import AdminLayout from '../../components/AdminLayout';
+import { productService } from '../../services/productService';
+import { orderService } from '../../services/orderService';
+import { storeService } from '../../services/storeService';
+import { resolveOrderStatus } from '../../types/order';
 import {
   analyticsService,
   type RevenueSummaryDto,
   type RevenueByDateDto,
   type TopProductDto,
   type OrderStatusBreakdownDto,
-} from '../services/analyticsService';
+} from '../../services/analyticsService';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

@@ -61,7 +61,7 @@ export default function InventoryManagementPage() {
   const [completingReceipt, setCompletingReceipt] = useState(false);
   const [cancellingReceipt, setCancellingReceipt] = useState(false);
   const [editReceiptId, setEditReceiptId] = useState<string | null>(null);
-  const [collapsedSizeRows, setCollapsedSizeRows] = useState<Record<number, boolean>>({});
+  const [sizePopupIdx, setSizePopupIdx] = useState<number | null>(null);
   const [collapsedDetailProducts, setCollapsedDetailProducts] = useState<Record<string, boolean>>({});
 
   // Load stores on mount
@@ -265,7 +265,6 @@ export default function InventoryManagementPage() {
               setEditReceiptId(null);
               setCreateReceiptOpen(true);
               setReceiptItems([{ productId: '', productName: '', hasSizes: false, quantity: '', sizeEntries: [], notes: '' }]);
-              setCollapsedSizeRows({});
               setReceiptDate(new Date().toISOString().split('T')[0]);
               setReceiptNotes('');
             }}
@@ -474,7 +473,6 @@ export default function InventoryManagementPage() {
                                     }
                                   }
                                   setReceiptItems(rows);
-                                  setCollapsedSizeRows({});
                                   setCreateReceiptOpen(true);
                                 } catch {
                                   toast.error('Không tải được chi tiết phiếu.');
@@ -820,7 +818,6 @@ export default function InventoryManagementPage() {
                             const pid = e.target.value;
                             const prod = allProducts.find((p) => p.id === pid);
                             const hasSizes = prod?.hasSizes ?? false;
-                            setCollapsedSizeRows((prev) => ({ ...prev, [idx]: false }));
                             if (hasSizes && pid) {
                               try {
                                 const sizes = await sizeService.getProductSizes(pid);
@@ -865,7 +862,7 @@ export default function InventoryManagementPage() {
                           type="button"
                           onClick={() => {
                             setReceiptItems(items => items.filter((_, i) => i !== idx));
-                            setCollapsedSizeRows({});
+                            setSizePopupIdx(null);
                           }}
                           className="p-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
                           title="Xóa dòng"
@@ -874,103 +871,40 @@ export default function InventoryManagementPage() {
                         </button>
                       </div>
 
-                      {/* Size table — shown only for sized products */}
-                      {item.hasSizes && item.sizeEntries.length > 0 && (
-                        <div className="px-3 py-3 bg-white">
-                          <div className="mb-2 flex items-center justify-between gap-3">
-                            <button
-                              type="button"
-                              onClick={() => setCollapsedSizeRows((prev) => ({ ...prev, [idx]: !prev[idx] }))}
-                              className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1 py-1 text-left hover:bg-gray-50"
-                            >
-                              {collapsedSizeRows[idx] ? (
-                                <FiChevronRight size={14} className="shrink-0 text-gray-500" />
+                      {/* Size entry button — opens popup */}
+                      {item.hasSizes && item.productId && (
+                        <div className="px-3 py-2.5 bg-white border-t border-gray-100 flex items-center gap-3">
+                          {item.sizeEntries.length === 0 ? (
+                            <p className="text-xs text-orange-600">Sản phẩm này chưa có size master hợp lệ để nhập kho.</p>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setSizePopupIdx(idx)}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                                  item.sizeEntries.some(se => parseInt(se.quantity, 10) > 0)
+                                    ? 'border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100'
+                                    : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                                }`}
+                              >
+                                <FiLayers size={12} />
+                                Nhập theo size
+                              </button>
+                              {item.sizeEntries.some(se => parseInt(se.quantity, 10) > 0) ? (
+                                <span className="text-xs text-gray-500">
+                                  {item.sizeEntries.filter(se => parseInt(se.quantity, 10) > 0).length} size ·{' '}
+                                  <span className="font-semibold text-gray-800">
+                                    {item.sizeEntries.reduce((sum, se) => sum + (parseInt(se.quantity, 10) || 0), 0)} SP
+                                  </span>
+                                </span>
                               ) : (
-                                <FiChevronDown size={14} className="shrink-0 text-gray-500" />
+                                <span className="text-xs text-amber-600 flex items-center gap-1">
+                                  <FiAlertTriangle size={11} />
+                                  Chưa nhập số lượng
+                                </span>
                               )}
-                              <span className="min-w-0">
-                                <span className="block text-xs font-semibold text-gray-700">Nhập số lượng theo size</span>
-                                <span className="block truncate text-[11px] text-gray-500">Cần nhập ít nhất 1 size có số lượng lớn hơn 0.</span>
-                              </span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setCollapsedSizeRows((prev) => ({ ...prev, [idx]: !prev[idx] }))}
-                              className="rounded-md px-2 py-1 text-right text-[11px] text-gray-500 hover:bg-gray-50 shrink-0"
-                            >
-                              <span className="font-semibold text-gray-800">
-                                {item.sizeEntries.reduce((sum, se) => sum + (parseInt(se.quantity, 10) || 0), 0)}
-                              </span>
-                              <span className="ml-1">sản phẩm</span>
-                            </button>
-                          </div>
-
-                          {!collapsedSizeRows[idx] && (
-                            <div className="overflow-hidden rounded-lg border border-gray-200">
-                              <table className="w-full text-xs">
-                                <thead className="bg-gray-50 text-gray-500">
-                                  <tr>
-                                    <th className="px-3 py-2 text-left font-semibold">Size</th>
-                                    <th className="px-3 py-2 text-center font-semibold w-32">Số lượng</th>
-                                    <th className="px-3 py-2 text-right font-semibold hidden sm:table-cell">Trạng thái</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                  {item.sizeEntries.map((se, si) => {
-                                    const qty = parseInt(se.quantity, 10) || 0;
-                                    const hasQty = qty > 0;
-                                    return (
-                                      <tr key={se.sizeId} className={hasQty ? 'bg-rose-50/60' : 'bg-white hover:bg-gray-50'}>
-                                        <td className="px-3 py-2 font-semibold text-gray-800">{se.sizeLabel}</td>
-                                        <td className="px-3 py-2">
-                                          <input
-                                            type="number"
-                                            min={0}
-                                            value={se.quantity}
-                                            onChange={(e) => {
-                                              const val = e.target.value;
-                                              setReceiptItems(items => items.map((it, i) =>
-                                                i === idx
-                                                  ? { ...it, sizeEntries: it.sizeEntries.map((s, j) => j === si ? { ...s, quantity: val } : s) }
-                                                  : it,
-                                              ));
-                                            }}
-                                            placeholder="0"
-                                            className={`h-8 w-full rounded-md border px-2 text-center text-sm font-medium focus:outline-none focus:ring-1 focus:ring-rose-400 ${
-                                              hasQty ? 'border-rose-200 bg-white text-rose-700' : 'border-gray-200 bg-white text-gray-700'
-                                            }`}
-                                          />
-                                        </td>
-                                        <td className="px-3 py-2 text-right hidden sm:table-cell">
-                                          <span
-                                            className={`inline-flex min-w-20 justify-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                                              hasQty ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-500'
-                                            }`}
-                                          >
-                                            {hasQty ? 'Có nhập' : 'Bỏ qua'}
-                                          </span>
-                                        </td>
-                                      </tr>
-                                    );
-                                  })}
-                                </tbody>
-                              </table>
-                            </div>
+                            </>
                           )}
-
-                          {item.productId && item.sizeEntries.every(se => !se.quantity || parseInt(se.quantity) <= 0) && (
-                            <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
-                              <FiAlertTriangle size={11} />
-                              Vui lòng nhập số lượng cho ít nhất 1 size.
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Loading sizes indicator */}
-                      {item.hasSizes && item.sizeEntries.length === 0 && item.productId && (
-                        <div className="px-3 py-2 text-xs text-orange-600">
-                          Sản phẩm này chưa có size master hợp lệ để nhập kho.
                         </div>
                       )}
                     </div>
@@ -1045,6 +979,70 @@ export default function InventoryManagementPage() {
                 className="flex-1 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors disabled:opacity-50"
               >
                 {creatingReceipt ? 'Đang lưu...' : editReceiptId ? 'Cập nhật phiếu' : 'Tạo phiếu'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Size entry popup */}
+      {sizePopupIdx !== null && receiptItems[sizePopupIdx]?.hasSizes && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
+            <div className="flex items-center justify-between px-5 py-4 border-b">
+              <div>
+                <h4 className="text-sm font-semibold text-gray-800">Nhập số lượng theo size</h4>
+                <p className="text-xs text-gray-500 mt-0.5">{receiptItems[sizePopupIdx].productName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSizePopupIdx(null)}
+                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              >
+                <FiX size={15} />
+              </button>
+            </div>
+            <div className="px-5 py-4 space-y-2.5 max-h-72 overflow-y-auto">
+              {receiptItems[sizePopupIdx].sizeEntries.map((se, si) => {
+                const qty = parseInt(se.quantity, 10) || 0;
+                const hasQty = qty > 0;
+                return (
+                  <div key={se.sizeId} className="flex items-center gap-3">
+                    <span className="flex-1 text-sm font-medium text-gray-700">{se.sizeLabel}</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={se.quantity}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const popupIdx = sizePopupIdx;
+                        setReceiptItems(items => items.map((it, i) =>
+                          i === popupIdx
+                            ? { ...it, sizeEntries: it.sizeEntries.map((s, j) => j === si ? { ...s, quantity: val } : s) }
+                            : it,
+                        ));
+                      }}
+                      placeholder="0"
+                      className={`w-24 h-9 border rounded-lg px-3 text-center text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-400 ${
+                        hasQty ? 'border-rose-300 bg-rose-50 text-rose-700' : 'border-gray-200 text-gray-700'
+                      }`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex items-center justify-between px-5 py-3 border-t bg-gray-50 rounded-b-2xl">
+              <span className="text-xs text-gray-500">
+                Tổng:{' '}
+                <span className="font-semibold text-gray-800">
+                  {receiptItems[sizePopupIdx].sizeEntries.reduce((sum, se) => sum + (parseInt(se.quantity, 10) || 0), 0)} SP
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setSizePopupIdx(null)}
+                className="px-4 py-1.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors"
+              >
+                Xong
               </button>
             </div>
           </div>

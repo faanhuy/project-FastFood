@@ -1,20 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { categoryService, productService } from '../services/productService';
-import { sizeService } from '../services/sizeService';
-import { imageService } from '../services/imageService';
-import { getApiError } from '../utils/errorHandler';
-import { formatPrice } from '../utils/formatters';
-import { slugify } from '../utils/slugify';
-import type { BulkImportResult, CategoryDto, CreateProductRequest, ProductDto, UpdateProductRequest } from '../types/product';
-import type { SizeDto, SizeCategory } from '../types/size';
-import { SIZE_CATEGORY_LABELS } from '../types/size';
-import GenerateDescriptionButton from '../components/GenerateDescriptionButton';
-import AdminLayout from '../components/AdminLayout';
-import ImageUploadField from '../components/common/ImageUploadField';
-import Pagination from '../components/common/Pagination';
-import { getImageUrl } from '../utils/imageUrl';
+import { categoryService, productService } from '../../services/productService';
+import { sizeService } from '../../services/sizeService';
+import { imageService } from '../../services/imageService';
+import { getApiError } from '../../utils/errorHandler';
+import { formatPrice } from '../../utils/formatters';
+import { slugify } from '../../utils/slugify';
+import type { BulkImportResult, CategoryDto, CreateProductRequest, ProductDto, UpdateProductRequest } from '../../types/product';
+import type { SizeDto, SizeCategory } from '../../types/size';
+import { SIZE_CATEGORY_LABELS } from '../../types/size';
+import GenerateDescriptionButton from '../../components/GenerateDescriptionButton';
+import AdminLayout from '../../components/AdminLayout';
+import ImageUploadField from '../../components/common/ImageUploadField';
+import Pagination from '../../components/common/Pagination';
+import { getImageUrl } from '../../utils/imageUrl';
 
 const EMPTY_CREATE: CreateProductRequest = {
   name: '', description: '', price: 0, originalPrice: undefined,

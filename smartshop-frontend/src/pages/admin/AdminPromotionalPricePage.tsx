@@ -1,40 +1,46 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { FiEdit2, FiTrash2, FiPlus, FiX, FiCheck } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiPlus, FiX, FiCheck, FiLayers, FiAlertTriangle } from 'react-icons/fi';
 import AdminLayout from '../../components/AdminLayout';
 import { promotionService } from '../../services/promotionService';
 import { productService } from '../../services/productService';
 import { sizeService } from '../../services/sizeService';
+import { storeService } from '../../services/storeService';
 import type { PriceCampaignSummaryDto, PriceCampaignDto, CreatePriceCampaignRequest } from '../../types/promotion';
 import type { ProductDto } from '../../types/product';
 import type { ProductSize } from '../../types/size';
+import type { AdminStore } from '../../types/store';
 
 const RULE_TYPES = [
-  { value: 1, label: 'Giảm theo hệ số (Coefficient %)' },
+  { value: 1, label: 'Giảm theo % (Discount %)' },
   { value: 2, label: 'Giá cố định (Fixed Price)' },
 ];
 
-interface CampaignItemForm {
-  productId: string;
-  sizeId: string | null;
+interface SizeDiscountEntry {
+  sizeId: string;
+  sizeLabel: string;
   ruleType: number;
   discountValue: string;
 }
 
-const defaultForm = (): {
-  name: string;
-  startsAt: string;
-  endsAt: string;
-  appliesToAll: boolean;
-  storeIds: string[];
-  items: CampaignItemForm[];
-} => ({
+interface CampaignItemForm {
+  productId: string;
+  hasSizes: boolean;
+  // used when hasSizes=false:
+  sizeId: string | null;
+  ruleType: number;
+  discountValue: string;
+  // used when hasSizes=true:
+  sizeEntries: SizeDiscountEntry[];
+}
+
+const defaultForm = () => ({
   name: '',
   startsAt: '',
   endsAt: '',
   appliesToAll: true,
-  storeIds: [],
-  items: [],
+  storeIds: [] as string[],
+  items: [] as CampaignItemForm[],
 });
 
 export default function AdminPromotionalPricePage() {
@@ -47,7 +53,9 @@ export default function AdminPromotionalPricePage() {
   const [form, setForm] = useState(defaultForm());
 
   const [products, setProducts] = useState<ProductDto[]>([]);
+  const [stores, setStores] = useState<AdminStore[]>([]);
   const [itemSizes, setItemSizes] = useState<Record<number, ProductSize[]>>({});
+  const [sizePopupIdx, setSizePopupIdx] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadCampaigns = async () => {
@@ -65,6 +73,7 @@ export default function AdminPromotionalPricePage() {
   useEffect(() => {
     loadCampaigns();
     productService.getProducts({ pageSize: 200 }).then((r) => setProducts(r?.items ?? [])).catch(() => {});
+    storeService.getAdminStores().then(setStores).catch(() => {});
   }, []);
 
   const openCreate = () => {
@@ -78,20 +87,83 @@ export default function AdminPromotionalPricePage() {
     try {
       const dto: PriceCampaignDto = await promotionService.getPriceCampaignById(id);
       setEditingId(id);
+
+      // Group raw API items by productId
+      type RawEntry = { sizeId: string | null; ruleType: number; discountValue: number };
+      const productMap = new Map<string, RawEntry[]>();
+      for (const it of (dto.items ?? [])) {
+        const list = productMap.get(it.productId) ?? [];
+        list.push({ sizeId: it.sizeId, ruleType: it.ruleType, discountValue: it.discountValue });
+        productMap.set(it.productId, list);
+      }
+
+      const sizesMap: Record<number, ProductSize[]> = {};
+      const items: CampaignItemForm[] = [];
+      let itemIdx = 0;
+
+      for (const [productId, rawEntries] of productMap.entries()) {
+        const product = products.find((p) => p.id === productId);
+        const hasSizes = product?.hasSizes ?? rawEntries.some((e) => e.sizeId !== null);
+
+        if (!hasSizes) {
+          const e = rawEntries[0];
+          items.push({
+            productId,
+            hasSizes: false,
+            sizeId: e.sizeId,
+            ruleType: e.ruleType,
+            discountValue:
+              e.ruleType === 1
+                ? String(Math.round((1 - e.discountValue) * 10000) / 100)
+                : String(e.discountValue),
+            sizeEntries: [],
+          });
+        } else {
+          let activeSizes: ProductSize[] = [];
+          try {
+            const allSizes = await sizeService.getProductSizes(productId);
+            activeSizes = allSizes.filter((s) => s.isActive);
+            sizesMap[itemIdx] = activeSizes;
+          } catch {
+            sizesMap[itemIdx] = [];
+          }
+          const existingBySizeId = new Map(
+            rawEntries.filter((e) => e.sizeId !== null).map((e) => [e.sizeId!, e]),
+          );
+          const sizeEntries: SizeDiscountEntry[] = activeSizes.map((s) => {
+            const existing = existingBySizeId.get(s.id);
+            return {
+              sizeId: s.id,
+              sizeLabel: s.sizeLabel,
+              ruleType: existing?.ruleType ?? 1,
+              discountValue: existing
+                ? existing.ruleType === 1
+                  ? String(Math.round((1 - existing.discountValue) * 10000) / 100)
+                  : String(existing.discountValue)
+                : '',
+            };
+          });
+          items.push({
+            productId,
+            hasSizes: true,
+            sizeId: null,
+            ruleType: 1,
+            discountValue: '',
+            sizeEntries,
+          });
+        }
+        itemIdx++;
+      }
+
       setForm({
         name: dto.name,
         startsAt: dto.startsAt.slice(0, 16),
         endsAt: dto.endsAt.slice(0, 16),
         appliesToAll: dto.appliesToAll,
         storeIds: dto.stores?.map((s) => s.id) ?? [],
-        items: dto.items?.map((it) => ({
-          productId: it.productId,
-          sizeId: it.sizeId,
-          ruleType: it.ruleType,
-          discountValue: String(it.discountValue),
-        })) ?? [],
+        items,
       });
-      setItemSizes({});
+      setItemSizes(sizesMap);
       setShowForm(true);
     } catch {
       toast.error('Không tải được campaign.');
@@ -112,10 +184,39 @@ export default function AdminPromotionalPricePage() {
     }
   };
 
-  const addItem = () => {
+  const addItem = async () => {
+    const defaultProduct = products[0];
+    const hasSizes = defaultProduct?.hasSizes ?? false;
+    const newIdx = form.items.length;
+    let sizeEntries: SizeDiscountEntry[] = [];
+    if (hasSizes && defaultProduct) {
+      try {
+        const sizes = await sizeService.getProductSizes(defaultProduct.id);
+        const activeSizes = sizes.filter((s) => s.isActive);
+        sizeEntries = activeSizes.map((s) => ({
+          sizeId: s.id,
+          sizeLabel: s.sizeLabel,
+          ruleType: 1,
+          discountValue: '',
+        }));
+        setItemSizes((prev) => ({ ...prev, [newIdx]: activeSizes }));
+      } catch {
+        setItemSizes((prev) => ({ ...prev, [newIdx]: [] }));
+      }
+    }
     setForm((prev) => ({
       ...prev,
-      items: [...prev.items, { productId: products[0]?.id ?? '', sizeId: null, ruleType: 1, discountValue: '' }],
+      items: [
+        ...prev.items,
+        {
+          productId: defaultProduct?.id ?? '',
+          hasSizes,
+          sizeId: null,
+          ruleType: 1,
+          discountValue: '',
+          sizeEntries,
+        },
+      ],
     }));
   };
 
@@ -131,23 +232,53 @@ export default function AdminPromotionalPricePage() {
   const updateItem = (idx: number, patch: Partial<CampaignItemForm>) => {
     setForm((prev) => ({
       ...prev,
-      items: prev.items.map((it, i) => i === idx ? { ...it, ...patch } : it),
+      items: prev.items.map((it, i) => (i === idx ? { ...it, ...patch } : it)),
+    }));
+  };
+
+  const updateSizeEntry = (itemIdx: number, sizeIdx: number, patch: Partial<SizeDiscountEntry>) => {
+    setForm((prev) => ({
+      ...prev,
+      items: prev.items.map((it, i) =>
+        i === itemIdx
+          ? {
+              ...it,
+              sizeEntries: it.sizeEntries.map((se, j) => (j === sizeIdx ? { ...se, ...patch } : se)),
+            }
+          : it,
+      ),
     }));
   };
 
   const handleProductChange = async (idx: number, productId: string) => {
-    updateItem(idx, { productId, sizeId: null });
     const p = products.find((pr) => pr.id === productId);
-    if (p?.hasSizes) {
+    const hasSizes = p?.hasSizes ?? false;
+    let sizeEntries: SizeDiscountEntry[] = [];
+    if (hasSizes && productId) {
       try {
         const sizes = await sizeService.getProductSizes(productId);
-        setItemSizes((prev) => ({ ...prev, [idx]: sizes.filter((s) => s.isActive) }));
+        const activeSizes = sizes.filter((s) => s.isActive);
+        sizeEntries = activeSizes.map((s) => ({
+          sizeId: s.id,
+          sizeLabel: s.sizeLabel,
+          ruleType: 1,
+          discountValue: '',
+        }));
+        setItemSizes((prev) => ({ ...prev, [idx]: activeSizes }));
       } catch {
         setItemSizes((prev) => ({ ...prev, [idx]: [] }));
       }
     } else {
       setItemSizes((prev) => ({ ...prev, [idx]: [] }));
     }
+    setForm((prev) => ({
+      ...prev,
+      items: prev.items.map((it, i) =>
+        i === idx
+          ? { ...it, productId, hasSizes, sizeId: null, ruleType: 1, discountValue: '', sizeEntries }
+          : it,
+      ),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -156,19 +287,38 @@ export default function AdminPromotionalPricePage() {
       toast.error('Vui lòng điền đầy đủ tên, ngày bắt đầu và ngày kết thúc.');
       return;
     }
+    const flatItems: CreatePriceCampaignRequest['items'] = [];
+    for (const it of form.items) {
+      if (!it.hasSizes) {
+        const raw = parseFloat(it.discountValue) || 0;
+        flatItems.push({
+          productId: it.productId,
+          sizeId: it.sizeId || null,
+          ruleType: it.ruleType,
+          discountValue: it.ruleType === 1 ? (100 - raw) / 100 : raw,
+        });
+      } else {
+        for (const se of it.sizeEntries) {
+          if (se.discountValue !== '' && parseFloat(se.discountValue) > 0) {
+            const raw = parseFloat(se.discountValue) || 0;
+            flatItems.push({
+              productId: it.productId,
+              sizeId: se.sizeId,
+              ruleType: se.ruleType,
+              discountValue: se.ruleType === 1 ? (100 - raw) / 100 : raw,
+            });
+          }
+        }
+      }
+    }
     const body: CreatePriceCampaignRequest = {
-      id: editingId ?? '', // API sẽ ignore trường này khi tạo mới
+      id: editingId ?? '',
       name: form.name.trim(),
       startsAt: new Date(form.startsAt).toISOString(),
       endsAt: new Date(form.endsAt).toISOString(),
       appliesToAll: form.appliesToAll,
       storeIds: form.appliesToAll ? [] : form.storeIds,
-      items: form.items.map((it) => ({
-        productId: it.productId,
-        sizeId: it.sizeId || null,
-        ruleType: it.ruleType,
-        discountValue: parseFloat(it.discountValue) || 0,
-      })),
+      items: flatItems,
     };
     setSaving(true);
     try {
@@ -233,15 +383,21 @@ export default function AdminPromotionalPricePage() {
                     {c.appliesToAll ? (
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Tất cả</span>
                     ) : (
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{c.storeCount} chi nhánh</span>
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                        {c.storeCount} chi nhánh
+                      </span>
                     )}
                   </td>
                   <td className="px-5 py-3 text-center text-gray-600">{c.itemCount}</td>
                   <td className="px-5 py-3 text-center">
                     {c.isActive ? (
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Hoạt động</span>
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                        Hoạt động
+                      </span>
                     ) : (
-                      <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Không hoạt động</span>
+                      <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                        Không hoạt động
+                      </span>
                     )}
                   </td>
                   <td className="px-5 py-3 text-right">
@@ -278,7 +434,10 @@ export default function AdminPromotionalPricePage() {
               <h3 className="text-base font-semibold text-gray-800">
                 {editingId ? 'Sửa campaign' : 'Tạo campaign mới'}
               </h3>
-              <button onClick={() => setShowForm(false)} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100">
+              <button
+                onClick={() => setShowForm(false)}
+                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100"
+              >
                 <FiX size={16} />
               </button>
             </div>
@@ -325,16 +484,58 @@ export default function AdminPromotionalPricePage() {
               </div>
 
               {/* Scope */}
-              <div>
+              <div className="space-y-3">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={form.appliesToAll}
-                    onChange={(e) => setForm((p) => ({ ...p, appliesToAll: e.target.checked }))}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, appliesToAll: e.target.checked, storeIds: [] }))
+                    }
                     className="accent-rose-600"
                   />
                   Áp dụng cho tất cả chi nhánh
                 </label>
+                {!form.appliesToAll && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-2">Chọn chi nhánh áp dụng:</p>
+                    {stores.length === 0 ? (
+                      <p className="text-xs text-gray-400">Không có chi nhánh nào.</p>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-1.5 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50">
+                        {stores.map((s) => {
+                          const checked = form.storeIds.includes(s.id);
+                          return (
+                            <label
+                              key={s.id}
+                              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer text-xs transition-colors ${
+                                checked ? 'bg-rose-50 text-rose-700 font-medium' : 'hover:bg-white text-gray-700'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) =>
+                                  setForm((p) => ({
+                                    ...p,
+                                    storeIds: e.target.checked
+                                      ? [...p.storeIds, s.id]
+                                      : p.storeIds.filter((id) => id !== s.id),
+                                  }))
+                                }
+                                className="accent-rose-600 shrink-0"
+                              />
+                              <span className="truncate">{s.name}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {form.storeIds.length === 0 && (
+                      <p className="text-xs text-amber-600 mt-1">Chưa chọn chi nhánh nào.</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Items */}
@@ -354,60 +555,104 @@ export default function AdminPromotionalPricePage() {
                   <p className="text-sm text-gray-400 py-2">Chưa có item nào. Nhấn "Thêm dòng" để thêm.</p>
                 ) : (
                   <div className="space-y-2">
-                    {form.items.map((it, idx) => {
-                      const sizes = itemSizes[idx] ?? [];
-                      const selectedProduct = products.find((p) => p.id === it.productId);
-                      return (
-                        <div key={idx} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                    {form.items.map((it, idx) => (
+                      <div key={idx} className="border border-gray-200 rounded-xl overflow-hidden">
+                        {/* Product selector row */}
+                        <div className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 border-b border-gray-100">
                           <select
                             value={it.productId}
                             onChange={(e) => handleProductChange(idx, e.target.value)}
-                            className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400 bg-white"
+                            className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-rose-400 focus:outline-none bg-white"
                           >
                             {products.map((p) => (
-                              <option key={p.id} value={p.id}>{p.name}</option>
+                              <option key={p.id} value={p.id}>
+                                {p.name}{p.hasSizes ? ' (có size)' : ''}
+                              </option>
                             ))}
                           </select>
-                          {(selectedProduct?.hasSizes || sizes.length > 0) && (
-                            <select
-                              value={it.sizeId ?? ''}
-                              onChange={(e) => updateItem(idx, { sizeId: e.target.value || null })}
-                              className="w-24 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400 bg-white"
-                            >
-                              <option value="">Tất cả size</option>
-                              {sizes.map((s) => (
-                                <option key={s.id} value={s.id}>{s.sizeLabel}</option>
-                              ))}
-                            </select>
+                          {!it.hasSizes && (
+                            <>
+                              <select
+                                value={it.ruleType}
+                                onChange={(e) => updateItem(idx, { ruleType: Number(e.target.value) })}
+                                className="w-36 border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400 bg-white"
+                              >
+                                {RULE_TYPES.map((r) => (
+                                  <option key={r.value} value={r.value}>{r.label}</option>
+                                ))}
+                              </select>
+                              <div className="relative w-24">
+                                <input
+                                  type="number"
+                                  step="1"
+                                  min="0"
+                                  max={it.ruleType === 1 ? '99' : undefined}
+                                  value={it.discountValue}
+                                  onChange={(e) => updateItem(idx, { discountValue: e.target.value })}
+                                  className="w-full border border-gray-200 rounded-lg px-2 py-1.5 pr-6 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400"
+                                  placeholder={it.ruleType === 1 ? 'VD: 10' : 'VD: 50000'}
+                                />
+                                {it.ruleType === 1 && (
+                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                                    %
+                                  </span>
+                                )}
+                              </div>
+                            </>
                           )}
-                          <select
-                            value={it.ruleType}
-                            onChange={(e) => updateItem(idx, { ruleType: Number(e.target.value) })}
-                            className="w-36 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400 bg-white"
-                          >
-                            {RULE_TYPES.map((r) => (
-                              <option key={r.value} value={r.value}>{r.label}</option>
-                            ))}
-                          </select>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={it.discountValue}
-                            onChange={(e) => updateItem(idx, { discountValue: e.target.value })}
-                            className="w-24 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400"
-                            placeholder={it.ruleType === 1 ? 'Hệ số (vd: 0.8)' : 'Giá (vd: 50000)'}
-                          />
                           <button
                             type="button"
                             onClick={() => removeItem(idx)}
-                            className="p-1 rounded text-gray-400 hover:text-red-500"
+                            className="p-1 rounded text-gray-400 hover:text-red-500 shrink-0"
                           >
                             <FiX size={14} />
                           </button>
                         </div>
-                      );
-                    })}
+
+                        {/* Size price button — for products with sizes */}
+                        {it.hasSizes && it.productId && (
+                          <div className="px-3 py-2.5 bg-white flex items-center gap-3">
+                            {it.sizeEntries.length === 0 ? (
+                              <p className="text-xs text-orange-600">Sản phẩm này chưa có size master hợp lệ.</p>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => setSizePopupIdx(idx)}
+                                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                                    it.sizeEntries.some(
+                                      (se) => se.discountValue !== '' && parseFloat(se.discountValue) > 0,
+                                    )
+                                      ? 'border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100'
+                                      : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  <FiLayers size={12} />
+                                  Cài giá theo size
+                                </button>
+                                {it.sizeEntries.some(
+                                  (se) => se.discountValue !== '' && parseFloat(se.discountValue) > 0,
+                                ) ? (
+                                  <span className="text-xs text-gray-500">
+                                    {
+                                      it.sizeEntries.filter(
+                                        (se) => se.discountValue !== '' && parseFloat(se.discountValue) > 0,
+                                      ).length
+                                    }{' '}
+                                    size đã cài giá
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-amber-600 flex items-center gap-1">
+                                    <FiAlertTriangle size={11} />
+                                    Chưa cài giá cho size nào
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -434,6 +679,94 @@ export default function AdminPromotionalPricePage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Size price popup */}
+      {sizePopupIdx !== null && form.items[sizePopupIdx]?.hasSizes && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
+            <div className="flex items-center justify-between px-5 py-4 border-b">
+              <div>
+                <h4 className="text-sm font-semibold text-gray-800">Cài giá theo size</h4>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {products.find((p) => p.id === form.items[sizePopupIdx!].productId)?.name ?? ''}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSizePopupIdx(null)}
+                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              >
+                <FiX size={15} />
+              </button>
+            </div>
+
+            <div className="px-5 py-4 space-y-3 max-h-72 overflow-y-auto">
+              {form.items[sizePopupIdx!].sizeEntries.map((se, si) => {
+                const hasValue = se.discountValue !== '' && parseFloat(se.discountValue) > 0;
+                return (
+                  <div
+                    key={se.sizeId}
+                    className={`rounded-lg border p-2.5 transition-colors ${
+                      hasValue ? 'border-rose-200 bg-rose-50/50' : 'border-gray-200 bg-white'
+                    }`}
+                  >
+                    <p className="text-xs font-semibold text-gray-800 mb-2">{se.sizeLabel}</p>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={se.ruleType}
+                        onChange={(e) => updateSizeEntry(sizePopupIdx!, si, { ruleType: Number(e.target.value) })}
+                        className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400 bg-white"
+                      >
+                        {RULE_TYPES.map((r) => (
+                          <option key={r.value} value={r.value}>{r.label}</option>
+                        ))}
+                      </select>
+                      <div className="relative w-24">
+                        <input
+                          type="number"
+                          step="1"
+                          min="0"
+                          max={se.ruleType === 1 ? '99' : undefined}
+                          value={se.discountValue}
+                          onChange={(e) =>
+                            updateSizeEntry(sizePopupIdx!, si, { discountValue: e.target.value })
+                          }
+                          placeholder={se.ruleType === 1 ? 'VD: 10' : 'VD: 50000'}
+                          className="w-full border border-gray-200 rounded-lg px-2 py-1.5 pr-6 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400"
+                        />
+                        {se.ruleType === 1 && (
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                            %
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-between px-5 py-3 border-t bg-gray-50 rounded-b-2xl">
+              <span className="text-xs text-gray-500">
+                {
+                  form.items[sizePopupIdx!].sizeEntries.filter(
+                    (se) => se.discountValue !== '' && parseFloat(se.discountValue) > 0,
+                  ).length
+                }{' '}
+                /{' '}
+                {form.items[sizePopupIdx!].sizeEntries.length} size đã cài giá
+              </span>
+              <button
+                type="button"
+                onClick={() => setSizePopupIdx(null)}
+                className="px-4 py-1.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors"
+              >
+                Xong
+              </button>
+            </div>
           </div>
         </div>
       )}

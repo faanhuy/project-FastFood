@@ -11,6 +11,19 @@ export interface Store {
   street?: string;
 }
 
+export interface AdminStore {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  isActive: boolean;
+  street?: string;
+  provinceId?: number;
+  wardId?: number;
+  provinceName?: string;
+  wardName?: string;
+}
+
 export interface CreateStoreRequest {
   name: string;
   address: string;

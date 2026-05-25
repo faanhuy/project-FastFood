@@ -17,8 +17,8 @@ public class PriceCampaignItem
         Guid campaignId, Guid productId, Guid? sizeId,
         PriceRuleType ruleType, decimal discountValue)
     {
-        if (ruleType == PriceRuleType.Coefficient && (discountValue <= 0 || discountValue > 10))
-            throw new ArgumentException("Coefficient phải nằm trong khoảng (0, 10].", nameof(discountValue));
+        if (ruleType == PriceRuleType.Coefficient && (discountValue <= 0 || discountValue > 100))
+            throw new ArgumentException("Coefficient phải nằm trong khoảng (0, 100].", nameof(discountValue));
 
         if (ruleType == PriceRuleType.FixedPrice && discountValue < 0)
             throw new ArgumentException("FixedPrice không được âm.", nameof(discountValue));

@@ -20,5 +20,7 @@ public class ChatMessageConfiguration : IEntityTypeConfiguration<ChatMessage>
 
         builder.Property(m => m.ChatSessionId)
             .IsRequired();
+
+        builder.HasIndex(m => m.ChatSessionId);
     }
 }

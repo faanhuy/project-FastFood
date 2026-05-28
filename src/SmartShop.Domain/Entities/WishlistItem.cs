@@ -4,16 +4,15 @@ namespace SmartShop.Domain.Entities;
 
 public class WishlistItem : BaseAuditableEntity
 {
-    public string UserId { get; private set; } = string.Empty;
+    public Guid UserId { get; private set; }
     public Guid ProductId { get; private set; }
 
     public Product? Product { get; private set; }
 
     private WishlistItem() { }
 
-    public static WishlistItem Create(string userId, Guid productId)
+    public static WishlistItem Create(Guid userId, Guid productId)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
         return new WishlistItem
         {
             UserId = userId,

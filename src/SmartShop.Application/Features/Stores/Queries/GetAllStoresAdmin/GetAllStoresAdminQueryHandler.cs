@@ -12,7 +12,7 @@ public class GetAllStoresAdminQueryHandler(IStoreRepository storeRepository)
         var stores = await storeRepository.GetAllAsync(cancellationToken);
 
         var dtos = stores.Select(s => new AdminStoreDto(
-            s.Id, s.Name, s.Address, s.Phone, s.IsActive,
+            s.Id, s.Name, s.Phone, s.IsActive,
             s.Street, s.ProvinceId, s.WardId,
             s.Province?.Name, s.Ward?.Name)).ToList();
 

@@ -20,6 +20,13 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
         builder.Property(e => e.IsApproved)
             .HasDefaultValue(false);
 
+        // Composite unique index (UserId, ProductId) - one review per user per product
+        builder.HasIndex(e => new { e.UserId, e.ProductId })
+            .IsUnique();
+
+        // Composite index for queries filtering by ProductId and IsApproved
+        builder.HasIndex(e => new { e.ProductId, e.IsApproved });
+
         // many:1 Review → User (restrict: preserve reviews when user deleted)
         // Product → Reviews relationship is configured in ProductConfiguration
         builder.HasOne(e => e.User)

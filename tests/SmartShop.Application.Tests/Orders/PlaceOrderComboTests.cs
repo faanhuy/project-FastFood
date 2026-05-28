@@ -54,15 +54,15 @@ public class PlaceOrderComboTests
 
     private void SetupActiveStore()
     {
-        var store = Store.Create("Store", "Addr", "123");
+        var store = Store.Create("Store", "0901234567");
         _storeRepo.Setup(r => r.GetByIdAsync(_storeId, default)).ReturnsAsync(store);
     }
 
     private void SetupDefaultAddress()
     {
         var address = UserAddress.Create(
-            Guid.NewGuid().ToString(), "Home", "Test User", "0901234567",
-            "123 Main St", null, "Q1", "TP.HCM");
+            Guid.NewGuid(), "Home", "Test User", "0901234567",
+            "123 Main St", null, null);
         _userAddressRepo.Setup(r => r.GetByIdAsync(_addressId, default)).ReturnsAsync(address);
     }
 
@@ -326,7 +326,7 @@ public class PlaceOrderComboTests
         var cart = CartEntity.Create(userId);
         cart.AddItem(productId, "Product", null, 1, 50m);
 
-        var store = Store.Create("Store", "Addr", "123");
+        var store = Store.Create("Store", "0901234567");
         store.Deactivate();
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);

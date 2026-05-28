@@ -9,7 +9,6 @@ public record GetAllStoresAdminQuery : IRequest<ApiResponse<List<AdminStoreDto>>
 public record AdminStoreDto(
     Guid Id,
     string Name,
-    string Address,
     string Phone,
     bool IsActive,
     string? Street = null,

@@ -1,0 +1,17 @@
+{
+  "addToCartSuccess": "Added to cart",
+  "removeFromCartSuccess": "Removed from cart",
+  "addToWishlistSuccess": "Added to wishlist",
+  "removeFromWishlistSuccess": "Removed from wishlist",
+  "orderPlacedSuccess": "Order placed successfully",
+  "orderCancelledSuccess": "Order cancelled",
+  "returnRequestSuccess": "Return request submitted",
+  "profileUpdatedSuccess": "Profile updated",
+  "addressAddedSuccess": "Address added",
+  "addressUpdatedSuccess": "Address updated",
+  "addressDeletedSuccess": "Address deleted",
+  "reviewSubmittedSuccess": "Review submitted",
+  "couponAppliedSuccess": "Coupon applied",
+  "couponInvalid": "Invalid coupon code",
+  "networkError": "Network error. Please try again"
+}

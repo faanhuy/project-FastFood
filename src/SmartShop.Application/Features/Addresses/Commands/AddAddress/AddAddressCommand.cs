@@ -9,20 +9,14 @@ public record AddAddressRequest(
     string RecipientName,
     string Phone,
     string Street,
-    string? Ward,
-    string District,
-    string City,
     int? ProvinceId = null,
     int? WardId = null);
 
 public record AddAddressCommand(
-    string UserId,
+    Guid UserId,
     string Label,
     string RecipientName,
     string Phone,
     string Street,
-    string? Ward,
-    string District,
-    string City,
     int? ProvinceId = null,
     int? WardId = null) : IRequest<ApiResponse<AddressDto>>;

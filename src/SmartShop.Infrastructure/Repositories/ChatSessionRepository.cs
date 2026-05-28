@@ -7,11 +7,11 @@ namespace SmartShop.Infrastructure.Repositories;
 
 public class ChatSessionRepository(ApplicationDbContext db) : IChatSessionRepository
 {
-    public async Task<ChatSession?> GetBySessionIdAsync(Guid sessionId, CancellationToken ct = default)
+    public async Task<ChatSession?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         return await db.ChatSessions
             .Include(s => s.Messages)
-            .FirstOrDefaultAsync(s => s.SessionId == sessionId, ct);
+            .FirstOrDefaultAsync(s => s.Id == id, ct);
     }
 
     public async Task AddAsync(ChatSession session, CancellationToken ct = default)

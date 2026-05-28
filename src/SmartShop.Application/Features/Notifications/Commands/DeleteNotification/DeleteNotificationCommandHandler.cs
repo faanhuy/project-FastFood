@@ -14,7 +14,7 @@ public class DeleteNotificationCommandHandler(
 {
     public async Task<ApiResponse<bool>> Handle(DeleteNotificationCommand request, CancellationToken cancellationToken)
     {
-        var userId = currentUserService.UserId;
+        var userId = Guid.Parse(currentUserService.UserId);
 
         if (request.NotificationId.HasValue)
         {

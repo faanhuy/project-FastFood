@@ -52,15 +52,15 @@ public class PlaceOrderSizeInventoryTests
 
     private void SetupActiveStore()
     {
-        var store = Store.Create("Store", "Addr", "123");
+        var store = Store.Create("Store", "0901234567");
         _storeRepo.Setup(r => r.GetByIdAsync(_storeId, default)).ReturnsAsync(store);
     }
 
     private void SetupDefaultAddress()
     {
         var address = UserAddress.Create(
-            Guid.NewGuid().ToString(), "Home", "Test User", "0901234567",
-            "123 Main St", null, "Q1", "TP.HCM");
+            Guid.NewGuid(), "Home", "Test User", "0901234567",
+            "123 Main St", null, null);
         _userAddressRepo.Setup(r => r.GetByIdAsync(_addressId, default)).ReturnsAsync(address);
     }
 

@@ -10,12 +10,6 @@ public class ChatSessionConfiguration : IEntityTypeConfiguration<ChatSession>
     {
         builder.HasKey(s => s.Id);
 
-        builder.Property(s => s.SessionId)
-            .IsRequired();
-
-        builder.HasIndex(s => s.SessionId)
-            .IsUnique();
-
         builder.Property(s => s.UserId)
             .IsRequired(false);
 

@@ -47,20 +47,20 @@ public class ApproveReturnCommandHandler(
 
         returnRequestRepository.Update(returnRequest);
 
-        var userId = returnRequest.UserId.ToString();
+        var userIdString = returnRequest.UserId.ToString();
         var orderCode = order.Id.ToString()[..8].ToUpper();
         var refundFormatted = returnRequest.RefundAmount.ToString("N0");
         var title = "Yêu cầu trả hàng được duyệt";
         var message = $"Đơn hàng #{orderCode}: Yêu cầu trả hàng đã được duyệt. Bạn sẽ nhận hoàn tiền {refundFormatted}đ.";
 
-        var notification = Notification.Create(userId, title, message, order.Id);
+        var notification = Notification.Create(returnRequest.UserId, title, message, order.Id);
         await notificationRepository.AddAsync(notification, cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         try
         {
-            await hubService.SendToUserAsync(userId, "ReturnRequestUpdated", new
+            await hubService.SendToUserAsync(userIdString, "ReturnRequestUpdated", new
             {
                 NotificationId = notification.Id,
                 Title = title,

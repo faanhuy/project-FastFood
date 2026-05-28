@@ -2,7 +2,7 @@ using SmartShop.Domain.Common;
 
 namespace SmartShop.Domain.Entities;
 
-public class StockReceiptItem : BaseAuditableEntity
+public class StockReceiptItem : BaseEntity
 {
     public Guid StockReceiptId { get; private set; }
     public StockReceipt StockReceipt { get; private set; } = null!;

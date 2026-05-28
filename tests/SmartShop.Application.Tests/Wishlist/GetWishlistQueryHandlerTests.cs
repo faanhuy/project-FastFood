@@ -13,11 +13,12 @@ public class GetWishlistQueryHandlerTests
     private readonly Mock<IWishlistRepository> _wishlistRepo = new();
     private readonly Mock<ICurrentUserService> _currentUser = new();
 
-    private static readonly string UserId = Guid.NewGuid().ToString();
+    private static readonly Guid UserId = Guid.NewGuid();
+    private static readonly string UserIdString = UserId.ToString();
 
     public GetWishlistQueryHandlerTests()
     {
-        _currentUser.Setup(s => s.UserId).Returns(UserId);
+        _currentUser.Setup(s => s.UserId).Returns(UserIdString);
     }
 
     private GetWishlistQueryHandler CreateHandler() =>

@@ -8,7 +8,6 @@ public record GetStoresQuery : IRequest<ApiResponse<List<StoreDto>>>;
 public record StoreDto(
     Guid Id,
     string Name,
-    string Address,
     string Phone,
     string? Street = null,
     int? ProvinceId = null,

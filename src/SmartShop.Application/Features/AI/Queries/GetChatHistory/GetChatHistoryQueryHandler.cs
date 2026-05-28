@@ -9,7 +9,7 @@ public class GetChatHistoryQueryHandler(IChatSessionRepository chatSessionRepo)
 {
     public async Task<IReadOnlyList<ChatMessageDto>> Handle(GetChatHistoryQuery query, CancellationToken ct)
     {
-        var session = await chatSessionRepo.GetBySessionIdAsync(query.SessionId, ct)
+        var session = await chatSessionRepo.GetByIdAsync(query.SessionId, ct)
             ?? throw new NotFoundException("ChatSession", query.SessionId);
 
         return session.Messages

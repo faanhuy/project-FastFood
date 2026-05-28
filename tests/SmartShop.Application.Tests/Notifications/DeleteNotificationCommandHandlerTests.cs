@@ -16,18 +16,19 @@ public class DeleteNotificationCommandHandlerTests
     private readonly Mock<IUnitOfWork> _uow = new();
     private readonly Mock<ICurrentUserService> _currentUser = new();
 
-    private static readonly string UserId = Guid.NewGuid().ToString();
+    private static readonly Guid UserId = Guid.NewGuid();
+    private static readonly string UserIdString = UserId.ToString();
 
     public DeleteNotificationCommandHandlerTests()
     {
-        _currentUser.Setup(s => s.UserId).Returns(UserId);
+        _currentUser.Setup(s => s.UserId).Returns(UserIdString);
         _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
     }
 
     private DeleteNotificationCommandHandler CreateHandler() =>
         new(_notificationRepo.Object, _uow.Object, _currentUser.Object);
 
-    private static Notification CreateNotification(string userId) =>
+    private static Notification CreateNotification(Guid userId) =>
         Notification.Create(userId, "Thong bao", "Noi dung thong bao");
 
     // ---------------------------------------------------------------
@@ -80,7 +81,7 @@ public class DeleteNotificationCommandHandlerTests
     [Fact]
     public async Task Handle_SingleNotificationId_DifferentOwner_ThrowsUnauthorizedException()
     {
-        var otherUserId = Guid.NewGuid().ToString();
+        var otherUserId = Guid.NewGuid();
         var notification = CreateNotification(otherUserId);
         var notificationId = notification.Id;
 
@@ -95,7 +96,7 @@ public class DeleteNotificationCommandHandlerTests
     [Fact]
     public async Task Handle_SingleNotificationId_DifferentOwner_DoesNotDeleteOrSave()
     {
-        var otherUserId = Guid.NewGuid().ToString();
+        var otherUserId = Guid.NewGuid();
         var notification = CreateNotification(otherUserId);
         var notificationId = notification.Id;
 

@@ -16,10 +16,6 @@ public class StoreConfiguration : IEntityTypeConfiguration<Store>
             .IsRequired()
             .HasMaxLength(100);
 
-        builder.Property(e => e.Address)
-            .IsRequired()
-            .HasMaxLength(500);
-
         builder.Property(e => e.Phone)
             .IsRequired()
             .HasMaxLength(20);

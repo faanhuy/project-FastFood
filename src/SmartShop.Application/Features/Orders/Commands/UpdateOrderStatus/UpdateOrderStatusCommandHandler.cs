@@ -54,7 +54,7 @@ public class UpdateOrderStatusCommandHandler(
         {
             await mediator.Publish(new OrderStatusChangedEvent(
                 OrderId: order.Id,
-                UserId: user.Id.ToString(),
+                UserId: user.Id,
                 UserEmail: user.Email,
                 UserName: $"{user.FirstName} {user.LastName}".Trim(),
                 NewStatus: order.Status.ToString()), cancellationToken);
@@ -66,7 +66,7 @@ public class UpdateOrderStatusCommandHandler(
             UserId          = order.UserId,
             Status          = order.Status.ToString(),
             TotalAmount     = order.TotalAmount,
-            ShippingAddress = order.ShippingAddress,
+            ShippingAddress = string.Join(", ", new[] { order.ShippingStreet, order.ShippingWard?.Name, order.ShippingProvince?.Name }.Where(s => !string.IsNullOrWhiteSpace(s))),
             Notes           = order.Notes,
             PaymentMethod   = order.PaymentMethod.ToString(),
             PaymentStatus   = order.PaymentStatus.ToString(),

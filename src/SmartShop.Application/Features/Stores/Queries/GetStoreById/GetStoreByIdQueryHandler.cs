@@ -15,7 +15,7 @@ public class GetStoreByIdQueryHandler(IStoreRepository storeRepository)
             ?? throw new NotFoundException("Store", request.Id);
 
         return ApiResponse<StoreDto>.Ok(new StoreDto(
-            store.Id, store.Name, store.Address, store.Phone,
+            store.Id, store.Name, store.Phone,
             store.Street, store.ProvinceId, store.WardId,
             store.Province?.Name, store.Ward?.Name));
     }

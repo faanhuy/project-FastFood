@@ -6,14 +6,11 @@ public class UserAddress : BaseAuditableEntity
 {
     private UserAddress() { }
 
-    public string UserId { get; private set; } = string.Empty;
+    public Guid UserId { get; private set; }
     public string Label { get; private set; } = string.Empty;
     public string RecipientName { get; private set; } = string.Empty;
     public string Phone { get; private set; } = string.Empty;
     public string Street { get; private set; } = string.Empty;
-    public string? Ward { get; private set; }
-    public string District { get; private set; } = string.Empty;
-    public string City { get; private set; } = string.Empty;
     public bool IsDefault { get; private set; }
 
     // Structured geography FKs (Sprint 18B)
@@ -23,22 +20,17 @@ public class UserAddress : BaseAuditableEntity
     public Ward? WardEntity { get; private set; }
 
     public static UserAddress Create(
-        string userId,
+        Guid userId,
         string label,
         string recipientName,
         string phone,
         string street,
-        string? ward,
-        string district,
-        string city,
         int? provinceId = null,
         int? wardId = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
         ArgumentException.ThrowIfNullOrWhiteSpace(recipientName);
         ArgumentException.ThrowIfNullOrWhiteSpace(phone);
         ArgumentException.ThrowIfNullOrWhiteSpace(street);
-        ArgumentException.ThrowIfNullOrWhiteSpace(city);
 
         return new UserAddress
         {
@@ -47,9 +39,6 @@ public class UserAddress : BaseAuditableEntity
             RecipientName = recipientName,
             Phone = phone,
             Street = street,
-            Ward = ward,
-            District = district,
-            City = city,
             IsDefault = false,
             ProvinceId = provinceId,
             WardId = wardId
@@ -61,24 +50,17 @@ public class UserAddress : BaseAuditableEntity
         string recipientName,
         string phone,
         string street,
-        string? ward,
-        string district,
-        string city,
         int? provinceId = null,
         int? wardId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(recipientName);
         ArgumentException.ThrowIfNullOrWhiteSpace(phone);
         ArgumentException.ThrowIfNullOrWhiteSpace(street);
-        ArgumentException.ThrowIfNullOrWhiteSpace(city);
 
         Label = label;
         RecipientName = recipientName;
         Phone = phone;
         Street = street;
-        Ward = ward;
-        District = district;
-        City = city;
         ProvinceId = provinceId;
         WardId = wardId;
     }

@@ -31,7 +31,7 @@ public class GetOrderByIdQueryHandlerTests
     {
         var orderId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
-        var order = Order.Create(ownerId, "123 Main St");
+        var order = Order.Create(ownerId);
         _orderRepo.Setup(r => r.GetByIdWithItemsAsync(orderId, default)).ReturnsAsync(order);
 
         var act = () => CreateHandler().Handle(
@@ -45,7 +45,7 @@ public class GetOrderByIdQueryHandlerTests
     {
         var orderId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        var order = Order.Create(userId, "123 Main St", "Please deliver fast");
+        var order = Order.Create(userId, "Please deliver fast", "123 Main St");
         _orderRepo.Setup(r => r.GetByIdWithItemsAsync(orderId, default)).ReturnsAsync(order);
 
         var result = await CreateHandler().Handle(new GetOrderByIdQuery(userId, orderId), default);

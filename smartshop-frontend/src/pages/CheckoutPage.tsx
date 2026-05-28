@@ -260,9 +260,7 @@ export default function CheckoutPage() {
                           )}
                         </div>
                         <p className="text-sm text-gray-500 mt-0.5">
-                          {addr.street && addr.wardName && addr.provinceName
-                            ? `${addr.street}, ${addr.wardName}, ${addr.provinceName}`
-                            : [addr.street, addr.ward, addr.district, addr.city].filter(Boolean).join(', ')}
+                          {[addr.street, addr.wardName, addr.provinceName].filter(Boolean).join(', ')}
                         </p>
                       </div>
                     </label>

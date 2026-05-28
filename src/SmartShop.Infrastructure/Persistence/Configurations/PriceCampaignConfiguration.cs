@@ -8,7 +8,7 @@ public class PriceCampaignConfiguration : IEntityTypeConfiguration<PriceCampaign
 {
     public void Configure(EntityTypeBuilder<PriceCampaign> builder)
     {
-        builder.ToTable("PriceLists");
+        builder.ToTable("PriceCampaigns");
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Name)

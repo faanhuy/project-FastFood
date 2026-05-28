@@ -79,7 +79,7 @@ public class SendMessageCommandHandlerTests
         var existingSession = ChatSession.Create();
 
         _chatSessionRepo
-            .Setup(r => r.GetBySessionIdAsync(existingSession.SessionId, default))
+            .Setup(r => r.GetByIdAsync(existingSession.Id, default))
             .ReturnsAsync(existingSession);
 
         _chatbotService
@@ -90,7 +90,7 @@ public class SendMessageCommandHandlerTests
                 default))
             .ReturnsAsync("reply");
 
-        var cmd = new SendMessageCommand { Message = "Hi", SessionId = existingSession.SessionId };
+        var cmd = new SendMessageCommand { Message = "Hi", SessionId = existingSession.Id };
 
         var result = await CreateHandler().Handle(cmd, default);
 
@@ -99,7 +99,7 @@ public class SendMessageCommandHandlerTests
         _chatSessionRepo.Verify(r => r.AddAsync(It.IsAny<ChatSession>(), default), Times.Never);
 
         // SessionId in response matches the existing session
-        result.SessionId.Should().Be(existingSession.SessionId);
+        result.SessionId.Should().Be(existingSession.Id);
     }
 
     // ---------------------------------------------------------------
@@ -112,7 +112,7 @@ public class SendMessageCommandHandlerTests
         var missingId = Guid.NewGuid();
 
         _chatSessionRepo
-            .Setup(r => r.GetBySessionIdAsync(missingId, default))
+            .Setup(r => r.GetByIdAsync(missingId, default))
             .ReturnsAsync((ChatSession?)null);
 
         _chatbotService
@@ -152,7 +152,7 @@ public class SendMessageCommandHandlerTests
         }
 
         _chatSessionRepo
-            .Setup(r => r.GetBySessionIdAsync(existingSession.SessionId, default))
+            .Setup(r => r.GetByIdAsync(existingSession.Id, default))
             .ReturnsAsync(existingSession);
 
         IReadOnlyList<(string Role, string Content)>? capturedHistory = null;
@@ -167,7 +167,7 @@ public class SendMessageCommandHandlerTests
                 (_, _, history, _) => capturedHistory = history)
             .ReturnsAsync("reply");
 
-        var cmd = new SendMessageCommand { Message = "question", SessionId = existingSession.SessionId };
+        var cmd = new SendMessageCommand { Message = "question", SessionId = existingSession.Id };
 
         await CreateHandler().Handle(cmd, default);
 

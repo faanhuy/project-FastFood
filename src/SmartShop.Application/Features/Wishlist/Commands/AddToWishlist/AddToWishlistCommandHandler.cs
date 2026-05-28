@@ -16,7 +16,7 @@ public class AddToWishlistCommandHandler(
 {
     public async Task<ApiResponse<bool>> Handle(AddToWishlistCommand request, CancellationToken cancellationToken)
     {
-        var userId = currentUserService.UserId;
+        var userId = Guid.Parse(currentUserService.UserId);
 
         var product = await productRepository.GetByIdAsync(request.ProductId, cancellationToken)
             ?? throw new NotFoundException(nameof(Product), request.ProductId);

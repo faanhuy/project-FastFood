@@ -10,13 +10,9 @@ public class ApplicationDbContext : DbContext
 {
     private readonly ICurrentUserService? _currentUserService;
 
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
-    {
-    }
-
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options,
-        ICurrentUserService currentUserService) : base(options)
+        ICurrentUserService? currentUserService = null) : base(options)
     {
         _currentUserService = currentUserService;
     }

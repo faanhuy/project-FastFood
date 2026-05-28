@@ -1,0 +1,22 @@
+{
+  "dashboard": "Bảng điều khiển",
+  "adminPanel": "Quản trị viên",
+  "manageProducts": "Quản lý sản phẩm",
+  "manageOrders": "Quản lý đơn hàng",
+  "manageUsers": "Quản lý người dùng",
+  "manageCoupons": "Quản lý coupon",
+  "manageStores": "Quản lý cửa hàng",
+  "manageCategories": "Quản lý danh mục",
+  "manageReturns": "Quản lý hoàn hàng",
+  "statistics": "Thống kê",
+  "totalRevenue": "Tổng doanh thu",
+  "totalOrders": "Tổng đơn hàng",
+  "totalUsers": "Tổng người dùng",
+  "totalProducts": "Tổng sản phẩm",
+  "addProduct": "Thêm sản phẩm",
+  "createCoupon": "Tạo coupon",
+  "approve": "Duyệt",
+  "reject": "Từ chối",
+  "active": "Đang hoạt động",
+  "inactive": "Ngừng hoạt động"
+}

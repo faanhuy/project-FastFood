@@ -9,7 +9,8 @@ public class GetAddressesQueryHandler(
 {
     public async Task<ApiResponse<List<AddressDto>>> Handle(GetAddressesQuery query, CancellationToken cancellationToken)
     {
-        var addresses = await addressRepository.GetByUserIdAsync(query.UserId, cancellationToken);
+        var userId = Guid.Parse(query.UserId);
+        var addresses = await addressRepository.GetByUserIdAsync(userId, cancellationToken);
 
         var dtos = addresses
             .OrderByDescending(a => a.IsDefault)

@@ -10,6 +10,7 @@ import { orderService } from '../services/orderService';
 import { useWishlistStore } from '../store/useWishlistStore';
 import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
 import NotificationBell from './NotificationBell';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface NavbarProps {
   children?: React.ReactNode; // slot cho search bar (ProductListPage)
@@ -176,6 +177,8 @@ export default function Navbar({ children }: NavbarProps) {
 
         {/* Right — auth actions */}
         <div className="flex items-center gap-1 shrink-0">
+          <LanguageSwitcher />
+
           {isAuthenticated ? (
             <>
               <Link

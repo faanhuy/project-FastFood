@@ -11,7 +11,7 @@ public class GetWishlistQueryHandler(
 {
     public async Task<ApiResponse<List<WishlistItemDto>>> Handle(GetWishlistQuery request, CancellationToken cancellationToken)
     {
-        var userId = currentUserService.UserId;
+        var userId = Guid.Parse(currentUserService.UserId);
         var items = await wishlistRepository.GetByUserIdAsync(userId, cancellationToken);
 
         var dtos = items.Select(i => new WishlistItemDto(

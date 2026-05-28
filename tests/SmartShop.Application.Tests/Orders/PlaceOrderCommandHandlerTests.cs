@@ -53,7 +53,7 @@ public class PlaceOrderCommandHandlerTests
 
     private void SetupActiveStore()
     {
-        var store = Store.Create("Store", "Addr", "123");
+        var store = Store.Create("Store", "0901234567");
         _storeRepo.Setup(r => r.GetByIdAsync(_storeId, default)).ReturnsAsync(store);
     }
 
@@ -68,8 +68,8 @@ public class PlaceOrderCommandHandlerTests
     private void SetupDefaultAddress()
     {
         var address = UserAddress.Create(
-            Guid.NewGuid().ToString(), "Home", "Test User", "0901234567",
-            "123 Main St", null, "Q1", "TP.HCM");
+            Guid.NewGuid(), "Home", "Test User", "0901234567",
+            "123 Main St", null, null);
         _userAddressRepo.Setup(r => r.GetByIdAsync(_addressId, default)).ReturnsAsync(address);
     }
 
@@ -328,8 +328,8 @@ public class PlaceOrderCommandHandlerTests
         var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
 
         var address = UserAddress.Create(
-            userId.ToString(), "Home", "Test User", "0901234567",
-            "123 Đường Lê Lợi", "Phường Bến Nghé", "Q1", "TP. Hồ Chí Minh");
+            userId, "Home", "Test User", "0901234567",
+            "123 Đường Lê Lợi", null, null);
         _userAddressRepo.Setup(r => r.GetByIdAsync(_addressId, default)).ReturnsAsync(address);
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
@@ -342,7 +342,7 @@ public class PlaceOrderCommandHandlerTests
 
         result.Should().NotBeNull();
         result.ShippingStreet.Should().Be("123 Đường Lê Lợi");
-        result.ShippingWardName.Should().Be("Phường Bến Nghé");
-        result.ShippingProvinceName.Should().Be("TP. Hồ Chí Minh");
+        result.ShippingWardName.Should().BeNull();
+        result.ShippingProvinceName.Should().BeNull();
     }
 }

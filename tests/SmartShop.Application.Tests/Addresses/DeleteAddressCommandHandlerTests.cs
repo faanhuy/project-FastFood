@@ -17,10 +17,10 @@ public class DeleteAddressCommandHandlerTests
     private DeleteAddressCommandHandler CreateHandler() =>
         new(_addressRepo.Object, _uow.Object);
 
-    private static UserAddress CreateAddress(string userId, bool isDefault = false)
+    private static UserAddress CreateAddress(Guid userId, bool isDefault = false)
     {
         var addr = UserAddress.Create(userId, "Nhà riêng", "Nguyen Van A",
-            "0901234567", "123 Đường Lê Lợi", null, "Quận 1", "TP.HCM");
+            "0901234567", "123 Đường Lê Lợi", null, null);
         if (isDefault)
             addr.SetAsDefault();
         return addr;
@@ -30,7 +30,7 @@ public class DeleteAddressCommandHandlerTests
     public async Task DeleteAddress_NotFound_ThrowsNotFoundException()
     {
         var addressId = Guid.NewGuid();
-        var userId = Guid.NewGuid().ToString();
+        var userId = Guid.NewGuid();
 
         _addressRepo.Setup(r => r.GetByIdAsync(addressId, default))
                     .ReturnsAsync((UserAddress?)null);
@@ -43,8 +43,8 @@ public class DeleteAddressCommandHandlerTests
     [Fact]
     public async Task DeleteAddress_WrongOwner_ThrowsUnauthorizedException()
     {
-        var userId = Guid.NewGuid().ToString();
-        var otherUserId = Guid.NewGuid().ToString();
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
         var address = CreateAddress(otherUserId);
 
         _addressRepo.Setup(r => r.GetByIdAsync(address.Id, default))
@@ -58,16 +58,16 @@ public class DeleteAddressCommandHandlerTests
     [Fact]
     public async Task DeleteAddress_DefaultAddress_PromotesOldestRemaining()
     {
-        var userId = Guid.NewGuid().ToString();
+        var userId = Guid.NewGuid();
         var defaultAddress = CreateAddress(userId, isDefault: true);
 
         // oldest: created earlier
         var oldestAddress = UserAddress.Create(userId, "Cũ nhất", "Nguyen Van B",
-            "0909999999", "789 Đường Nguyễn Huệ", null, "Quận 1", "TP.HCM");
+            "0909999999", "789 Đường Nguyễn Huệ", null, null);
         oldestAddress.CreatedAt = DateTime.UtcNow.AddDays(-5);
 
         var newerAddress = UserAddress.Create(userId, "Mới hơn", "Nguyen Van C",
-            "0908888888", "101 Đường Pasteur", null, "Quận 3", "TP.HCM");
+            "0908888888", "101 Đường Pasteur", null, null);
         newerAddress.CreatedAt = DateTime.UtcNow.AddDays(-1);
 
         var remaining = new List<UserAddress> { defaultAddress, oldestAddress, newerAddress };
@@ -89,7 +89,7 @@ public class DeleteAddressCommandHandlerTests
     [Fact]
     public async Task DeleteAddress_NonDefaultAddress_NoPromotion()
     {
-        var userId = Guid.NewGuid().ToString();
+        var userId = Guid.NewGuid();
         var nonDefaultAddress = CreateAddress(userId, isDefault: false);
         var otherAddress = CreateAddress(userId, isDefault: true);
 
@@ -100,7 +100,7 @@ public class DeleteAddressCommandHandlerTests
         await CreateHandler().Handle(new DeleteAddressCommand(nonDefaultAddress.Id, userId), default);
 
         // GetByUserIdAsync should NOT be called because address is not default
-        _addressRepo.Verify(r => r.GetByUserIdAsync(It.IsAny<string>(), default), Times.Never);
+        _addressRepo.Verify(r => r.GetByUserIdAsync(It.IsAny<Guid>(), default), Times.Never);
         // otherAddress remains the default — untouched
         otherAddress.IsDefault.Should().BeTrue();
         _addressRepo.Verify(r => r.Remove(nonDefaultAddress), Times.Once);

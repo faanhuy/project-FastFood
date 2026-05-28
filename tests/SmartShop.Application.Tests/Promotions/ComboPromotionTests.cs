@@ -211,11 +211,11 @@ public class ComboPromotionTests
         var triggerInventory = StoreInventory.Create(storeId, triggerProductId, 10);
         var rewardInventory = StoreInventory.Create(storeId, rewardProductId, 5);
 
-        var store = Store.Create("Store", "Addr", "123");
+        var store = Store.Create("Store", "0901234567");
 
         var address = UserAddress.Create(
-            userId.ToString(), "Home", "Test User", "0901234567",
-            "123 Main St", null, "Q1", "TP.HCM");
+            userId, "Home", "Test User", "0901234567",
+            "123 Main St", null, null);
 
         // Combo match result
         var combo = ComboPromotion.Create(
@@ -309,10 +309,10 @@ public class ComboPromotionTests
 
         var product = Product.Create("Coffee", "Desc", 100m, Guid.NewGuid(), "coffee");
         var inventory = StoreInventory.Create(storeId, productId, 10);
-        var store = Store.Create("Store", "Addr", "123");
+        var store = Store.Create("Store", "0901234567");
         var address = UserAddress.Create(
-            userId.ToString(), "Home", "Test User", "0901234567",
-            "123 Main St", null, "Q1", "TP.HCM");
+            userId, "Home", "Test User", "0901234567",
+            "123 Main St", null, null);
         var coupon = Coupon.Create("SAVE10", SmartShop.Domain.Enums.DiscountType.Percentage, 10,
             DateTime.UtcNow.AddDays(1), 5, "desc", 100);
 

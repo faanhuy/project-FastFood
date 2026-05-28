@@ -11,11 +11,15 @@ public class WishlistItemConfiguration : IEntityTypeConfiguration<WishlistItem>
         builder.HasKey(e => e.Id);
 
         builder.Property(e => e.UserId)
-            .IsRequired()
-            .HasMaxLength(450);
+            .IsRequired();
 
         builder.HasIndex(e => new { e.UserId, e.ProductId })
             .IsUnique();
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(e => e.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(e => e.Product)
             .WithMany()

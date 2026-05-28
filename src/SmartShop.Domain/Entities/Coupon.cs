@@ -13,6 +13,7 @@ public class Coupon : BaseAuditableEntity
     public int UsedQuantity { get; private set; }
     public decimal MinOrderValue { get; private set; }
     public string? Description { get; private set; }
+    public byte[]? RowVersion { get; private set; }
     private Coupon() { }
 
     public static Coupon Create(string code, DiscountType discountType, decimal discountValue, DateTime expiresAt, int maxUsage, string description, decimal minOrderValue)

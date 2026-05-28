@@ -17,16 +17,16 @@ public class UpdateAddressCommandHandlerTests
     private UpdateAddressCommandHandler CreateHandler() =>
         new(_addressRepo.Object, _uow.Object);
 
-    private static UpdateAddressCommand ValidCommand(Guid addressId, string userId) =>
+    private static UpdateAddressCommand ValidCommand(Guid addressId, Guid userId) =>
         new(addressId, userId, "Nhà riêng mới", "Nguyen Van B", "0909999888",
-            "456 Đường Nguyễn Huệ", "Phường Bến Nghé", "Quận 1", "TP.HCM");
+            "456 Đường Nguyễn Huệ");
 
     [Fact]
     public async Task UpdateAddress_ValidRequest_ReturnsUpdatedDto()
     {
-        var userId = Guid.NewGuid().ToString();
+        var userId = Guid.NewGuid();
         var address = UserAddress.Create(userId, "Nhà riêng cũ", "Nguyen Van A",
-            "0901234567", "123 Đường Lê Lợi", null, "Quận 1", "TP.HCM");
+            "0901234567", "123 Đường Lê Lợi");
         var addressId = address.Id;
 
         _addressRepo.Setup(r => r.GetByIdAsync(addressId, default)).ReturnsAsync(address);
@@ -42,14 +42,13 @@ public class UpdateAddressCommandHandlerTests
         result.Data.RecipientName.Should().Be("Nguyen Van B");
         result.Data.Phone.Should().Be("0909999888");
         result.Data.Street.Should().Be("456 Đường Nguyễn Huệ");
-        result.Data.City.Should().Be("TP.HCM");
     }
 
     [Fact]
     public async Task UpdateAddress_AddressNotFound_ThrowsNotFoundException()
     {
         var addressId = Guid.NewGuid();
-        var userId = Guid.NewGuid().ToString();
+        var userId = Guid.NewGuid();
 
         _addressRepo.Setup(r => r.GetByIdAsync(addressId, default)).ReturnsAsync((UserAddress?)null);
 
@@ -61,10 +60,10 @@ public class UpdateAddressCommandHandlerTests
     [Fact]
     public async Task UpdateAddress_WrongOwner_ThrowsUnauthorizedException()
     {
-        var ownerId = Guid.NewGuid().ToString();
-        var requesterId = Guid.NewGuid().ToString();
+        var ownerId = Guid.NewGuid();
+        var requesterId = Guid.NewGuid();
         var address = UserAddress.Create(ownerId, "Nhà riêng", "Nguyen Van A",
-            "0901234567", "123 Đường Lê Lợi", null, "Quận 1", "TP.HCM");
+            "0901234567", "123 Đường Lê Lợi");
         var addressId = address.Id;
 
         _addressRepo.Setup(r => r.GetByIdAsync(addressId, default)).ReturnsAsync(address);
@@ -78,9 +77,9 @@ public class UpdateAddressCommandHandlerTests
     [Fact]
     public async Task UpdateAddress_WithProvinceIdAndWardId_SavesThem()
     {
-        var userId = Guid.NewGuid().ToString();
+        var userId = Guid.NewGuid();
         var address = UserAddress.Create(userId, "Nhà riêng", "Nguyen Van A",
-            "0901234567", "123 Đường Lê Lợi", null, "Quận 1", "TP.HCM");
+            "0901234567", "123 Đường Lê Lợi");
         var addressId = address.Id;
 
         _addressRepo.Setup(r => r.GetByIdAsync(addressId, default)).ReturnsAsync(address);
@@ -88,8 +87,7 @@ public class UpdateAddressCommandHandlerTests
 
         var command = new UpdateAddressCommand(
             addressId, userId, "Nhà riêng mới", "Nguyen Van B", "0909999888",
-            "456 Đường Nguyễn Huệ", "Phường Bến Nghé", "Quận 1", "TP.HCM",
-            ProvinceId: 1, WardId: 1001);
+            "456 Đường Nguyễn Huệ", ProvinceId: 1, WardId: 1001);
 
         var result = await CreateHandler().Handle(command, default);
 
@@ -101,9 +99,9 @@ public class UpdateAddressCommandHandlerTests
     [Fact]
     public async Task UpdateAddress_CallsRepositoryUpdate_Once()
     {
-        var userId = Guid.NewGuid().ToString();
+        var userId = Guid.NewGuid();
         var address = UserAddress.Create(userId, "Nhà riêng", "Nguyen Van A",
-            "0901234567", "123 Đường Lê Lợi", null, "Quận 1", "TP.HCM");
+            "0901234567", "123 Đường Lê Lợi");
         var addressId = address.Id;
 
         _addressRepo.Setup(r => r.GetByIdAsync(addressId, default)).ReturnsAsync(address);

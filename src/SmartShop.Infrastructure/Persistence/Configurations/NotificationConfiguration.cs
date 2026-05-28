@@ -11,8 +11,7 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.HasKey(e => e.Id);
 
         builder.Property(e => e.UserId)
-            .IsRequired()
-            .HasMaxLength(450);
+            .IsRequired();
 
         builder.Property(e => e.Title)
             .IsRequired()
@@ -22,6 +21,11 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
             .IsRequired()
             .HasMaxLength(1000);
 
-        builder.HasIndex(e => e.UserId);
+        builder.HasIndex(e => new { e.UserId, e.IsRead });
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(e => e.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

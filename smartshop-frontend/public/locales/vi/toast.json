@@ -1,0 +1,17 @@
+{
+  "addToCartSuccess": "Đã thêm vào giỏ hàng",
+  "removeFromCartSuccess": "Đã xóa khỏi giỏ hàng",
+  "addToWishlistSuccess": "Đã thêm vào danh sách yêu thích",
+  "removeFromWishlistSuccess": "Đã xóa khỏi danh sách yêu thích",
+  "orderPlacedSuccess": "Đặt hàng thành công",
+  "orderCancelledSuccess": "Đã hủy đơn hàng",
+  "returnRequestSuccess": "Gửi yêu cầu hoàn hàng thành công",
+  "profileUpdatedSuccess": "Cập nhật hồ sơ thành công",
+  "addressAddedSuccess": "Đã thêm địa chỉ mới",
+  "addressUpdatedSuccess": "Đã cập nhật địa chỉ",
+  "addressDeletedSuccess": "Đã xóa địa chỉ",
+  "reviewSubmittedSuccess": "Đánh giá đã được gửi",
+  "couponAppliedSuccess": "Mã giảm giá hợp lệ",
+  "couponInvalid": "Mã giảm giá không hợp lệ",
+  "networkError": "Lỗi kết nối. Vui lòng thử lại"
+}

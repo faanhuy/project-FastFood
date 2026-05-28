@@ -1,0 +1,22 @@
+{
+  "dashboard": "Dashboard",
+  "adminPanel": "Admin panel",
+  "manageProducts": "Manage products",
+  "manageOrders": "Manage orders",
+  "manageUsers": "Manage users",
+  "manageCoupons": "Manage coupons",
+  "manageStores": "Manage stores",
+  "manageCategories": "Manage categories",
+  "manageReturns": "Manage returns",
+  "statistics": "Statistics",
+  "totalRevenue": "Total revenue",
+  "totalOrders": "Total orders",
+  "totalUsers": "Total users",
+  "totalProducts": "Total products",
+  "addProduct": "Add product",
+  "createCoupon": "Create coupon",
+  "approve": "Approve",
+  "reject": "Reject",
+  "active": "Active",
+  "inactive": "Inactive"
+}

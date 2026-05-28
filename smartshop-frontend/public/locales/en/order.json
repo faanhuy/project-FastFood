@@ -1,0 +1,21 @@
+{
+  "orders": "Orders",
+  "myOrders": "My orders",
+  "orderDetail": "Order detail",
+  "orderCode": "Order code",
+  "orderDate": "Order date",
+  "orderStatus": "Status",
+  "status_Pending": "Pending",
+  "status_Confirmed": "Confirmed",
+  "status_Shipping": "Shipping",
+  "status_Delivered": "Delivered",
+  "status_Cancelled": "Cancelled",
+  "cancelOrder": "Cancel order",
+  "returnRequest": "Return request",
+  "returnStatus_Pending": "Pending review",
+  "returnStatus_Approved": "Approved",
+  "returnStatus_Rejected": "Rejected",
+  "noOrders": "You have no orders yet",
+  "trackOrder": "Track order",
+  "totalAmount": "Total amount"
+}

@@ -6,7 +6,6 @@ namespace SmartShop.Application.Features.Stores.Commands.CreateStore;
 
 public record CreateStoreCommand(
     string Name,
-    string Address,
     string Phone,
     int? ProvinceId = null,
     int? WardId = null,

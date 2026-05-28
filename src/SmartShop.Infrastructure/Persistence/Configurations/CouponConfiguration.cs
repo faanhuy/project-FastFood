@@ -14,6 +14,7 @@ public class CouponConfiguration : IEntityTypeConfiguration<Coupon>
         builder.Property(x => x.DiscountValue).HasPrecision(18, 2);
         builder.Property(x => x.MinOrderValue).HasPrecision(18, 2);
         builder.Property(x => x.Code).HasMaxLength(50).IsRequired();
+        builder.Property(x => x.RowVersion).IsRowVersion();
         builder.Metadata.FindNavigation(nameof(Coupon.Usages))?.SetPropertyAccessMode(PropertyAccessMode.Field);
     }
 }

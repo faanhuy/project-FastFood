@@ -1,0 +1,22 @@
+{
+  "ok": "OK",
+  "cancel": "Hủy",
+  "save": "Lưu",
+  "delete": "Xóa",
+  "edit": "Chỉnh sửa",
+  "add": "Thêm",
+  "back": "Quay lại",
+  "close": "Đóng",
+  "confirm": "Xác nhận",
+  "search": "Tìm kiếm",
+  "filter": "Lọc",
+  "loading": "Đang tải...",
+  "noData": "Không có dữ liệu",
+  "error": "Có lỗi xảy ra",
+  "success": "Thành công",
+  "retry": "Thử lại",
+  "viewDetail": "Xem chi tiết",
+  "viewAll": "Xem tất cả",
+  "currency": "₫",
+  "all": "Tất cả"
+}

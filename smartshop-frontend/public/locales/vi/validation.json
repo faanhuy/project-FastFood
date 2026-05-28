@@ -1,0 +1,11 @@
+{
+  "required": "Trường này là bắt buộc",
+  "emailInvalid": "Email không hợp lệ",
+  "passwordMin": "Mật khẩu phải có ít nhất 6 ký tự",
+  "passwordMismatch": "Mật khẩu không khớp",
+  "phoneInvalid": "Số điện thoại không hợp lệ",
+  "quantityMin": "Số lượng phải lớn hơn 0",
+  "quantityMax": "Vượt quá số lượng trong kho",
+  "selectAddress": "Vui lòng chọn địa chỉ giao hàng",
+  "selectPayment": "Vui lòng chọn phương thức thanh toán"
+}

@@ -15,7 +15,7 @@ public class RemoveFromWishlistCommandHandler(
 {
     public async Task<ApiResponse<bool>> Handle(RemoveFromWishlistCommand request, CancellationToken cancellationToken)
     {
-        var userId = currentUserService.UserId;
+        var userId = Guid.Parse(currentUserService.UserId);
 
         var item = await wishlistRepository.GetByUserAndProductAsync(userId, request.ProductId, cancellationToken)
             ?? throw new NotFoundException(nameof(WishlistItem), request.ProductId);

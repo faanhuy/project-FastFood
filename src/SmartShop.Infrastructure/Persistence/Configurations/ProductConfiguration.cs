@@ -45,6 +45,9 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasConversion<string>()
             .IsRequired(false);
 
+        // Performance indexes
+        builder.HasIndex(e => new { e.CategoryId, e.IsActive });
+
         // 1:many Product → Reviews
         // Product has private backing field _reviews — EF finds it by naming convention
         builder.HasMany(e => e.Reviews)

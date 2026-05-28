@@ -17,10 +17,10 @@ public class SetDefaultAddressCommandHandlerTests
     private SetDefaultAddressCommandHandler CreateHandler() =>
         new(_addressRepo.Object, _uow.Object);
 
-    private static UserAddress CreateAddress(string userId, bool isDefault = false)
+    private static UserAddress CreateAddress(Guid userId, bool isDefault = false)
     {
         var addr = UserAddress.Create(userId, "Label", "Nguyen Van A",
-            "0901234567", "123 Đường Lê Lợi", null, "Quận 1", "TP.HCM");
+            "0901234567", "123 Đường Lê Lợi", null, null);
         if (isDefault)
             addr.SetAsDefault();
         return addr;
@@ -29,7 +29,7 @@ public class SetDefaultAddressCommandHandlerTests
     [Fact]
     public async Task SetDefault_ValidAddress_UnsetsAllOthers()
     {
-        var userId = Guid.NewGuid().ToString();
+        var userId = Guid.NewGuid();
         var address1 = CreateAddress(userId, isDefault: true);
         var address2 = CreateAddress(userId, isDefault: false);
         var address3 = CreateAddress(userId, isDefault: false);
@@ -53,7 +53,7 @@ public class SetDefaultAddressCommandHandlerTests
     public async Task SetDefault_NotFound_ThrowsNotFoundException()
     {
         var addressId = Guid.NewGuid();
-        var userId = Guid.NewGuid().ToString();
+        var userId = Guid.NewGuid();
 
         _addressRepo.Setup(r => r.GetByIdAsync(addressId, default))
                     .ReturnsAsync((UserAddress?)null);
@@ -66,8 +66,8 @@ public class SetDefaultAddressCommandHandlerTests
     [Fact]
     public async Task SetDefault_WrongOwner_ThrowsUnauthorizedException()
     {
-        var userId = Guid.NewGuid().ToString();
-        var otherUserId = Guid.NewGuid().ToString();
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
         var address = CreateAddress(otherUserId);
 
         _addressRepo.Setup(r => r.GetByIdAsync(address.Id, default))

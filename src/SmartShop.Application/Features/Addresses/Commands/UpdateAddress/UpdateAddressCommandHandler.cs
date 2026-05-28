@@ -24,9 +24,6 @@ public class UpdateAddressCommandHandler(
             command.RecipientName,
             command.Phone,
             command.Street,
-            command.Ward,
-            command.District,
-            command.City,
             command.ProvinceId,
             command.WardId);
 

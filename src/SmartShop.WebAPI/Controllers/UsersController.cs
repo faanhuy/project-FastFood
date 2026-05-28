@@ -59,14 +59,11 @@ public class UsersController(IMediator mediator) : ControllerBase
         [FromBody] AddAddressRequest request, CancellationToken ct)
     {
         var result = await mediator.Send(new AddAddressCommand(
-            CurrentUserId,
+            Guid.Parse(CurrentUserId),
             request.Label,
             request.RecipientName,
             request.Phone,
             request.Street,
-            request.Ward,
-            request.District,
-            request.City,
             request.ProvinceId,
             request.WardId), ct);
         return Ok(result);
@@ -79,14 +76,11 @@ public class UsersController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new UpdateAddressCommand(
             id,
-            CurrentUserId,
+            Guid.Parse(CurrentUserId),
             request.Label,
             request.RecipientName,
             request.Phone,
             request.Street,
-            request.Ward,
-            request.District,
-            request.City,
             request.ProvinceId,
             request.WardId), ct);
         return Ok(result);
@@ -96,7 +90,7 @@ public class UsersController(IMediator mediator) : ControllerBase
     [HttpDelete("me/addresses/{id:guid}")]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteAddress(Guid id, CancellationToken ct)
     {
-        var result = await mediator.Send(new DeleteAddressCommand(id, CurrentUserId), ct);
+        var result = await mediator.Send(new DeleteAddressCommand(id, Guid.Parse(CurrentUserId)), ct);
         return Ok(result);
     }
 
@@ -104,7 +98,7 @@ public class UsersController(IMediator mediator) : ControllerBase
     [HttpPatch("me/addresses/{id:guid}/default")]
     public async Task<ActionResult<ApiResponse<bool>>> SetDefaultAddress(Guid id, CancellationToken ct)
     {
-        var result = await mediator.Send(new SetDefaultAddressCommand(id, CurrentUserId), ct);
+        var result = await mediator.Send(new SetDefaultAddressCommand(id, Guid.Parse(CurrentUserId)), ct);
         return Ok(result);
     }
 }

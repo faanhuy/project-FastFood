@@ -1,0 +1,21 @@
+{
+  "cart": "Cart",
+  "emptyCart": "Your cart is empty",
+  "checkout": "Checkout",
+  "total": "Total",
+  "subtotal": "Subtotal",
+  "shipping": "Shipping",
+  "freeShipping": "Free shipping",
+  "coupon": "Coupon code",
+  "applyCoupon": "Apply coupon",
+  "removeCoupon": "Remove coupon",
+  "couponApplied": "Coupon applied",
+  "continueShoping": "Continue shopping",
+  "removeItem": "Remove item",
+  "updateQuantity": "Update quantity",
+  "paymentMethod": "Payment method",
+  "cod": "Cash on delivery",
+  "vnpay": "VNPay",
+  "shippingAddress": "Shipping address",
+  "selectAddress": "Select address"
+}

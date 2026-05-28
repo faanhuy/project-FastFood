@@ -7,7 +7,7 @@ namespace SmartShop.Infrastructure.Repositories;
 
 public class WishlistRepository(ApplicationDbContext context) : IWishlistRepository
 {
-    public async Task<IEnumerable<WishlistItem>> GetByUserIdAsync(string userId, CancellationToken ct = default)
+    public async Task<IEnumerable<WishlistItem>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
         return await context.WishlistItems
             .AsNoTracking()
@@ -17,7 +17,7 @@ public class WishlistRepository(ApplicationDbContext context) : IWishlistReposit
             .ToListAsync(ct);
     }
 
-    public async Task<WishlistItem?> GetByUserAndProductAsync(string userId, Guid productId, CancellationToken ct = default)
+    public async Task<WishlistItem?> GetByUserAndProductAsync(Guid userId, Guid productId, CancellationToken ct = default)
     {
         return await context.WishlistItems
             .FirstOrDefaultAsync(w => w.UserId == userId && w.ProductId == productId, ct);
@@ -33,7 +33,7 @@ public class WishlistRepository(ApplicationDbContext context) : IWishlistReposit
         context.WishlistItems.Remove(item);
     }
 
-    public async Task<bool> ExistsAsync(string userId, Guid productId, CancellationToken ct = default)
+    public async Task<bool> ExistsAsync(Guid userId, Guid productId, CancellationToken ct = default)
     {
         return await context.WishlistItems
             .AnyAsync(w => w.UserId == userId && w.ProductId == productId, ct);

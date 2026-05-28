@@ -23,7 +23,7 @@ public class SendMessageCommandHandler(
 
         if (cmd.SessionId.HasValue)
         {
-            var existing = await chatSessionRepo.GetBySessionIdAsync(cmd.SessionId.Value, ct);
+            var existing = await chatSessionRepo.GetByIdAsync(cmd.SessionId.Value, ct);
             if (existing is not null)
             {
                 session = existing;
@@ -66,6 +66,6 @@ public class SendMessageCommandHandler(
         await uow.SaveChangesAsync(ct);
 
         // 6. Return DTO
-        return new SendMessageResponseDto(reply, session.SessionId, ["faq"]);
+        return new SendMessageResponseDto(reply, session.Id, ["faq"]);
     }
 }

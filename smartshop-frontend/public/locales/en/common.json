@@ -1,0 +1,22 @@
+{
+  "ok": "OK",
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "edit": "Edit",
+  "add": "Add",
+  "back": "Back",
+  "close": "Close",
+  "confirm": "Confirm",
+  "search": "Search",
+  "filter": "Filter",
+  "loading": "Loading...",
+  "noData": "No data available",
+  "error": "Something went wrong",
+  "success": "Success",
+  "retry": "Retry",
+  "viewDetail": "View details",
+  "viewAll": "View all",
+  "currency": "₫",
+  "all": "All"
+}

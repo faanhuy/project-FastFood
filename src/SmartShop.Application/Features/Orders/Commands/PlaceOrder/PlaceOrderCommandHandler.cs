@@ -89,17 +89,12 @@ public class PlaceOrderCommandHandler(
         var address = await userAddressRepository.GetByIdAsync(request.AddressId, cancellationToken)
             ?? throw new NotFoundException("Address", request.AddressId);
 
-        var wardName     = address.WardEntity?.Name ?? address.Ward;
-        var provinceName = address.Province?.Name ?? address.City;
-
-        var shippingAddress = string.Join(", ", new[]
-        {
-            address.RecipientName, address.Phone, address.Street, wardName, provinceName
-        }.Where(s => !string.IsNullOrWhiteSpace(s)));
+        var wardName     = address.WardEntity?.Name;
+        var provinceName = address.Province?.Name;
 
         // ── Create Order ──────────────────────────────────────────────────────
         var order = Order.Create(
-            request.UserId, shippingAddress, request.Notes,
+            request.UserId, request.Notes,
             shippingStreet: address.Street,
             shippingWardId: address.WardId,
             shippingProvinceId: address.ProvinceId,
@@ -247,7 +242,7 @@ public class PlaceOrderCommandHandler(
             TotalAmount = order.TotalAmount,
             OriginalAmount = order.OriginalAmount,
             DiscountAmount = order.DiscountAmount,
-            ShippingAddress = order.ShippingAddress,
+            ShippingAddress = string.Join(", ", new[] { order.ShippingStreet, wardName, provinceName }.Where(s => !string.IsNullOrWhiteSpace(s))),
             ShippingAddressId = order.ShippingAddressId,
             ShippingStreet = order.ShippingStreet,
             ShippingWardId = order.ShippingWardId,

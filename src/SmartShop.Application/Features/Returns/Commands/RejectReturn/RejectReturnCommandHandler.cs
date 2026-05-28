@@ -36,19 +36,19 @@ public class RejectReturnCommandHandler(
         returnRequest.Reject(request.AdminNote);
         returnRequestRepository.Update(returnRequest);
 
-        var userId = returnRequest.UserId.ToString();
+        var userIdString = returnRequest.UserId.ToString();
         var orderCode = order.Id.ToString()[..8].ToUpper();
         var title = "Yêu cầu trả hàng bị từ chối";
         var message = $"Đơn hàng #{orderCode}: Yêu cầu trả hàng bị từ chối. Lý do: {request.AdminNote}";
 
-        var notification = Notification.Create(userId, title, message, order.Id);
+        var notification = Notification.Create(returnRequest.UserId, title, message, order.Id);
         await notificationRepository.AddAsync(notification, cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         try
         {
-            await hubService.SendToUserAsync(userId, "ReturnRequestUpdated", new
+            await hubService.SendToUserAsync(userIdString, "ReturnRequestUpdated", new
             {
                 NotificationId = notification.Id,
                 Title = title,

@@ -24,9 +24,6 @@ interface AddressFormData {
   recipientName: string;
   phone: string;
   street: string;
-  ward: string;
-  district: string;
-  city: string;
   provinceId?: number;
   wardId?: number;
   provinceName?: string;
@@ -38,9 +35,6 @@ const EMPTY_FORM: AddressFormData = {
   recipientName: '',
   phone: '',
   street: '',
-  ward: '',
-  district: '',
-  city: '',
 };
 
 interface AddressModalProps {
@@ -57,9 +51,6 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
           recipientName: initial.recipientName,
           phone: initial.phone,
           street: initial.street,
-          ward: initial.wardName ?? initial.ward ?? '',
-          district: initial.district,
-          city: initial.provinceName ?? initial.city,
           provinceId: initial.provinceId,
           wardId: initial.wardId,
           provinceName: initial.provinceName,
@@ -76,8 +67,6 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
     setForm((f) => ({
       ...f,
       street: selection.street,
-      ward: selection.wardName,
-      city: selection.provinceName,
       provinceId: selection.provinceId,
       wardId: selection.wardId,
       provinceName: selection.provinceName,
@@ -102,9 +91,6 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
         recipientName: form.recipientName.trim(),
         phone: form.phone.trim(),
         street: form.street.trim(),
-        ward: form.wardName ?? (form.ward.trim() || undefined),
-        district: form.district.trim() || '',
-        city: form.provinceName ?? form.city.trim(),
         provinceId: form.provinceId,
         wardId: form.wardId,
         provinceName: form.provinceName,
@@ -450,9 +436,7 @@ export default function ProfilePage() {
                       <p className="text-sm font-medium text-gray-800">{addr.recipientName}</p>
                       <p className="text-sm text-gray-500">{addr.phone}</p>
                       <p className="text-sm text-gray-500 mt-0.5">
-                        {addr.street && addr.wardName && addr.provinceName
-                          ? `${addr.street}, ${addr.wardName}, ${addr.provinceName}`
-                          : [addr.street, addr.ward, addr.district, addr.city].filter(Boolean).join(', ')}
+                        {[addr.street, addr.wardName, addr.provinceName].filter(Boolean).join(', ')}
                       </p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">

@@ -18,12 +18,17 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(e => e.TotalAmount)
             .HasPrecision(18, 2);
 
-        builder.Property(e => e.ShippingAddress)
-            .IsRequired()
-            .HasMaxLength(500);
-
         builder.Property(e => e.Notes)
             .HasMaxLength(1000);
+
+        // Performance indexes
+        builder.HasIndex(e => e.UserId);
+        builder.HasIndex(e => e.Status);
+
+        // Unique filtered index for VnpayTransactionId
+        builder.HasIndex(e => e.VnpayTransactionId)
+            .HasFilter("[VnpayTransactionId] IS NOT NULL")
+            .IsUnique();
 
         // many:1 Order → User (restrict: don't delete user with orders)
         builder.HasOne(e => e.User)

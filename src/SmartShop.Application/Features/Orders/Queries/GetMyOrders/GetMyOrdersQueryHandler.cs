@@ -18,7 +18,7 @@ public class GetMyOrdersQueryHandler(IOrderRepository orderRepository)
             UserId = order.UserId,
             Status = order.Status.ToString(),
             TotalAmount = order.TotalAmount,
-            ShippingAddress = order.ShippingAddress,
+            ShippingAddress = string.Join(", ", new[] { order.ShippingStreet, order.ShippingWard?.Name, order.ShippingProvince?.Name }.Where(s => !string.IsNullOrWhiteSpace(s))),
             ShippingAddressId = order.ShippingAddressId,
             ShippingStreet = order.ShippingStreet,
             ShippingWardId = order.ShippingWardId,

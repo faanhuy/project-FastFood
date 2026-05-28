@@ -1,0 +1,22 @@
+{
+  "products": "Sản phẩm",
+  "productDetail": "Chi tiết sản phẩm",
+  "price": "Giá",
+  "originalPrice": "Giá gốc",
+  "discount": "Giảm giá",
+  "outOfStock": "Hết hàng",
+  "inStock": "Còn hàng",
+  "quantity": "Số lượng",
+  "addToCart": "Thêm vào giỏ",
+  "addToWishlist": "Yêu thích",
+  "removeFromWishlist": "Bỏ yêu thích",
+  "category": "Danh mục",
+  "store": "Cửa hàng",
+  "reviews": "Đánh giá",
+  "rating": "Xếp hạng",
+  "noReviews": "Chưa có đánh giá",
+  "writeReview": "Viết đánh giá",
+  "images": "Hình ảnh",
+  "description": "Mô tả",
+  "relatedProducts": "Sản phẩm liên quan"
+}

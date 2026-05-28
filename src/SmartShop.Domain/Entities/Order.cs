@@ -8,7 +8,6 @@ public class Order : BaseAuditableEntity
     public Guid UserId { get; private set; }
     public OrderStatus Status { get; private set; } = OrderStatus.Pending;
     public decimal TotalAmount { get; private set; }
-    public string ShippingAddress { get; private set; } = string.Empty;
     public string? Notes { get; private set; }
     public decimal OriginalAmount { get; private set; }   // tổng trước giảm(= tổng các items)
     public decimal DiscountAmount { get; private set; }   // số tiền được giảm(= 0 nếu không dùng coupon)
@@ -40,7 +39,6 @@ public class Order : BaseAuditableEntity
 
     public static Order Create(
         Guid userId,
-        string shippingAddress,
         string? notes = null,
         string? shippingStreet = null,
         int? shippingWardId = null,
@@ -50,7 +48,6 @@ public class Order : BaseAuditableEntity
         return new Order
         {
             UserId = userId,
-            ShippingAddress = shippingAddress,
             Notes = notes,
             ShippingStreet = shippingStreet,
             ShippingWardId = shippingWardId,

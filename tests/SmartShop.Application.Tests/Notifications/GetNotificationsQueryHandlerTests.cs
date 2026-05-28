@@ -13,17 +13,18 @@ public class GetNotificationsQueryHandlerTests
     private readonly Mock<INotificationRepository> _notificationRepo = new();
     private readonly Mock<ICurrentUserService> _currentUser = new();
 
-    private static readonly string UserId = Guid.NewGuid().ToString();
+    private static readonly Guid UserId = Guid.NewGuid();
+    private static readonly string UserIdString = UserId.ToString();
 
     public GetNotificationsQueryHandlerTests()
     {
-        _currentUser.Setup(s => s.UserId).Returns(UserId);
+        _currentUser.Setup(s => s.UserId).Returns(UserIdString);
     }
 
     private GetNotificationsQueryHandler CreateHandler() =>
         new(_notificationRepo.Object, _currentUser.Object);
 
-    private static Notification CreateNotification(string userId, bool isRead = false)
+    private static Notification CreateNotification(Guid userId, bool isRead = false)
     {
         var notification = Notification.Create(userId, "Thong bao test", "Noi dung test");
         if (isRead) notification.MarkAsRead();

@@ -1,0 +1,21 @@
+{
+  "orders": "Đơn hàng",
+  "myOrders": "Đơn hàng của tôi",
+  "orderDetail": "Chi tiết đơn hàng",
+  "orderCode": "Mã đơn",
+  "orderDate": "Ngày đặt",
+  "orderStatus": "Trạng thái",
+  "status_Pending": "Chờ xác nhận",
+  "status_Confirmed": "Đã xác nhận",
+  "status_Shipping": "Đang giao",
+  "status_Delivered": "Đã giao",
+  "status_Cancelled": "Đã hủy",
+  "cancelOrder": "Hủy đơn hàng",
+  "returnRequest": "Yêu cầu hoàn hàng",
+  "returnStatus_Pending": "Chờ duyệt",
+  "returnStatus_Approved": "Đã duyệt",
+  "returnStatus_Rejected": "Từ chối",
+  "noOrders": "Bạn chưa có đơn hàng nào",
+  "trackOrder": "Theo dõi đơn hàng",
+  "totalAmount": "Tổng thanh toán"
+}

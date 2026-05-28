@@ -6,7 +6,6 @@ public class ChatSession : BaseAuditableEntity
 {
     private readonly List<ChatMessage> _messages = [];
 
-    public Guid SessionId { get; private set; }   // public-facing GUID
     public Guid? UserId { get; private set; }      // nullable — support anonymous
 
     public IReadOnlyList<ChatMessage> Messages => _messages.AsReadOnly();
@@ -17,7 +16,6 @@ public class ChatSession : BaseAuditableEntity
     {
         return new ChatSession
         {
-            SessionId = Guid.NewGuid(),
             UserId = userId
         };
     }

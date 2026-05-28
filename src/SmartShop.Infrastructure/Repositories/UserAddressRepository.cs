@@ -7,7 +7,7 @@ namespace SmartShop.Infrastructure.Repositories;
 
 public class UserAddressRepository(ApplicationDbContext context) : IUserAddressRepository
 {
-    public async Task<IReadOnlyList<UserAddress>> GetByUserIdAsync(string userId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<UserAddress>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
         return await context.UserAddresses
             //.AsNoTracking()
@@ -27,7 +27,7 @@ public class UserAddressRepository(ApplicationDbContext context) : IUserAddressR
             .FirstOrDefaultAsync(a => a.Id == id, ct);
     }
 
-    public async Task<UserAddress?> GetDefaultByUserIdAsync(string userId, CancellationToken ct = default)
+    public async Task<UserAddress?> GetDefaultByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
         return await context.UserAddresses
             .AsNoTracking()

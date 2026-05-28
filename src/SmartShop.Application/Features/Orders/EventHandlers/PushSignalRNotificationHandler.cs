@@ -50,7 +50,7 @@ public class PushSignalRNotificationHandler(
                 OrderId = notification.OrderId
             };
 
-            await hubService.SendToUserAsync(notification.UserId, "OrderStatusUpdated", payload, cancellationToken);
+            await hubService.SendToUserAsync(notification.UserId.ToString(), "OrderStatusUpdated", payload, cancellationToken);
         }
         catch (Exception ex)
         {

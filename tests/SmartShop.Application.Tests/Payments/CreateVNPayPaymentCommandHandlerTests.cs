@@ -47,12 +47,12 @@ public class CreateVNPayPaymentCommandHandlerTests
     public async Task CreateVNPayPayment_OrderNotFound_ThrowsNotFoundException()
     {
         var orderId = Guid.NewGuid();
-        var userId = Guid.NewGuid().ToString();
+        var userId = Guid.NewGuid();
 
         _orderRepo.Setup(r => r.GetByIdAsync(orderId, default)).ReturnsAsync((Order?)null);
 
         var act = () => CreateHandler().Handle(
-            new CreateVNPayPaymentCommand(orderId, userId, "https://return.url", "127.0.0.1"),
+            new CreateVNPayPaymentCommand(orderId, userId.ToString(), "https://return.url", "127.0.0.1"),
             default);
 
         await act.Should().ThrowAsync<NotFoundException>();

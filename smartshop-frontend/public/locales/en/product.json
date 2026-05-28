@@ -1,0 +1,22 @@
+{
+  "products": "Products",
+  "productDetail": "Product detail",
+  "price": "Price",
+  "originalPrice": "Original price",
+  "discount": "Discount",
+  "outOfStock": "Out of stock",
+  "inStock": "In stock",
+  "quantity": "Quantity",
+  "addToCart": "Add to cart",
+  "addToWishlist": "Wishlist",
+  "removeFromWishlist": "Remove from wishlist",
+  "category": "Category",
+  "store": "Store",
+  "reviews": "Reviews",
+  "rating": "Rating",
+  "noReviews": "No reviews yet",
+  "writeReview": "Write a review",
+  "images": "Images",
+  "description": "Description",
+  "relatedProducts": "Related products"
+}

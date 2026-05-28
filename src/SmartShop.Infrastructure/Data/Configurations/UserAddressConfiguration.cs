@@ -11,8 +11,7 @@ public class UserAddressConfiguration : IEntityTypeConfiguration<UserAddress>
         builder.HasKey(a => a.Id);
 
         builder.Property(a => a.UserId)
-            .IsRequired()
-            .HasMaxLength(450);
+            .IsRequired();
 
         builder.Property(a => a.Label)
             .IsRequired()
@@ -30,23 +29,17 @@ public class UserAddressConfiguration : IEntityTypeConfiguration<UserAddress>
             .IsRequired()
             .HasMaxLength(500);
 
-        builder.Property(a => a.Ward)
-            .HasMaxLength(200);
-
-        builder.Property(a => a.District)
-            .IsRequired()
-            .HasMaxLength(200);
-
-        builder.Property(a => a.City)
-            .IsRequired()
-            .HasMaxLength(200);
-
         builder.Property(a => a.IsDefault)
             .IsRequired()
             .HasDefaultValue(false);
 
         builder.HasIndex(a => a.UserId)
             .HasDatabaseName("IX_UserAddresses_UserId");
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(a => a.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Structured geography FKs (Sprint 18B)
         builder.Property(a => a.ProvinceId).IsRequired(false);

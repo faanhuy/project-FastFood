@@ -16,11 +16,12 @@ public class RemoveFromWishlistCommandHandlerTests
     private readonly Mock<IUnitOfWork> _uow = new();
     private readonly Mock<ICurrentUserService> _currentUser = new();
 
-    private static readonly string UserId = Guid.NewGuid().ToString();
+    private static readonly Guid UserId = Guid.NewGuid();
+    private static readonly string UserIdString = UserId.ToString();
 
     public RemoveFromWishlistCommandHandlerTests()
     {
-        _currentUser.Setup(s => s.UserId).Returns(UserId);
+        _currentUser.Setup(s => s.UserId).Returns(UserIdString);
         _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
     }
 

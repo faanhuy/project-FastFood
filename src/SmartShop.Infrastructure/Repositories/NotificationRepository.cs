@@ -7,7 +7,7 @@ namespace SmartShop.Infrastructure.Repositories;
 
 public class NotificationRepository(ApplicationDbContext context) : INotificationRepository
 {
-    public async Task<IEnumerable<Notification>> GetByUserIdAsync(string userId, CancellationToken ct = default)
+    public async Task<IEnumerable<Notification>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
         return await context.Notifications
             .Where(n => n.UserId == userId)
@@ -26,7 +26,7 @@ public class NotificationRepository(ApplicationDbContext context) : INotificatio
         await context.Notifications.AddAsync(notification, ct);
     }
 
-    public async Task<int> GetUnreadCountAsync(string userId, CancellationToken ct = default)
+    public async Task<int> GetUnreadCountAsync(Guid userId, CancellationToken ct = default)
     {
         return await context.Notifications
             .CountAsync(n => n.UserId == userId && !n.IsRead, ct);
@@ -38,7 +38,7 @@ public class NotificationRepository(ApplicationDbContext context) : INotificatio
         return Task.CompletedTask;
     }
 
-    public async Task DeleteAllByUserIdAsync(string userId, CancellationToken ct = default)
+    public async Task DeleteAllByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
         var notifications = await context.Notifications
             .Where(n => n.UserId == userId)

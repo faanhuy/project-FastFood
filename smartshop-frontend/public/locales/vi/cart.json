@@ -1,0 +1,21 @@
+{
+  "cart": "Giỏ hàng",
+  "emptyCart": "Giỏ hàng trống",
+  "checkout": "Thanh toán",
+  "total": "Tổng tiền",
+  "subtotal": "Tạm tính",
+  "shipping": "Phí vận chuyển",
+  "freeShipping": "Miễn phí vận chuyển",
+  "coupon": "Mã giảm giá",
+  "applyCoupon": "Áp dụng mã",
+  "removeCoupon": "Xóa mã",
+  "couponApplied": "Mã đã được áp dụng",
+  "continueShoping": "Tiếp tục mua sắm",
+  "removeItem": "Xóa sản phẩm",
+  "updateQuantity": "Cập nhật số lượng",
+  "paymentMethod": "Phương thức thanh toán",
+  "cod": "Thanh toán khi nhận hàng",
+  "vnpay": "VNPay",
+  "shippingAddress": "Địa chỉ giao hàng",
+  "selectAddress": "Chọn địa chỉ"
+}

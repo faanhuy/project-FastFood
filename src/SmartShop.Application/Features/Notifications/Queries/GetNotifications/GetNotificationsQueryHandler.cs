@@ -11,7 +11,7 @@ public class GetNotificationsQueryHandler(
 {
     public async Task<ApiResponse<List<NotificationDto>>> Handle(GetNotificationsQuery request, CancellationToken cancellationToken)
     {
-        var userId = currentUserService.UserId;
+        var userId = Guid.Parse(currentUserService.UserId);
         var notifications = await notificationRepository.GetByUserIdAsync(userId, cancellationToken);
 
         var dtos = notifications.Select(n => new NotificationDto(

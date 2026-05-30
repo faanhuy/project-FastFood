@@ -39,6 +39,13 @@ public class SizeRepository(ApplicationDbContext db) : ISizeRepository
             .AnyAsync(s => s.Label == label && s.Category == category, ct);
     }
 
+    public async Task<bool> IsReferencedAsync(Guid id, CancellationToken ct = default)
+    {
+        return await db.ProductSizes.AnyAsync(ps => ps.SizeId == id, ct)
+            || await db.StoreSizeInventories.AnyAsync(si => si.SizeId == id, ct)
+            || await db.StockReceiptItems.AnyAsync(sri => sri.SizeId == id, ct);
+    }
+
     public async Task AddAsync(Size size, CancellationToken ct = default)
     {
         await db.Sizes.AddAsync(size, ct);
@@ -47,5 +54,10 @@ public class SizeRepository(ApplicationDbContext db) : ISizeRepository
     public void Update(Size size)
     {
         db.Sizes.Update(size);
+    }
+
+    public void Remove(Size size)
+    {
+        db.Sizes.Remove(size);
     }
 }

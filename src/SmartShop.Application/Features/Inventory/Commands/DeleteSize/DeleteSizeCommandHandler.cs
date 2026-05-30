@@ -20,11 +20,13 @@ public class DeleteSizeCommandHandler(
         var size = await repo.GetByIdAsync(request.Id, ct)
             ?? throw new NotFoundException(nameof(Size), request.Id);
 
-        size.Deactivate();
-        repo.Update(size);
+        if (await repo.IsReferencedAsync(request.Id, ct))
+            throw new ConflictException("error.size_in_use", null);
+
+        repo.Remove(size);
         await uow.SaveChangesAsync(ct);
 
-        return ApiResponse<object>.Ok(new { },
-            localization.GetMessage("success.size_deactivated", languageService.Language));
+        var lang = languageService.Language;
+        return ApiResponse<object>.Ok(new { }, localization.GetMessage("success.size_deactivated", lang));
     }
 }

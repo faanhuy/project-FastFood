@@ -9,6 +9,8 @@ public interface ISizeRepository
     Task<List<Size>> GetAllAsync(CancellationToken ct = default);
     Task<Size?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<bool> ExistsByLabelAndCategoryAsync(string label, SizeType category, CancellationToken ct = default);
+    Task<bool> IsReferencedAsync(Guid id, CancellationToken ct = default);
     Task AddAsync(Size size, CancellationToken ct = default);
     void Update(Size size);
+    void Remove(Size size);
 }

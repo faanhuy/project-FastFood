@@ -32,5 +32,6 @@ public class Size : BaseAuditableEntity
         DisplayOrder = displayOrder;
     }
 
+    public void Activate() => IsActive = true;
     public void Deactivate() => IsActive = false;
 }

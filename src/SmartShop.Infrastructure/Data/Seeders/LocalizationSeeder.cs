@@ -197,6 +197,8 @@ internal sealed class LocalizationSeeder(
                 "Không thể xóa size đang có tồn kho. Vui lòng set tồn kho về 0 trước.", "error"),
             LocalizedMessage.Create("error.stock_receipt_not_pending", "vi",
                 "Chỉ có thể xóa phiếu nhập hàng có trạng thái Pending.", "error"),
+            LocalizedMessage.Create("error.size_in_use", "vi",
+                "Không thể xóa kích cỡ đang được sử dụng bởi sản phẩm hoặc phiếu nhập kho.", "error"),
 
             // ── Reviews — Vietnamese ─────────────────────────────────────────────────
             LocalizedMessage.Create("error.review_already_exists", "vi",
@@ -531,6 +533,8 @@ internal sealed class LocalizationSeeder(
                 "Cannot delete a size with existing inventory. Please set inventory to 0 first.", "error"),
             LocalizedMessage.Create("error.stock_receipt_not_pending", "en",
                 "Only stock receipts with Pending status can be deleted.", "error"),
+            LocalizedMessage.Create("error.size_in_use", "en",
+                "Cannot delete a size that is in use by products or stock receipts.", "error"),
 
             // ── Reviews — English ─────────────────────────────────────────────────────
             LocalizedMessage.Create("error.review_already_exists", "en",

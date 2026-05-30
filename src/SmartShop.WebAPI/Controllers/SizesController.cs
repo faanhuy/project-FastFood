@@ -5,6 +5,7 @@ using SmartShop.Application.Common.Models;
 using SmartShop.Application.Features.Inventory;
 using SmartShop.Application.Features.Inventory.Commands.CreateSize;
 using SmartShop.Application.Features.Inventory.Commands.DeleteSize;
+using SmartShop.Application.Features.Inventory.Commands.ToggleSizeActive;
 using SmartShop.Application.Features.Inventory.Commands.UpdateSize;
 using SmartShop.Application.Features.Inventory.Queries.GetSizes;
 using SmartShop.Domain.Enums;
@@ -64,7 +65,16 @@ public class SizesController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>Vô hiệu hóa kích thước</summary>
+    /// <summary>Bật/tắt trạng thái kích thước</summary>
+    [HttpPatch("api/admin/sizes/{id:guid}/toggle-active")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse<SizeDto>>> ToggleSizeActive(Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new ToggleSizeActiveCommand(id), ct);
+        return Ok(result);
+    }
+
+    /// <summary>Xóa kích thước</summary>
     [HttpDelete("api/admin/sizes/{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ApiResponse<object>>> DeleteSize(Guid id, CancellationToken ct)

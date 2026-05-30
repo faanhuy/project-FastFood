@@ -15,6 +15,8 @@ public class RemoveFromWishlistCommandHandlerTests
     private readonly Mock<IWishlistRepository> _wishlistRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
     private readonly Mock<ICurrentUserService> _currentUser = new();
+    private readonly Mock<ILocalizationService> _localization = new();
+    private readonly Mock<ICurrentLanguageService> _langService = new();
 
     private static readonly Guid UserId = Guid.NewGuid();
     private static readonly string UserIdString = UserId.ToString();
@@ -23,10 +25,12 @@ public class RemoveFromWishlistCommandHandlerTests
     {
         _currentUser.Setup(s => s.UserId).Returns(UserIdString);
         _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        _localization.Setup(l => l.GetMessage(It.IsAny<string>(), It.IsAny<string>(), null)).Returns("ok");
+        _langService.Setup(s => s.Language).Returns("vi");
     }
 
     private RemoveFromWishlistCommandHandler CreateHandler() =>
-        new(_wishlistRepo.Object, _uow.Object, _currentUser.Object);
+        new(_wishlistRepo.Object, _uow.Object, _currentUser.Object, _localization.Object, _langService.Object);
 
     private static WishlistItem CreateWishlistItem(Guid productId) =>
         WishlistItem.Create(UserId, productId);

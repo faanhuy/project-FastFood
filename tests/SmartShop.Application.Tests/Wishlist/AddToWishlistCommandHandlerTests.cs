@@ -16,6 +16,8 @@ public class AddToWishlistCommandHandlerTests
     private readonly Mock<IProductRepository> _productRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
     private readonly Mock<ICurrentUserService> _currentUser = new();
+    private readonly Mock<ILocalizationService> _localization = new();
+    private readonly Mock<ICurrentLanguageService> _langService = new();
 
     private static readonly Guid UserId = Guid.NewGuid();
     private static readonly string UserIdString = UserId.ToString();
@@ -24,10 +26,12 @@ public class AddToWishlistCommandHandlerTests
     {
         _currentUser.Setup(s => s.UserId).Returns(UserIdString);
         _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        _localization.Setup(l => l.GetMessage(It.IsAny<string>(), It.IsAny<string>(), null)).Returns("ok");
+        _langService.Setup(s => s.Language).Returns("vi");
     }
 
     private AddToWishlistCommandHandler CreateHandler() =>
-        new(_wishlistRepo.Object, _productRepo.Object, _uow.Object, _currentUser.Object);
+        new(_wishlistRepo.Object, _productRepo.Object, _uow.Object, _currentUser.Object, _localization.Object, _langService.Object);
 
     private static Product CreateProduct() =>
         Product.Create("San pham A", "Mo ta", 100m, Guid.NewGuid(), "san-pham-a");

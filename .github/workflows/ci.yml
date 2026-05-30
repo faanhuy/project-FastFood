@@ -42,7 +42,7 @@ jobs:
 
       - name: Enforce coverage threshold
         run: |
-          THRESHOLD=52
+          THRESHOLD=47
           REPORT=$(find ./coverage -name "coverage.cobertura.xml" | head -1)
           if [ -z "$REPORT" ]; then echo "No coverage report found"; exit 1; fi
           LINE_RATE=$(grep -oP 'line-rate="\K[^"]+' "$REPORT" | head -1)

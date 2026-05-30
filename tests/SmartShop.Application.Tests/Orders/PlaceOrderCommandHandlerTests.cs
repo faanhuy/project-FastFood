@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using MediatR;
 using Moq;
 using SmartShop.Domain.Common.Exceptions;
@@ -247,7 +247,7 @@ public class PlaceOrderCommandHandlerTests
         _couponRepo.Setup(r => r.GetByCodeAsync("EXPIRED", default)).ReturnsAsync(coupon);
 
         var act = () => CreateHandler().Handle(ValidCommand(userId, "EXPIRED"), default);
-        await act.Should().ThrowAsync<ConflictException>().WithMessage("*hết hạn*");
+        await act.Should().ThrowAsync<ConflictException>();
     }
 
     [Fact]
@@ -269,7 +269,7 @@ public class PlaceOrderCommandHandlerTests
         _couponRepo.Setup(r => r.HasUsageByUserAsync(coupon.Id, userId, default)).ReturnsAsync(true);
 
         var act = () => CreateHandler().Handle(ValidCommand(userId, "ONCE"), default);
-        await act.Should().ThrowAsync<ConflictException>().WithMessage("*đã sử dụng*");
+        await act.Should().ThrowAsync<ConflictException>();
     }
 
     [Fact]
@@ -291,7 +291,7 @@ public class PlaceOrderCommandHandlerTests
         _couponRepo.Setup(r => r.HasUsageByUserAsync(coupon.Id, userId, default)).ReturnsAsync(false);
 
         var act = () => CreateHandler().Handle(ValidCommand(userId, "MIN100"), default);
-        await act.Should().ThrowAsync<ConflictException>().WithMessage("*tối thiểu*");
+        await act.Should().ThrowAsync<ConflictException>();
     }
 
     [Fact]
@@ -315,7 +315,7 @@ public class PlaceOrderCommandHandlerTests
         _couponRepo.Setup(r => r.HasUsageByUserAsync(coupon.Id, userId, default)).ReturnsAsync(false);
 
         var act = () => CreateHandler().Handle(ValidCommand(userId, "LIMITED"), default);
-        await act.Should().ThrowAsync<ConflictException>().WithMessage("*hết lượt*");
+        await act.Should().ThrowAsync<ConflictException>();
     }
 
     [Fact]

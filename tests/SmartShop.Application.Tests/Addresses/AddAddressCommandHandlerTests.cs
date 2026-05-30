@@ -3,6 +3,7 @@ using Moq;
 using Xunit;
 using SmartShop.Application.Features.Addresses.Commands.AddAddress;
 using SmartShop.Application.Interfaces;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces;
 
@@ -12,9 +13,17 @@ public class AddAddressCommandHandlerTests
 {
     private readonly Mock<IUserAddressRepository> _addressRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
+    private readonly Mock<ILocalizationService> _localization = new();
+    private readonly Mock<ICurrentLanguageService> _langService = new();
+
+    public AddAddressCommandHandlerTests()
+    {
+        _localization.Setup(l => l.GetMessage(It.IsAny<string>(), It.IsAny<string>(), null)).Returns("ok");
+        _langService.Setup(s => s.Language).Returns("vi");
+    }
 
     private AddAddressCommandHandler CreateHandler() =>
-        new(_addressRepo.Object, _uow.Object);
+        new(_addressRepo.Object, _uow.Object, _localization.Object, _langService.Object);
 
     private static AddAddressCommand ValidCommand(Guid userId) =>
         new(userId, "Nhà riêng", "Nguyen Van A", "0901234567",

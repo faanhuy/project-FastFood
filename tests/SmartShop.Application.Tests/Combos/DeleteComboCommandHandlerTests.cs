@@ -4,6 +4,7 @@ using SmartShop.Domain.Common.Exceptions;
 using Xunit;
 using SmartShop.Application.Features.Combos.Commands.DeleteCombo;
 using SmartShop.Application.Interfaces;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces;
 
@@ -13,9 +14,17 @@ public class DeleteComboCommandHandlerTests
 {
     private readonly Mock<IComboRepository> _comboRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
+    private readonly Mock<ILocalizationService> _localization = new();
+    private readonly Mock<ICurrentLanguageService> _langService = new();
+
+    public DeleteComboCommandHandlerTests()
+    {
+        _localization.Setup(l => l.GetMessage(It.IsAny<string>(), It.IsAny<string>(), null)).Returns("ok");
+        _langService.Setup(s => s.Language).Returns("vi");
+    }
 
     private DeleteComboCommandHandler CreateHandler() =>
-        new(_comboRepo.Object, _uow.Object);
+        new(_comboRepo.Object, _uow.Object, _localization.Object, _langService.Object);
 
     private static Combo CreateTestCombo()
     {
@@ -86,6 +95,6 @@ public class DeleteComboCommandHandlerTests
 
         var result = await CreateHandler().Handle(command, default);
 
-        result.Message.Should().Be("Combo đã được vô hiệu hóa.");
+        result.Message.Should().NotBeNullOrWhiteSpace();
     }
 }

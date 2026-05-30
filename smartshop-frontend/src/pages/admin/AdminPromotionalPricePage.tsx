@@ -56,7 +56,7 @@ export default function AdminPromotionalPricePage() {
 
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [stores, setStores] = useState<AdminStore[]>([]);
-  const [itemSizes, setItemSizes] = useState<Record<number, ProductSize[]>>({});
+  const [, setItemSizes] = useState<Record<number, ProductSize[]>>({});
   const [sizePopupIdx, setSizePopupIdx] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 

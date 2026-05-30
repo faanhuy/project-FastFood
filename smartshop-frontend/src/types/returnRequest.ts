@@ -1,15 +1,17 @@
-export enum ReturnStatus {
-  Pending = 'Pending',
-  Approved = 'Approved',
-  Rejected = 'Rejected',
-}
+export const ReturnStatus = {
+  Pending: 'Pending',
+  Approved: 'Approved',
+  Rejected: 'Rejected',
+} as const;
+export type ReturnStatus = typeof ReturnStatus[keyof typeof ReturnStatus];
 
-export enum ReturnReason {
-  Defective = 'Defective',
-  NotAsDescribed = 'NotAsDescribed',
-  WrongSize = 'WrongSize',
-  ChangedMind = 'ChangedMind',
-}
+export const ReturnReason = {
+  Defective: 'Defective',
+  NotAsDescribed: 'NotAsDescribed',
+  WrongSize: 'WrongSize',
+  ChangedMind: 'ChangedMind',
+} as const;
+export type ReturnReason = typeof ReturnReason[keyof typeof ReturnReason];
 
 // Numeric values for sending to API (controller expects int)
 export const RETURN_REASON_INT: Record<ReturnReason, number> = {

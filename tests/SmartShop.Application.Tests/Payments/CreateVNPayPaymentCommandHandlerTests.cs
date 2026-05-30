@@ -2,6 +2,7 @@ using FluentAssertions;
 using Moq;
 using Xunit;
 using SmartShop.Application.Features.Payments.Commands.CreateVNPayPayment;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Enums;
@@ -13,9 +14,17 @@ public class CreateVNPayPaymentCommandHandlerTests
 {
     private readonly Mock<IOrderRepository> _orderRepo = new();
     private readonly Mock<IPaymentGateway> _paymentGateway = new();
+    private readonly Mock<ILocalizationService> _localization = new();
+    private readonly Mock<ICurrentLanguageService> _langService = new();
+
+    public CreateVNPayPaymentCommandHandlerTests()
+    {
+        _localization.Setup(l => l.GetMessage(It.IsAny<string>(), It.IsAny<string>(), null)).Returns("ok");
+        _langService.Setup(s => s.Language).Returns("vi");
+    }
 
     private CreateVNPayPaymentCommandHandler CreateHandler() =>
-        new(_orderRepo.Object, _paymentGateway.Object);
+        new(_orderRepo.Object, _paymentGateway.Object, _localization.Object, _langService.Object);
 
     private static Order CreateVNPayOrder(Guid userId)
     {

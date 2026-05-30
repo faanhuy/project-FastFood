@@ -16,7 +16,7 @@ import {
 } from 'react-icons/fi';
 import { orderService } from '../services/orderService';
 import { paymentService } from '../services/paymentService';
-import type { OrderDto, PaymentMethod, PaymentStatus } from '../types/order';
+import type { OrderDto, PaymentStatus } from '../types/order';
 import { ORDER_STATUSES } from '../types/order';
 import { formatPrice, formatDate } from '../utils/formatters';
 import { getImageUrl } from '../utils/imageUrl';

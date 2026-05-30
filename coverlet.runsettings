@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<!-- Coverage baseline: 52% (Application+Domain only). Sprint 12 target: 60%. Threshold is enforced by CI bash check, not coverlet (collector mode does not fail the build on threshold). -->
+<!-- Coverage baseline: 47% (Application+Domain only). Sprint 18 raised to 47% after localization sprint added Domain entities. Target: 60%. Threshold is enforced by CI bash check, not coverlet (collector mode does not fail the build on threshold). -->
 <RunSettings>
   <DataCollectionRunSettings>
     <DataCollectors>

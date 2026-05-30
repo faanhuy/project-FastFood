@@ -3,6 +3,7 @@ using Moq;
 using Xunit;
 using SmartShop.Application.Features.Addresses.Commands.UpdateAddress;
 using SmartShop.Application.Interfaces;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces;
@@ -13,9 +14,17 @@ public class UpdateAddressCommandHandlerTests
 {
     private readonly Mock<IUserAddressRepository> _addressRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
+    private readonly Mock<ILocalizationService> _localization = new();
+    private readonly Mock<ICurrentLanguageService> _langService = new();
+
+    public UpdateAddressCommandHandlerTests()
+    {
+        _localization.Setup(l => l.GetMessage(It.IsAny<string>(), It.IsAny<string>(), null)).Returns("ok");
+        _langService.Setup(s => s.Language).Returns("vi");
+    }
 
     private UpdateAddressCommandHandler CreateHandler() =>
-        new(_addressRepo.Object, _uow.Object);
+        new(_addressRepo.Object, _uow.Object, _localization.Object, _langService.Object);
 
     private static UpdateAddressCommand ValidCommand(Guid addressId, Guid userId) =>
         new(addressId, userId, "Nhà riêng mới", "Nguyen Van B", "0909999888",

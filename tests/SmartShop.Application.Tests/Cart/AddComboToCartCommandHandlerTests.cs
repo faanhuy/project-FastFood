@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Moq;
 using Xunit;
 using SmartShop.Application.Features.Cart.Commands.AddComboToCart;
@@ -118,8 +118,7 @@ public class AddComboToCartCommandHandlerTests
         var act = () => CreateHandler().Handle(
             new AddComboToCartCommand(userId, combo.Id, 1), default);
 
-        await act.Should().ThrowAsync<ConflictException>()
-            .WithMessage("*không còn khả dụng*");
+        await act.Should().ThrowAsync<ConflictException>();
     }
 
     [Fact]
@@ -146,8 +145,7 @@ public class AddComboToCartCommandHandlerTests
         var act = () => CreateHandler().Handle(
             new AddComboToCartCommand(userId, combo.Id, 1), default);
 
-        await act.Should().ThrowAsync<ConflictException>()
-            .WithMessage("*không còn khả dụng*");
+        await act.Should().ThrowAsync<ConflictException>();
     }
 
     [Fact]
@@ -171,8 +169,7 @@ public class AddComboToCartCommandHandlerTests
         var act = () => CreateHandler().Handle(
             new AddComboToCartCommand(userId, combo.Id, 1), default);
 
-        await act.Should().ThrowAsync<ConflictException>()
-            .WithMessage("*không có món con*");
+        await act.Should().ThrowAsync<ConflictException>();
     }
 
     [Fact]
@@ -247,8 +244,7 @@ public class AddComboToCartCommandHandlerTests
         var act = () => CreateHandler().Handle(
             new AddComboToCartCommand(userId, combo.Id, 1), default);
 
-        await act.Should().ThrowAsync<ConflictException>()
-            .WithMessage("*không còn khả dụng*");
+        await act.Should().ThrowAsync<ConflictException>();
     }
 
     [Fact]

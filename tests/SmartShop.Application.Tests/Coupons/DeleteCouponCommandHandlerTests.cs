@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Moq;
 using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Features.Coupons.Commands.DeleteCoupon;
@@ -74,7 +74,7 @@ public class DeleteCouponCommandHandlerTests
 
         var act = () => CreateHandler().Handle(new DeleteCouponCommand("USED"), default);
 
-        await act.Should().ThrowAsync<ConflictException>().WithMessage("*USED*");
+        await act.Should().ThrowAsync<ConflictException>();
     }
 
     [Fact]

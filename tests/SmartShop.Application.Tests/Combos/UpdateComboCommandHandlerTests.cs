@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Moq;
 using SmartShop.Domain.Common.Exceptions;
 using Xunit;
@@ -116,8 +116,7 @@ public class UpdateComboCommandHandlerTests
 
         var act = () => CreateHandler().Handle(command, default);
 
-        await act.Should().ThrowAsync<ConflictException>()
-            .WithMessage("*Combo phải có ít nhất 1 sản phẩm*");
+        await act.Should().ThrowAsync<ConflictException>();
     }
 
     [Fact]
@@ -153,8 +152,7 @@ public class UpdateComboCommandHandlerTests
 
         var act = () => CreateHandler().Handle(command, default);
 
-        await act.Should().ThrowAsync<ConflictException>()
-            .WithMessage("*không hoạt động*");
+        await act.Should().ThrowAsync<ConflictException>();
     }
 
     [Fact]

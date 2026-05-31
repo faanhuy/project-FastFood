@@ -12,7 +12,8 @@ public class RegisterCommandHandler(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
     IJwtTokenService jwtTokenService,
-    IUnitOfWork unitOfWork
+    IUnitOfWork unitOfWork,
+    ITokenHasher tokenHasher
 ) : IRequestHandler<RegisterCommand, AuthResponse>
 {
     public async Task<AuthResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -30,7 +31,7 @@ public class RegisterCommandHandler(
         var refreshToken = jwtTokenService.GenerateRefreshToken();
         var refreshTokenExpiry = DateTime.UtcNow.AddDays(1);
 
-        user.SetRefreshToken(refreshToken, refreshTokenExpiry);
+        user.SetRefreshToken(refreshToken, refreshTokenExpiry, tokenHasher);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new AuthResponse(token, refreshToken, refreshTokenExpiry, user.Email, user.FirstName, user.LastName, user.Role);

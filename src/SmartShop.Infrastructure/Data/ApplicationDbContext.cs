@@ -56,6 +56,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ComboItem> ComboItems { get; set; }
     public DbSet<ComboPromotion> ComboPromotions { get; set; }
     public DbSet<ReturnRequest> ReturnRequests { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
 
     public DbSet<LocalizedMessage> LocalizedMessages { get; set; }
     public DbSet<LocalizedFieldName> LocalizedFieldNames { get; set; }

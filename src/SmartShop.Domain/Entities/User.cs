@@ -1,4 +1,5 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.Domain.Entities;
 
@@ -10,6 +11,7 @@ public class User : BaseAuditableEntity
     public string LastName { get; private set; } = string.Empty;
     public string Role { get; private set; } = "Customer";
     public string? RefreshToken { get; private set; }
+    public string? RefreshTokenHash { get; private set; }
     public DateTime? RefreshTokenExpiry { get; private set; }
     public string? AvatarUrl { get; private set; }
 
@@ -26,15 +28,32 @@ public class User : BaseAuditableEntity
         };
     }
 
-    public void SetRefreshToken(string refreshToken, DateTime expiry)
+    public void SetRefreshToken(string refreshToken, DateTime expiry, ITokenHasher hasher)
     {
-        RefreshToken = refreshToken;
+        ArgumentException.ThrowIfNullOrWhiteSpace(refreshToken);
+        RefreshToken = null;
+        RefreshTokenHash = hasher.Hash(refreshToken);
         RefreshTokenExpiry = expiry;
+    }
+
+    public bool VerifyRefreshToken(string token, ITokenHasher hasher)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+
+        // Try hash verification first
+        if (!string.IsNullOrEmpty(RefreshTokenHash))
+        {
+            return hasher.Verify(token, RefreshTokenHash);
+        }
+
+        // Fallback to plaintext comparison (backward compatibility)
+        return token == RefreshToken;
     }
 
     public void RevokeRefreshToken()
     {
         RefreshToken = null;
+        RefreshTokenHash = null;
         RefreshTokenExpiry = null;
     }
 

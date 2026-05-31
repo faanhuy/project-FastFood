@@ -45,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<ICouponUsageRepository, CouponUsageRepository>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
+        services.AddScoped<ITokenHasher, TokenHasher>();
         services.AddScoped<IProductEmbeddingRepository, ProductEmbeddingRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<IReviewImageRepository, ReviewImageRepository>();
@@ -67,6 +68,8 @@ public static class DependencyInjection
         services.AddScoped<IComboPromotionRepository, ComboPromotionRepository>();
         services.AddScoped<IComboPromotionService, ComboPromotionService>();
         services.AddScoped<IReturnRequestRepository, ReturnRequestRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
 
         services.AddScoped<IDataSeeder, LocalizationSeeder>();
         services.AddScoped<IDataSeeder, AppSettingsSeeder>();

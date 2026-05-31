@@ -18,6 +18,10 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
         => await context.Users
             .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken, ct);
 
+    public async Task<User?> GetByRefreshTokenHashAsync(string tokenHash, CancellationToken ct = default)
+        => await context.Users
+            .FirstOrDefaultAsync(u => u.RefreshTokenHash == tokenHash, ct);
+
     public async Task AddAsync(User user, CancellationToken ct = default)
         => await context.Users.AddAsync(user, ct);
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiMapPin, FiPhone, FiCheck, FiX } from 'react-icons/fi';
 import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
 import type { Store } from '../types/store';
@@ -10,6 +11,7 @@ interface StoreSelectorModalProps {
 }
 
 export default function StoreSelectorModal({ isOpen, onClose, required = false }: StoreSelectorModalProps) {
+  const { t } = useTranslation(['cart', 'common']);
   const { stores, selectedStore, setSelectedStore, fetchStores } = useStoreSelectionStore();
   const [pending, setPending] = useState<Store | null>(selectedStore);
   const [loading, setLoading] = useState(false);
@@ -52,12 +54,12 @@ export default function StoreSelectorModal({ isOpen, onClose, required = false }
       <div id="store-selector-modal" className="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-base font-semibold text-gray-800">Chọn chi nhánh</h2>
+          <h2 className="text-base font-semibold text-gray-800">{t('selectBranchModal')}</h2>
           <button
             onClick={handleClose}
             disabled={required && !selectedStore}
             className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            title={required && !selectedStore ? 'Vui lòng chọn chi nhánh trước' : 'Đóng'}
+            title={required && !selectedStore ? t('selectBranchToOrder') : t('common:close')}
           >
             <FiX size={18} />
           </button>
@@ -72,7 +74,7 @@ export default function StoreSelectorModal({ isOpen, onClose, required = false }
               ))}
             </div>
           ) : stores.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">Không có chi nhánh nào.</p>
+            <p className="text-sm text-gray-400 text-center py-8">{t('noStoresAvailable')}</p>
           ) : (
             <div className="space-y-2">
               {stores.map((store) => {
@@ -117,7 +119,7 @@ export default function StoreSelectorModal({ isOpen, onClose, required = false }
         <div className="px-6 py-4 border-t bg-gray-50">
           {required && !selectedStore && (
             <p className="text-xs text-amber-600 mb-3">
-              Vui lòng chọn chi nhánh để tiếp tục đặt hàng.
+              {t('selectBranchToOrder')}
             </p>
           )}
           <button
@@ -125,7 +127,7 @@ export default function StoreSelectorModal({ isOpen, onClose, required = false }
             disabled={!pending}
             className="w-full bg-rose-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            Chọn chi nhánh này
+            {t('selectThisBranch')}
           </button>
         </div>
       </div>

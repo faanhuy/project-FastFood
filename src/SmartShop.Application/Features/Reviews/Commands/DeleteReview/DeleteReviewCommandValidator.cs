@@ -7,9 +7,9 @@ public class DeleteReviewCommandValidator : AbstractValidator<DeleteReviewComman
     public DeleteReviewCommandValidator()
     {
         RuleFor(x => x.ReviewId)
-            .NotEmpty().WithMessage("ReviewId không hợp lệ.");
+            .NotEmpty().WithMessage("validation.review_id_invalid");
 
         RuleFor(x => x.RequestingUserId)
-            .NotEmpty().WithMessage("UserId không hợp lệ.");
+            .NotEmpty().WithMessage("validation.user_id_invalid");
     }
 }

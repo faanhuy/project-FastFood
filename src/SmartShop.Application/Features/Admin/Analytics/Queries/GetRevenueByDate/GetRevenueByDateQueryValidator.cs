@@ -7,9 +7,9 @@ public class GetRevenueByDateQueryValidator : AbstractValidator<GetRevenueByDate
     public GetRevenueByDateQueryValidator()
     {
         RuleFor(x => x.From)
-            .LessThan(x => x.To).WithMessage("Ngày bắt đầu phải nhỏ hơn ngày kết thúc.");
+            .LessThan(x => x.To).WithMessage("validation.date_from_before_to");
 
         RuleFor(x => x.To)
-            .LessThanOrEqualTo(DateTime.UtcNow.AddDays(1)).WithMessage("Ngày kết thúc không được ở tương lai.");
+            .LessThanOrEqualTo(DateTime.UtcNow.AddDays(1)).WithMessage("validation.date_to_not_future");
     }
 }

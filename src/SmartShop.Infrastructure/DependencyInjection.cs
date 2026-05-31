@@ -33,6 +33,8 @@ public static class DependencyInjection
             options.UseSqlServer(connectionString, b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
         });
 
+        services.AddMemoryCache();
+        services.AddScoped<ILocalizationService, LocalizationService>();
         services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -66,6 +68,7 @@ public static class DependencyInjection
         services.AddScoped<IComboPromotionService, ComboPromotionService>();
         services.AddScoped<IReturnRequestRepository, ReturnRequestRepository>();
 
+        services.AddScoped<IDataSeeder, LocalizationSeeder>();
         services.AddScoped<IDataSeeder, AppSettingsSeeder>();
         services.AddScoped<IDataSeeder, AdminUserSeeder>();
         services.AddScoped<IDataSeeder, FaqDocumentSeeder>();

@@ -1,4 +1,5 @@
 using MediatR;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Common.Exceptions;
@@ -9,7 +10,9 @@ namespace SmartShop.Application.Features.Addresses.Commands.UpdateAddress;
 
 public class UpdateAddressCommandHandler(
     IUserAddressRepository addressRepository,
-    IUnitOfWork unitOfWork) : IRequestHandler<UpdateAddressCommand, ApiResponse<AddressDto>>
+    IUnitOfWork unitOfWork,
+    ILocalizationService localization,
+    ICurrentLanguageService languageService) : IRequestHandler<UpdateAddressCommand, ApiResponse<AddressDto>>
 {
     public async Task<ApiResponse<AddressDto>> Handle(UpdateAddressCommand command, CancellationToken cancellationToken)
     {
@@ -17,7 +20,7 @@ public class UpdateAddressCommandHandler(
             ?? throw new NotFoundException(nameof(UserAddress), command.AddressId);
 
         if (address.UserId != command.UserId)
-            throw new UnauthorizedException("Không có quyền chỉnh sửa địa chỉ này.");
+            throw new UnauthorizedException("error.address_update_unauthorized", null);
 
         address.Update(
             command.Label,
@@ -30,6 +33,7 @@ public class UpdateAddressCommandHandler(
         addressRepository.Update(address);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return ApiResponse<AddressDto>.Ok(AddressDto.From(address), "Đã cập nhật địa chỉ giao hàng.");
+        return ApiResponse<AddressDto>.Ok(AddressDto.From(address),
+            localization.GetMessage("success.address_updated", languageService.Language));
     }
 }

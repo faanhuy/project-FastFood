@@ -19,7 +19,7 @@ public class LoginCommandHandler(
         var user = await userRepository.GetByEmailAsync(request.Email, cancellationToken);
 
         if (user is null || !passwordHasher.Verify(request.Password, user.PasswordHash))
-            throw new UnauthorizedException("Email hoặc mật khẩu không đúng.");
+            throw new UnauthorizedException("error.auth_invalid_credentials", null);
 
         var token = jwtTokenService.GenerateToken(user);
         var refreshToken = jwtTokenService.GenerateRefreshToken();

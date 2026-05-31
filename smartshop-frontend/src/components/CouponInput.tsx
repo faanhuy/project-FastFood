@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiX, FiTag } from 'react-icons/fi';
 import { couponService, type ValidateCouponResult } from '../services/couponService';
 import { getApiError } from '../utils/errorHandler';
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function CouponInput({ orderTotal, onApplied, onClear, appliedCode }: Props) {
+  const { t } = useTranslation(['cart', 'toast']);
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,7 +27,7 @@ export default function CouponInput({ orderTotal, onApplied, onClear, appliedCod
       onApplied(result, trimmed.toUpperCase());
       setCode('');
     } catch (err) {
-      setError(getApiError(err, 'Mã voucher không hợp lệ hoặc đã hết hạn.'));
+      setError(getApiError(err, t('toast:couponError')));
     } finally {
       setLoading(false);
     }
@@ -47,7 +49,7 @@ export default function CouponInput({ orderTotal, onApplied, onClear, appliedCod
         <button
           onClick={handleClear}
           className="text-green-600 hover:text-red-500 transition-colors"
-          title="Xoá mã giảm giá"
+          title={t('cart:removeCoupon')}
         >
           <FiX size={18} />
         </button>
@@ -61,7 +63,7 @@ export default function CouponInput({ orderTotal, onApplied, onClear, appliedCod
         <input
           type="text"
           className="flex-1 border rounded-full px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-orange-400"
-          placeholder="Nhập mã giảm giá"
+          placeholder={t('cart:enterCoupon')}
           value={code}
           onChange={e => { setCode(e.target.value); setError(''); }}
           onKeyDown={e => { if (e.key === 'Enter') handleApply(); }}
@@ -72,7 +74,7 @@ export default function CouponInput({ orderTotal, onApplied, onClear, appliedCod
           onClick={handleApply}
           disabled={loading || !code.trim()}
         >
-          {loading ? 'Đang kiểm tra...' : 'Áp dụng'}
+          {loading ? t('cart:applying') : t('cart:apply')}
         </button>
       </div>
       {error && (

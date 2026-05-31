@@ -21,10 +21,10 @@ public class CancelOrderCommandHandler(
             ?? throw new NotFoundException("Order", request.OrderId);
 
         if (order.UserId != request.UserId)
-            throw new UnauthorizedException("Bạn không có quyền huỷ đơn hàng này.");
+            throw new UnauthorizedException("error.order_cancel_unauthorized", null);
 
         if (order.Status != OrderStatus.Pending)
-            throw new ConflictException("Chỉ có thể huỷ đơn hàng đang ở trạng thái Chờ xác nhận.");
+            throw new ConflictException("error.order_cancel_invalid_status", null);
 
         order.Cancel();
 

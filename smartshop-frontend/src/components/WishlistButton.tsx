@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 import { useWishlistStore } from '@/store/useWishlistStore';
@@ -10,6 +11,7 @@ interface WishlistButtonProps {
 }
 
 export default function WishlistButton({ productId, className = '' }: WishlistButtonProps) {
+  const { t: tToast } = useTranslation('toast');
   const { isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const { fetch, add, remove, reset, productIds, loading } = useWishlistStore();
@@ -29,7 +31,7 @@ export default function WishlistButton({ productId, className = '' }: WishlistBu
     e.stopPropagation();
 
     if (!isAuthenticated) {
-      toast.error('Vui lòng đăng nhập để thêm vào yêu thích');
+      toast.error(tToast('loginRequired'));
       navigate('/login');
       return;
     }
@@ -37,13 +39,13 @@ export default function WishlistButton({ productId, className = '' }: WishlistBu
     try {
       if (isInWishlist) {
         await remove(productId);
-        toast.success('Đã xóa khỏi danh sách yêu thích');
+        toast.success(tToast('removeFromWishlistSuccess'));
       } else {
         await add(productId);
-        toast.success('Đã thêm vào danh sách yêu thích');
+        toast.success(tToast('addToWishlistSuccess'));
       }
     } catch {
-      toast.error('Có lỗi xảy ra');
+      toast.error(tToast('genericError'));
     }
   };
 

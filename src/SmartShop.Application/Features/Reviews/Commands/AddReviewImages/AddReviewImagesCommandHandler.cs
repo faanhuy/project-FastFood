@@ -29,13 +29,17 @@ public class AddReviewImagesCommandHandler(
 
         // Kiểm tra ownership
         if (review.UserId != request.UserId)
-            throw new UnauthorizedException("Bạn không có quyền thêm ảnh vào review này.");
+            throw new UnauthorizedException("error.review_image_unauthorized", null);
 
         // Kiểm tra giới hạn ảnh (hiện có + mới thêm)
         var existingCount = await reviewImageRepository.CountByReviewIdAsync(request.ReviewId, cancellationToken);
         if (existingCount + request.Files.Count > MaxImagesPerReview)
-            throw new ConflictException(
-                $"Review này đã có {existingCount} ảnh. Tối đa {MaxImagesPerReview} ảnh được phép.");
+            throw new ConflictException("error.review_image_max_exceeded",
+                new Dictionary<string, string>
+                {
+                    ["existing"] = existingCount.ToString(),
+                    ["max"] = MaxImagesPerReview.ToString()
+                });
 
         var config = UploadCategoryConfigProvider.Get(UploadCategory.ReviewImage);
         var uploadedUrls = new List<string>();

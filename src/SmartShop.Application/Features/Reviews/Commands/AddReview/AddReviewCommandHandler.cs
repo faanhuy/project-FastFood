@@ -21,7 +21,7 @@ public class AddReviewCommandHandler(
             request.UserId, request.ProductId, cancellationToken);
 
         if (existing is not null)
-            throw new ConflictException("Bạn đã đánh giá sản phẩm này rồi.");
+            throw new ConflictException("error.review_already_exists", null);
 
         var review = Review.Create(request.UserId, request.ProductId, request.Rating, request.Comment);
         review.Approve(); // tự approve — có thể thay bằng moderation flow sau

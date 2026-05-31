@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   FiGrid, FiPackage, FiShoppingBag, FiTag, FiLogOut, FiMenu,
   FiExternalLink, FiMapPin, FiArchive, FiPercent, FiSliders,
@@ -34,37 +35,6 @@ interface NavSingle {
 type NavItem = NavSingle | NavGroup;
 
 const isGroup = (item: NavItem): item is NavGroup => 'children' in item;
-
-const NAV_ITEMS: NavItem[] = [
-  { to: '/admin', label: 'Tổng quan', icon: FiGrid, end: true },
-  {
-    label: 'Sản phẩm',
-    icon: FiPackage,
-    children: [
-      { to: '/admin/products',          label: 'Món ăn',          icon: FiPackage  },
-      { to: '/admin/sizes',             label: 'Kích cỡ',         icon: FiSliders  },
-      { to: '/admin/combos',            label: 'Combo',           icon: FiLayers   },
-      { to: '/admin/promotional-prices',label: 'Giá khuyến mãi',  icon: FiPercent  },
-    ],
-  },
-  {
-    label: 'Vận hành',
-    icon: FiShoppingBag,
-    children: [
-      { to: '/admin/orders',          label: 'Đơn giao',  icon: FiShoppingBag },
-      { to: '/admin/return-requests', label: 'Trả hàng',  icon: FiRotateCcw   },
-    ],
-  },
-  {
-    label: 'Kinh doanh',
-    icon: FiMapPin,
-    children: [
-      { to: '/admin/stores',    label: 'Chi nhánh',      icon: FiMapPin   },
-      { to: '/admin/inventory', label: 'Tồn kho',        icon: FiArchive  },
-      { to: '/admin/coupons',   label: 'Mã giảm giá',   icon: FiTag      },
-    ],
-  },
-];
 
 function NavGroupItem({ group, onClose }: { group: NavGroup; onClose?: () => void }) {
   const location = useLocation();
@@ -112,10 +82,42 @@ function NavGroupItem({ group, onClose }: { group: NavGroup; onClose?: () => voi
 }
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
+  const { t } = useTranslation('admin');
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
 
   const handleLogout = () => { logout(); navigate('/login'); };
+
+  const NAV_ITEMS: NavItem[] = [
+    { to: '/admin', label: t('navOverview'), icon: FiGrid, end: true },
+    {
+      label: t('navProducts'),
+      icon: FiPackage,
+      children: [
+        { to: '/admin/products',          label: t('navFoods'),       icon: FiPackage  },
+        { to: '/admin/sizes',             label: t('navSizes'),       icon: FiSliders  },
+        { to: '/admin/combos',            label: t('navCombos'),      icon: FiLayers   },
+        { to: '/admin/promotional-prices',label: t('navPromoPrice'),  icon: FiPercent  },
+      ],
+    },
+    {
+      label: t('navOperations'),
+      icon: FiShoppingBag,
+      children: [
+        { to: '/admin/orders',          label: t('navDeliveries'), icon: FiShoppingBag },
+        { to: '/admin/return-requests', label: t('navReturns'),    icon: FiRotateCcw   },
+      ],
+    },
+    {
+      label: t('navBusiness'),
+      icon: FiMapPin,
+      children: [
+        { to: '/admin/stores',    label: t('navBranches'),  icon: FiMapPin   },
+        { to: '/admin/inventory', label: t('navInventory'), icon: FiArchive  },
+        { to: '/admin/coupons',   label: t('navCoupons'),   icon: FiTag      },
+      ],
+    },
+  ];
 
   return (
     <div className="flex flex-col h-full bg-gray-900 text-white">
@@ -156,16 +158,16 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           to="/products"
           className="flex items-center gap-2 text-xs text-gray-400 hover:text-white"
         >
-          <FiExternalLink size={13} /> Về trang đặt món
+          <FiExternalLink size={13} /> {t('backToShop')}
         </Link>
         <div className="flex items-center justify-between">
           <div className="min-w-0">
-            <p className="text-[11px] text-gray-500">Đăng nhập với</p>
+            <p className="text-[11px] text-gray-500">{t('loggedInAs')}</p>
             <p className="text-xs font-medium text-gray-300 truncate">{user?.email}</p>
           </div>
           <button
             onClick={handleLogout}
-            title="Đăng xuất"
+            title={t('logout')}
             className="text-red-400 hover:text-red-300 ml-2 shrink-0"
           >
             <FiLogOut size={16} />

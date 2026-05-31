@@ -22,7 +22,7 @@ public class MarkAsReadCommandHandler(
                 ?? throw new NotFoundException("Notification", request.NotificationId.Value);
 
             if (notification.UserId != userId)
-                throw new UnauthorizedException("Không có quyền truy cập thông báo này.");
+                throw new UnauthorizedException("error.notification_access_unauthorized", null);
 
             notification.MarkAsRead();
         }

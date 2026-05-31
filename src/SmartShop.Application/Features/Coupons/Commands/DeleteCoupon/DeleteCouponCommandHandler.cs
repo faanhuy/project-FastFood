@@ -27,7 +27,7 @@ public class DeleteCouponCommandHandler : IRequestHandler<DeleteCouponCommand>
 
         var hasUsage = await repository.HasAnyUsageAsync(coupon.Id, cancellationToken);
         if (hasUsage)
-            throw new ConflictException($"Coupon '{request.Code}' đã được sử dụng, không thể xoá.");
+            throw new ConflictException("error.coupon_in_use_cannot_delete", new Dictionary<string, string> { ["code"] = request.Code });
 
         repository.DeleteAsync(coupon);
         await unitOfWork.SaveChangesAsync(cancellationToken);

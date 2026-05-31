@@ -30,7 +30,7 @@ public class ApproveReturnCommandHandler(
 
         // Validate status is Pending
         if (returnRequest.Status != ReturnStatus.Pending)
-            throw new ConflictException("Chỉ có thể phê duyệt yêu cầu trả hàng đang chờ xử lý.");
+            throw new ConflictException("error.return_approve_invalid_status", null);
 
         // Get order with items
         var order = await orderRepository.GetByIdWithItemsAsync(returnRequest.OrderId, cancellationToken)
@@ -83,7 +83,7 @@ public class ApproveReturnCommandHandler(
         CancellationToken cancellationToken)
     {
         if (order.StoreId == null)
-            throw new ConflictException("Đơn hàng không có thông tin chi nhánh.");
+            throw new ConflictException("error.return_no_store_info", null);
 
         var storeId = order.StoreId.Value;
         var productItems = order.Items.Where(i => i.ItemType == CartItemType.Product).ToList();

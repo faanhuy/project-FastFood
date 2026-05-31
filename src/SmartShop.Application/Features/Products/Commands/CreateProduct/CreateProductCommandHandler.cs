@@ -22,7 +22,7 @@ public class CreateProductCommandHandler(
 
         var existing = await repository.GetBySlugAsync(request.Slug, cancellationToken);
         if (existing is not null)
-            throw new ConflictException($"Slug '{request.Slug}' đã được sử dụng.");
+            throw new ConflictException("error.product_slug_exists", new Dictionary<string, string> { ["slug"] = request.Slug });
 
         var product = Product.Create(
             request.Name,

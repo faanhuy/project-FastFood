@@ -7,6 +7,6 @@ public class RevokeTokenCommandValidator : AbstractValidator<RevokeTokenCommand>
     public RevokeTokenCommandValidator()
     {
         RuleFor(x => x.RefreshToken)
-            .NotEmpty().WithMessage("Refresh token không được để trống.");
+            .NotEmpty().WithMessage("validation.refresh_token_required");
     }
 }

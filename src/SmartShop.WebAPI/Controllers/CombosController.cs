@@ -36,6 +36,22 @@ public class CombosController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>Danh sách combo đang active (public)</summary>
+    [HttpGet("api/combos")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<GetCombosResult>>> GetPublicCombos(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetCombosQuery(page, pageSize), ct);
+        if (result.Data is not null)
+        {
+            result.Data.Items.RemoveAll(c => !c.IsCurrentlyActive);
+        }
+        return Ok(result);
+    }
+
     /// <summary>Chi tiết combo (public)</summary>
     [HttpGet("api/combos/{id:guid}")]
     [AllowAnonymous]

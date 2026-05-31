@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import {
   FiUser, FiMail, FiCalendar, FiSave,
   FiMapPin, FiPlus, FiEdit2, FiTrash2, FiCheck,
@@ -44,6 +45,7 @@ interface AddressModalProps {
 }
 
 function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
+  const { t } = useTranslation(['common', 'toast', 'validation']);
   const [form, setForm] = useState<AddressFormData>(
     initial
       ? {
@@ -77,11 +79,11 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.recipientName.trim() || !form.phone.trim()) {
-      toast.error('Vui lòng điền đầy đủ họ tên người nhận và số điện thoại.');
+      toast.error(t('validation:recipientRequired'));
       return;
     }
     if (!form.provinceId || !form.wardId || !form.street.trim()) {
-      toast.error('Vui lòng chọn tỉnh/thành phố, phường/xã và nhập số nhà, đường.');
+      toast.error(t('validation:addressFieldsRequired'));
       return;
     }
     setSaving(true);
@@ -98,15 +100,15 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
       };
       if (initial) {
         await addressService.update(initial.id, payload);
-        toast.success('Đã cập nhật địa chỉ.');
+        toast.success(t('toast:addressUpdatedSuccess'));
       } else {
         await addressService.add(payload);
-        toast.success('Đã thêm địa chỉ mới.');
+        toast.success(t('toast:addressAddedSuccess'));
       }
       onSaved();
       onClose();
     } catch (err: any) {
-      toast.error(err.response?.data?.message ?? 'Lưu địa chỉ thất bại.');
+      toast.error(err.response?.data?.message ?? t('toast:addressSaveFailed'));
     } finally {
       setSaving(false);
     }
@@ -116,22 +118,22 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
         <h3 className="text-base font-semibold text-gray-800 mb-4">
-          {initial ? 'Sửa địa chỉ' : 'Thêm địa chỉ mới'}
+          {initial ? t('common:editAddress') : t('common:addNewAddress')}
         </h3>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nhãn (tuỳ chọn)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('common:labelOptional')}</label>
             <input
               value={form.label}
               onChange={set('label')}
-              placeholder="Nhà, Công ty..."
+              placeholder={t('common:labelPlaceholder')}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Người nhận <span className="text-red-500">*</span>
+                {t('common:recipient')} <span className="text-red-500">*</span>
               </label>
               <input
                 required
@@ -142,7 +144,7 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Điện thoại <span className="text-red-500">*</span>
+                {t('common:phone')} <span className="text-red-500">*</span>
               </label>
               <input
                 required
@@ -155,7 +157,7 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
 
           <div className="border border-gray-200 rounded-lg p-3">
             <p className="text-sm font-medium text-gray-700 mb-2">
-              Địa chỉ <span className="text-red-500">*</span>
+              {t('common:address')} <span className="text-red-500">*</span>
             </p>
             <AddressSelector
               value={{
@@ -173,14 +175,14 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
               onClick={onClose}
               className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm hover:bg-gray-50"
             >
-              Hủy
+              {t('common:cancel')}
             </button>
             <button
               type="submit"
               disabled={saving}
               className="flex-1 bg-rose-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-rose-700 disabled:opacity-50"
             >
-              {saving ? 'Đang lưu...' : 'Lưu địa chỉ'}
+              {saving ? t('common:savingAddress') : t('common:saveAddress')}
             </button>
           </div>
         </form>
@@ -191,6 +193,7 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
 
 // ---- Main Page ----
 export default function ProfilePage() {
+  const { t } = useTranslation(['common', 'toast']);
   const { updateUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
 
@@ -214,15 +217,15 @@ export default function ProfilePage() {
         setFirstName(p.firstName);
         setLastName(p.lastName);
       })
-      .catch(() => toast.error('Không thể tải thông tin profile.'))
+      .catch(() => toast.error(t('toast:profileLoadFailed')))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   const fetchAddresses = () => {
     setAddrLoading(true);
     addressService.getAll()
       .then(setAddresses)
-      .catch(() => toast.error('Không thể tải danh sách địa chỉ.'))
+      .catch(() => toast.error(t('toast:addressLoadFailed')))
       .finally(() => setAddrLoading(false));
   };
 
@@ -241,9 +244,9 @@ export default function ProfilePage() {
       });
       setProfile(updated);
       updateUser({ firstName: updated.firstName, lastName: updated.lastName });
-      toast.success('Đã cập nhật thông tin.');
+      toast.success(t('toast:profileSaved'));
     } catch {
-      toast.error('Cập nhật thất bại.');
+      toast.error(t('toast:profileSaveFailed'));
     } finally {
       setSaving(false);
     }
@@ -252,28 +255,28 @@ export default function ProfilePage() {
   const handleSetDefault = async (id: string) => {
     try {
       await addressService.setDefault(id);
-      toast.success('Đã đặt làm địa chỉ mặc định.');
+      toast.success(t('toast:addressDefaultSet'));
       fetchAddresses();
     } catch (err: any) {
-      toast.error(err.response?.data?.message ?? 'Có lỗi xảy ra.');
+      toast.error(err.response?.data?.message ?? t('common:error'));
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Xác nhận xóa địa chỉ này?')) return;
+    if (!window.confirm(t('toast:addressDeleteConfirm'))) return;
     try {
       await addressService.remove(id);
-      toast.success('Đã xóa địa chỉ.');
+      toast.success(t('toast:addressDeleted'));
       fetchAddresses();
     } catch (err: any) {
-      toast.error(err.response?.data?.message ?? 'Xóa thất bại.');
+      toast.error(err.response?.data?.message ?? t('toast:addressDeleteFailed'));
     }
   };
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="p-8 text-center text-gray-400">Đang tải...</div>
+      <div className="p-8 text-center text-gray-400">{t('common:loading')}</div>
     </div>
   );
 
@@ -281,7 +284,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Tài khoản của tôi</h1>
+        <h1 className="text-2xl font-bold mb-6">{t('common:myAccount')}</h1>
 
         {/* Tabs */}
         <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6">
@@ -293,7 +296,7 @@ export default function ProfilePage() {
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            Thông tin cá nhân
+            {t('common:personalInfo')}
           </button>
           <button
             onClick={() => setActiveTab('addresses')}
@@ -304,7 +307,7 @@ export default function ProfilePage() {
             }`}
           >
             <FiMapPin size={14} />
-            Địa chỉ giao hàng
+            {t('common:shippingAddresses')}
           </button>
         </div>
 
@@ -344,20 +347,20 @@ export default function ProfilePage() {
               </div>
               <div className="flex items-center gap-3 text-sm text-gray-600">
                 <FiUser size={16} className="text-gray-400 shrink-0" />
-                <span className="capitalize">{profile?.role === 'Admin' ? 'Quản trị viên' : 'Khách hàng'}</span>
+                <span className="capitalize">{profile?.role === 'Admin' ? t('common:roleAdmin') : t('common:roleCustomer')}</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-gray-600">
                 <FiCalendar size={16} className="text-gray-400 shrink-0" />
-                <span>Tham gia {profile ? formatDate(profile.createdAt) : '—'}</span>
+                <span>{t('common:joinedAt')} {profile ? formatDate(profile.createdAt) : '—'}</span>
               </div>
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm p-6">
-              <h2 className="text-base font-semibold text-gray-800 mb-4">Chỉnh sửa thông tin</h2>
+              <h2 className="text-base font-semibold text-gray-800 mb-4">{t('common:editInfo')}</h2>
               <form onSubmit={handleProfileSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Họ</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('common:lastName')}</label>
                     <input
                       required
                       value={lastName}
@@ -366,7 +369,7 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tên</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('common:firstName')}</label>
                     <input
                       required
                       value={firstName}
@@ -381,7 +384,7 @@ export default function ProfilePage() {
                   className="w-full bg-rose-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-rose-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                 >
                   <FiSave size={15} />
-                  {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                  {saving ? t('common:savingAddress') : t('admin:saveChanges')}
                 </button>
               </form>
             </div>
@@ -392,23 +395,23 @@ export default function ProfilePage() {
         {activeTab === 'addresses' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-gray-800">Danh sách địa chỉ</h2>
+              <h2 className="text-base font-semibold text-gray-800">{t('common:addressList')}</h2>
               <button
                 onClick={() => { setEditTarget(null); setShowModal(true); }}
                 className="flex items-center gap-1.5 bg-rose-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-rose-700 transition-colors"
               >
                 <FiPlus size={14} />
-                Thêm địa chỉ
+                {t('common:addNewAddress')}
               </button>
             </div>
 
             {addrLoading ? (
-              <p className="text-sm text-gray-400 text-center py-8">Đang tải...</p>
+              <p className="text-sm text-gray-400 text-center py-8">{t('common:loading')}</p>
             ) : addresses.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
                 <FiMapPin size={32} className="mx-auto text-gray-300 mb-3" />
-                <p className="text-sm text-gray-500">Bạn chưa có địa chỉ nào.</p>
-                <p className="text-xs text-gray-400 mt-1">Thêm địa chỉ để thanh toán nhanh hơn.</p>
+                <p className="text-sm text-gray-500">{t('common:noAddresses')}</p>
+                <p className="text-xs text-gray-400 mt-1">{t('common:addAddressHint')}</p>
               </div>
             ) : (
               addresses.map((addr) => (
@@ -429,7 +432,7 @@ export default function ProfilePage() {
                         {addr.isDefault && (
                           <span className="text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full flex items-center gap-1">
                             <FiCheck size={10} />
-                            Mặc định
+                            {t('common:defaultAddress')}
                           </span>
                         )}
                       </div>
@@ -443,7 +446,7 @@ export default function ProfilePage() {
                       {!addr.isDefault && (
                         <button
                           onClick={() => handleSetDefault(addr.id)}
-                          title="Đặt mặc định"
+                          title={t('common:setDefault')}
                           className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-xs"
                         >
                           <FiCheck size={15} />
@@ -451,14 +454,14 @@ export default function ProfilePage() {
                       )}
                       <button
                         onClick={() => { setEditTarget(addr); setShowModal(true); }}
-                        title="Sửa"
+                        title={t('common:edit')}
                         className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                       >
                         <FiEdit2 size={15} />
                       </button>
                       <button
                         onClick={() => handleDelete(addr.id)}
-                        title="Xóa"
+                        title={t('common:delete')}
                         className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       >
                         <FiTrash2 size={15} />

@@ -1,8 +1,14 @@
-export const formatPrice = (price: number): string =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+import i18n from '../i18n';
 
-export const formatDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString('vi-VN', { dateStyle: 'medium' });
+export const formatPrice = (price: number): string => {
+  const locale = i18n.language === 'en' ? 'en-US' : 'vi-VN';
+  return new Intl.NumberFormat(locale, { style: 'currency', currency: 'VND' }).format(price);
+};
+
+export const formatDate = (iso: string): string => {
+  const locale = i18n.language === 'en' ? 'en-US' : 'vi-VN';
+  return new Date(iso).toLocaleDateString(locale, { dateStyle: 'medium' });
+};
 
 export const formatDateTime = (iso: string): string => {
   const date = new Date(iso);

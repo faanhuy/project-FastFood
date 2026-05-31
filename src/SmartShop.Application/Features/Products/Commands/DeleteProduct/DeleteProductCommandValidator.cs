@@ -7,6 +7,6 @@ public class DeleteProductCommandValidator : AbstractValidator<DeleteProductComm
     public DeleteProductCommandValidator()
     {
         RuleFor(x => x.Id)
-            .NotEmpty().WithMessage("ProductId không hợp lệ.");
+            .NotEmpty().WithMessage("validation.product_id_invalid");
     }
 }

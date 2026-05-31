@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { FiEdit2, FiPlus, FiX } from 'react-icons/fi';
 import AdminLayout from '../../components/AdminLayout';
 import { storeService } from '../../services/storeService';
-import type { Store, CreateStoreRequest, UpdateStoreRequest } from '../../types/store';
+import type { AdminStore as Store, CreateStoreRequest, UpdateStoreRequest } from '../../types/store';
 import { AddressSelector, type AddressSelection } from '@/components/AddressSelector';
 
 // ─── Modal form state ─────────────────────────────────────────────────────────
@@ -35,6 +36,7 @@ const EMPTY_FORM: FormState = {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminStoresPage() {
+  const { t } = useTranslation(['admin', 'common', 'toast']);
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,9 +50,9 @@ export default function AdminStoresPage() {
   const loadStores = () => {
     setLoading(true);
     storeService
-      .getStores()
+      .getAdminStores()
       .then(setStores)
-      .catch(() => toast.error('Không tải được danh sách chi nhánh.'))
+      .catch(() => toast.error(t('storeLoadFailed', { ns: 'toast' })))
       .finally(() => setLoading(false));
   };
 
@@ -106,10 +108,10 @@ export default function AdminStoresPage() {
 
   const validate = (): boolean => {
     const next: FormErrors = {};
-    if (!form.name.trim()) next.name = 'Tên chi nhánh không được để trống.';
+    if (!form.name.trim()) next.name = t('storeNameRequired');
     if (!form.provinceId || !form.wardId || !form.street.trim())
-      next.address = 'Vui lòng chọn tỉnh/thành, phường/xã và nhập số nhà, tên đường.';
-    if (!form.phone.trim()) next.phone = 'Số điện thoại không được để trống.';
+      next.address = t('storeAddressRequired');
+    if (!form.phone.trim()) next.phone = t('storePhoneRequired');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -132,7 +134,7 @@ export default function AdminStoresPage() {
           street: form.street.trim(),
         };
         await storeService.updateStore(editingStore.id, body);
-        toast.success('Đã cập nhật chi nhánh.');
+        toast.success(t('storeUpdated', { ns: 'toast' }));
       } else {
         const body: CreateStoreRequest = {
           name: form.name.trim(),
@@ -145,12 +147,12 @@ export default function AdminStoresPage() {
           street: form.street.trim(),
         };
         await storeService.createStore(body);
-        toast.success('Đã thêm chi nhánh mới.');
+        toast.success(t('storeCreated', { ns: 'toast' }));
       }
       closeModal();
       loadStores();
     } catch (error: any) {
-      toast.error(error.response?.data?.message ?? 'Có lỗi xảy ra');
+      toast.error(error.response?.data?.message ?? t('error', { ns: 'common' }));
     } finally {
       setSubmitting(false);
     }
@@ -164,34 +166,34 @@ export default function AdminStoresPage() {
   };
 
   return (
-    <AdminLayout title="Quản lý chi nhánh">
+    <AdminLayout title={t('manageStores')}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-gray-800">Danh sách chi nhánh</h2>
+        <h2 className="text-lg font-semibold text-gray-800">{t('storeListTitle')}</h2>
         <button
           onClick={openCreateModal}
           className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
         >
           <FiPlus size={15} />
-          Thêm chi nhánh
+          {t('addStore')}
         </button>
       </div>
 
       {/* Table */}
       <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-gray-400 text-sm">Đang tải danh sách chi nhánh...</div>
+          <div className="p-8 text-center text-gray-400 text-sm">{t('loading', { ns: 'common' })}</div>
         ) : stores.length === 0 ? (
-          <div className="p-8 text-center text-gray-400 text-sm">Chưa có chi nhánh nào.</div>
+          <div className="p-8 text-center text-gray-400 text-sm">{t('storeNoData')}</div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-gray-50">
-                <th className="text-left px-5 py-3 font-semibold text-gray-600">Tên chi nhánh</th>
-                <th className="text-left px-5 py-3 font-semibold text-gray-600">Địa chỉ</th>
-                <th className="text-left px-5 py-3 font-semibold text-gray-600">Số điện thoại</th>
-                <th className="text-center px-5 py-3 font-semibold text-gray-600">Trạng thái</th>
-                <th className="text-right px-5 py-3 font-semibold text-gray-600">Thao tác</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">{t('storeNameLabel')}</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">{t('storeAddressLabel')}</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">{t('storePhoneLabel')}</th>
+                <th className="text-center px-5 py-3 font-semibold text-gray-600">{t('status')}</th>
+                <th className="text-right px-5 py-3 font-semibold text-gray-600">{t('actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -203,11 +205,11 @@ export default function AdminStoresPage() {
                   <td className="px-5 py-3 text-center">
                     {store.isActive !== false ? (
                       <span className="inline-block bg-green-100 text-green-700 text-xs px-2.5 py-0.5 rounded-full font-medium">
-                        Hoạt động
+                        {t('active')}
                       </span>
                     ) : (
                       <span className="inline-block bg-gray-100 text-gray-500 text-xs px-2.5 py-0.5 rounded-full font-medium">
-                        Tạm ngừng
+                        {t('inactive')}
                       </span>
                     )}
                   </td>
@@ -215,7 +217,7 @@ export default function AdminStoresPage() {
                     <button
                       onClick={() => openEditModal(store)}
                       className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-rose-600 transition-colors"
-                      title="Chỉnh sửa chi nhánh"
+                      title={t('edit')}
                     >
                       <FiEdit2 size={14} />
                     </button>
@@ -234,7 +236,7 @@ export default function AdminStoresPage() {
             {/* Modal header */}
             <div className="flex items-center justify-between px-6 py-4 border-b shrink-0">
               <h3 className="text-base font-semibold text-gray-800">
-                {editingStore ? 'Chỉnh sửa chi nhánh' : 'Thêm chi nhánh mới'}
+                {editingStore ? t('editStore') : t('createStore')}
               </h3>
               <button
                 onClick={closeModal}
@@ -250,13 +252,13 @@ export default function AdminStoresPage() {
               {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tên chi nhánh <span className="text-red-500">*</span>
+                  {t('storeNameLabel')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="Ví dụ: Chi nhánh Quận 1"
+                  placeholder={t('storeNamePlaceholder')}
                   className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 ${
                     errors.name ? 'border-red-400' : 'border-gray-300'
                   }`}
@@ -267,13 +269,13 @@ export default function AdminStoresPage() {
               {/* Phone */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Số điện thoại <span className="text-red-500">*</span>
+                  {t('storePhoneLabel')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={form.phone}
                   onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                  placeholder="Ví dụ: 028 3823 4567"
+                  placeholder={t('storePhonePlaceholder')}
                   className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 ${
                     errors.phone ? 'border-red-400' : 'border-gray-300'
                   }`}
@@ -284,7 +286,7 @@ export default function AdminStoresPage() {
               {/* Address via AddressSelector */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Địa chỉ chi nhánh <span className="text-red-500">*</span>
+                  {t('storeAddressLabel')} <span className="text-red-500">*</span>
                 </label>
                 <div className="border border-gray-200 rounded-lg p-3">
                   <AddressSelector
@@ -310,7 +312,7 @@ export default function AdminStoresPage() {
                     className="h-4 w-4 rounded border-gray-300 text-rose-600 focus:ring-rose-400"
                   />
                   <label htmlFor="isActive" className="text-sm font-medium text-gray-700 cursor-pointer">
-                    Đang hoạt động
+                    {t('active')}
                   </label>
                 </div>
               )}
@@ -323,7 +325,7 @@ export default function AdminStoresPage() {
                 disabled={submitting}
                 className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
               >
-                Hủy
+                {t('cancel', { ns: 'common' })}
               </button>
               <button
                 onClick={handleSubmit}
@@ -333,7 +335,7 @@ export default function AdminStoresPage() {
                 {submitting && (
                   <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
                 )}
-                Lưu
+                {t('save')}
               </button>
             </div>
           </div>

@@ -7,9 +7,9 @@ public class CancelOrderCommandValidator : AbstractValidator<CancelOrderCommand>
     public CancelOrderCommandValidator()
     {
         RuleFor(x => x.OrderId)
-            .NotEmpty().WithMessage("OrderId không hợp lệ.");
+            .NotEmpty().WithMessage("validation.order_id_invalid");
 
         RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("UserId không hợp lệ.");
+            .NotEmpty().WithMessage("validation.user_id_invalid");
     }
 }

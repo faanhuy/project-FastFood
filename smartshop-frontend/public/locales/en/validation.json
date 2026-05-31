@@ -7,5 +7,7 @@
   "quantityMin": "Quantity must be greater than 0",
   "quantityMax": "Exceeds available stock",
   "selectAddress": "Please select a shipping address",
-  "selectPayment": "Please select a payment method"
+  "selectPayment": "Please select a payment method",
+  "recipientRequired": "Please fill in recipient name and phone number.",
+  "addressFieldsRequired": "Please select province, ward, and enter street address."
 }

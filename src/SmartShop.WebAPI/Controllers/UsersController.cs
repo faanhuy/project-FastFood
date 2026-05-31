@@ -101,6 +101,7 @@ public class UsersController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new SetDefaultAddressCommand(id, Guid.Parse(CurrentUserId)), ct);
         return Ok(result);
     }
+
 }
 
 public record UpdateProfileRequest(string FirstName, string LastName);

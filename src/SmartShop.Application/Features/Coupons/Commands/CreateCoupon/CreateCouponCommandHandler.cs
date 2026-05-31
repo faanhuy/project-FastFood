@@ -27,7 +27,7 @@ public class CreateCouponCommandHandler : IRequestHandler<CreateCouponCommand, C
     {    
         var existing = await repository.GetByCodeAsync(request.Code, cancellationToken);
         if (existing is not null)
-            throw new ConflictException($"Code '{request.Code}' đã được sử dụng.");
+            throw new ConflictException("error.coupon_code_exists", new Dictionary<string, string> { ["code"] = request.Code });
 
         var coupon = Coupon.Create(
             request.Code, request.DiscountType, request.DiscountValue, request.ExpiresAt, request.MaxUsage, request.Description ?? string.Empty, request.MinOrderValue

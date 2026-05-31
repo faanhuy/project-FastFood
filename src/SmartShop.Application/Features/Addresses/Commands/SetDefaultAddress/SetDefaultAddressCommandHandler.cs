@@ -1,4 +1,5 @@
 using MediatR;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Common.Exceptions;
@@ -9,7 +10,9 @@ namespace SmartShop.Application.Features.Addresses.Commands.SetDefaultAddress;
 
 public class SetDefaultAddressCommandHandler(
     IUserAddressRepository addressRepository,
-    IUnitOfWork unitOfWork) : IRequestHandler<SetDefaultAddressCommand, ApiResponse<bool>>
+    IUnitOfWork unitOfWork,
+    ILocalizationService localization,
+    ICurrentLanguageService languageService) : IRequestHandler<SetDefaultAddressCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(SetDefaultAddressCommand command, CancellationToken cancellationToken)
     {
@@ -17,7 +20,7 @@ public class SetDefaultAddressCommandHandler(
             ?? throw new NotFoundException(nameof(UserAddress), command.AddressId);
 
         if (target.UserId != command.UserId)
-            throw new UnauthorizedException("Không có quyền thay đổi địa chỉ này.");
+            throw new UnauthorizedException("error.address_set_default_unauthorized", null);
 
         var allAddresses = await addressRepository.GetByUserIdAsync(command.UserId, cancellationToken);
 
@@ -28,6 +31,7 @@ public class SetDefaultAddressCommandHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return ApiResponse<bool>.Ok(true, "Đã đặt địa chỉ mặc định.");
+        return ApiResponse<bool>.Ok(true,
+            localization.GetMessage("success.address_set_default", languageService.Language));
     }
 }

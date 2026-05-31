@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { FiMail, FiPhone, FiMapPin, FiGithub } from 'react-icons/fi';
 
 export default function Footer() {
+  const { t } = useTranslation('common');
   return (
     <footer className="bg-[#2A1F1A] text-gray-300 mt-auto">
       <div className="max-w-7xl mx-auto px-4 py-12">
@@ -34,29 +36,29 @@ export default function Footer() {
 
           {/* Shop */}
           <div>
-            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Thực đơn</h4>
+            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">{t('menuSection')}</h4>
             <ul className="space-y-2.5 text-sm">
-              <li><Link to="/products" className="hover:text-amber-300 transition-colors">Toàn bộ món</Link></li>
-              <li><Link to="/products?sort=newest" className="hover:text-amber-300 transition-colors">Combo mới lên sóng</Link></li>
-              <li><Link to="/cart" className="hover:text-amber-300 transition-colors">Giỏ món</Link></li>
-              <li><Link to="/checkout" className="hover:text-amber-300 transition-colors">Xác nhận đơn</Link></li>
+              <li><Link to="/products" className="hover:text-amber-300 transition-colors">{t('allItems')}</Link></li>
+              <li><Link to="/products?sort=newest" className="hover:text-amber-300 transition-colors">{t('newCombos')}</Link></li>
+              <li><Link to="/cart" className="hover:text-amber-300 transition-colors">{t('cartItems')}</Link></li>
+              <li><Link to="/checkout" className="hover:text-amber-300 transition-colors">{t('confirmOrder')}</Link></li>
             </ul>
           </div>
 
           {/* Account */}
           <div>
-            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Tài khoản</h4>
+            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">{t('accountSection')}</h4>
             <ul className="space-y-2.5 text-sm">
-              <li><Link to="/profile" className="hover:text-amber-300 transition-colors">Hồ sơ giao nhận</Link></li>
-              <li><Link to="/orders" className="hover:text-amber-300 transition-colors">Đơn giao của tôi</Link></li>
-              <li><Link to="/login" className="hover:text-amber-300 transition-colors">Đăng nhập</Link></li>
-              <li><Link to="/register" className="hover:text-amber-300 transition-colors">Đăng ký</Link></li>
+              <li><Link to="/profile" className="hover:text-amber-300 transition-colors">{t('deliveryProfile')}</Link></li>
+              <li><Link to="/orders" className="hover:text-amber-300 transition-colors">{t('myDeliveries')}</Link></li>
+              <li><Link to="/login" className="hover:text-amber-300 transition-colors">{t('login', { ns: 'auth' })}</Link></li>
+              <li><Link to="/register" className="hover:text-amber-300 transition-colors">{t('register', { ns: 'auth' })}</Link></li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Liên hệ</h4>
+            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">{t('contactSection')}</h4>
             <ul className="space-y-2.5 text-sm">
               <li className="flex items-center gap-2">
                 <FiMail size={14} className="text-amber-300 shrink-0" />
@@ -87,7 +89,7 @@ export default function Footer() {
 
         {/* Divider + Bottom bar */}
         <div className="border-t border-gray-700 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
-          <span>© {new Date().getFullYear()} FastFood. Giao đồ ăn nhanh mỗi ngày.</span>
+          <span>© {new Date().getFullYear()} FastFood. {t('footerTagline')}</span>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             <span>Powered by .NET 8 + React 19 + HuyPD</span>

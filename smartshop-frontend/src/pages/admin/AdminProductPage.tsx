@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { categoryService, productService } from '../../services/productService';
 import { sizeService } from '../../services/sizeService';
 import { imageService } from '../../services/imageService';
@@ -24,6 +25,8 @@ const EMPTY_CREATE: CreateProductRequest = {
 const INPUT_CLS = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-rose-400 focus:outline-none';
 
 export default function AdminProductPage() {
+  const { t } = useTranslation('admin');
+  const { t: tToast } = useTranslation('toast');
   const navigate = useNavigate();
   const [products,    setProducts]    = useState<ProductDto[]>([]);
   const [categories,  setCategories]  = useState<CategoryDto[]>([]);
@@ -90,7 +93,7 @@ export default function AdminProductPage() {
       setCreateKey((k) => k + 1);
       await loadProducts(1);
       setPage(1);
-      toast.success('Đã tạo món mới.');
+      toast.success(tToast('productCreated'));
     } catch (err) {
       setCreateError(getApiError(err, 'Tạo món thất bại.'));
     } finally {
@@ -145,10 +148,10 @@ export default function AdminProductPage() {
     setSavingSize(true);
     try {
       await sizeService.setProductSizes(sizeProduct.id, Array.from(checkedSizeIds));
-      toast.success('Đã lưu kích cỡ.');
+      toast.success(tToast('sizeSaved'));
       setSizeProduct(null);
     } catch (err) {
-      toast.error(getApiError(err, 'Lưu kích cỡ thất bại.'));
+      toast.error(getApiError(err, tToast('sizeUpdateFailed')));
     } finally {
       setSavingSize(false);
     }
@@ -167,7 +170,7 @@ export default function AdminProductPage() {
       });
       setEditProduct(null);
       await loadProducts(page);
-      toast.success('Đã cập nhật món ăn.');
+      toast.success(tToast('productUpdated'));
     } catch (err) {
       setEditError(getApiError(err, 'Cập nhật món thất bại.'));
     } finally {
@@ -181,9 +184,9 @@ export default function AdminProductPage() {
     try {
       await productService.deleteProduct(id);
       await loadProducts(page);
-      toast.success('Đã gỡ món khỏi thực đơn.');
+      toast.success(tToast('productDeleted'));
     } catch {
-      toast.error('Gỡ món thất bại.');
+      toast.error(tToast('productDeleteFailed'));
     }
   };
 
@@ -202,10 +205,10 @@ export default function AdminProductPage() {
         setPage(1);
       }
       if (result.failed > 0) {
-        toast.error(`${result.failed} dòng thất bại.`);
+        toast.error(tToast('importFailedRows', { count: result.failed }));
       }
     } catch (err) {
-      toast.error(getApiError(err, 'Import thất bại.'));
+      toast.error(getApiError(err, tToast('importFailed')));
     } finally {
       setImporting(false);
       e.target.value = '';
@@ -232,7 +235,7 @@ export default function AdminProductPage() {
   );
 
   return (
-    <AdminLayout title="Quản lý món ăn">
+    <AdminLayout title={t('manageProducts')}>
       <div className="flex justify-end gap-2 mb-4">
         <label className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
           importing ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'
@@ -250,7 +253,7 @@ export default function AdminProductPage() {
           onClick={() => { setShowCreate(true); setCreateError(null); setCreateForm(EMPTY_CREATE); setCreateKey((k) => k + 1); }}
           className="bg-rose-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-rose-700"
         >
-          + Thêm món
+          + {t('addProduct')}
         </button>
       </div>
 
@@ -296,10 +299,10 @@ export default function AdminProductPage() {
       {showCreate && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 my-4">
-            <h2 className="text-lg font-semibold mb-4">Thêm món mới</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('createProduct')}</h2>
             <form onSubmit={handleCreate} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tên món</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('productName')}</label>
                 <input required className={INPUT_CLS} value={createForm.name}
                   onChange={(e) => handleCreateNameChange(e.target.value)} />
               </div>
@@ -316,13 +319,13 @@ export default function AdminProductPage() {
               />
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Giá bán (VND)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('sellingPrice')} (VND)</label>
                   <input required type="number" min={1} className={INPUT_CLS}
                     value={createForm.price || ''}
                     onChange={(e) => setCreateForm((f) => ({ ...f, price: Number(e.target.value) }))} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Giá niêm yết (VND)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('originalPrice', { ns: 'product' })} (VND)</label>
                   <input type="number" min={0} placeholder="Để trống = giá bán" className={INPUT_CLS}
                     value={createForm.originalPrice || ''}
                     onChange={(e) => setCreateForm((f) => ({ ...f, originalPrice: Number(e.target.value) || undefined }))} />
@@ -364,10 +367,10 @@ export default function AdminProductPage() {
               {createError && <p className="text-sm text-red-500">{createError}</p>}
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setShowCreate(false)}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">Hủy</button>
+                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">{t('cancel', { ns: 'common' })}</button>
                 <button type="submit" disabled={creating}
                   className="px-4 py-2 text-sm bg-rose-600 text-white rounded-lg hover:bg-rose-700 disabled:opacity-60">
-                  {creating ? 'Đang lưu...' : 'Lưu'}
+                  {creating ? t('creating') : t('save', { ns: 'common' })}
                 </button>
               </div>
             </form>
@@ -379,11 +382,11 @@ export default function AdminProductPage() {
       {editProduct && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 my-4">
-            <h2 className="text-lg font-semibold mb-1">Chỉnh sửa món ăn</h2>
+            <h2 className="text-lg font-semibold mb-1">{t('edit', { ns: 'common' })}</h2>
             <p className="text-xs text-gray-400 mb-4 font-mono">{editProduct.slug}</p>
             <form onSubmit={handleEdit} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tên món</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('productName')}</label>
                 <input required className={INPUT_CLS} value={editForm.name}
                   onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} />
               </div>
@@ -395,13 +398,13 @@ export default function AdminProductPage() {
               />
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Giá bán (VND)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('sellingPrice')} (VND)</label>
                   <input required type="number" min={1} className={INPUT_CLS}
                     value={editForm.price || ''}
                     onChange={(e) => setEditForm((f) => ({ ...f, price: Number(e.target.value) }))} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Giá niêm yết (VND)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('originalPrice', { ns: 'product' })} (VND)</label>
                   <input type="number" min={0} placeholder="Để trống = giữ nguyên" className={INPUT_CLS}
                     value={editForm.originalPrice ?? ''}
                     onChange={(e) => setEditForm((f) => ({ ...f, originalPrice: Number(e.target.value) || null }))} />
@@ -435,10 +438,10 @@ export default function AdminProductPage() {
               {editError && <p className="text-sm text-red-500">{editError}</p>}
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setEditProduct(null)}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">Hủy</button>
+                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">{t('cancel', { ns: 'common' })}</button>
                 <button type="submit" disabled={editing}
                   className="px-4 py-2 text-sm bg-rose-600 text-white rounded-lg hover:bg-rose-700 disabled:opacity-60">
-                  {editing ? 'Đang lưu...' : 'Cập nhật'}
+                  {editing ? t('saving') : t('saveChanges')}
                 </button>
               </div>
             </form>
@@ -448,7 +451,7 @@ export default function AdminProductPage() {
 
       {/* Products Table */}
       {loading ? (
-        <div className="flex items-center justify-center h-64 text-gray-400">Đang tải...</div>
+        <div className="flex items-center justify-center h-64 text-gray-400">{t('loading', { ns: 'common' })}</div>
       ) : (
         <>
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">

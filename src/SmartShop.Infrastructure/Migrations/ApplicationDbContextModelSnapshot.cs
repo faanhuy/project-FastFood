@@ -78,7 +78,7 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Carts", (string)null);
+                    b.ToTable("Carts");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.CartItem", b =>
@@ -129,7 +129,7 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("CartItems", (string)null);
+                    b.ToTable("CartItems");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.CartItemComponent", b =>
@@ -171,7 +171,7 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("CartItemId")
                         .HasDatabaseName("IX_CartItemComponents_CartItemId");
 
-                    b.ToTable("CartItemComponents", (string)null);
+                    b.ToTable("CartItemComponents");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Category", b =>
@@ -220,7 +220,7 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.ChatMessage", b =>
@@ -258,7 +258,7 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasIndex("ChatSessionId");
 
-                    b.ToTable("ChatMessages", (string)null);
+                    b.ToTable("ChatMessages");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.ChatSession", b =>
@@ -284,7 +284,7 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ChatSessions", (string)null);
+                    b.ToTable("ChatSessions");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Combo", b =>
@@ -348,7 +348,7 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("IsActive", "StartsAt", "EndsAt")
                         .HasDatabaseName("IX_Combo_Active");
 
-                    b.ToTable("Combos", (string)null);
+                    b.ToTable("Combos");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.ComboItem", b =>
@@ -388,7 +388,7 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ComboItems", (string)null);
+                    b.ToTable("ComboItems");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.ComboPromotion", b =>
@@ -517,7 +517,7 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.ToTable("Coupons", (string)null);
+                    b.ToTable("Coupons");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.CouponUsage", b =>
@@ -556,7 +556,7 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("CouponId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("CouponUsages", (string)null);
+                    b.ToTable("CouponUsages");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.FaqDocument", b =>
@@ -601,7 +601,96 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasIndex("IsActive");
 
-                    b.ToTable("FaqDocuments", (string)null);
+                    b.ToTable("FaqDocuments");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.LocalizedFieldName", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("FieldKey")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FieldKey", "Language")
+                        .IsUnique();
+
+                    b.ToTable("LocalizedFieldNames");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.LocalizedMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("error");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("MessageKey")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("MessageText")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MessageKey", "Language")
+                        .IsUnique();
+
+                    b.ToTable("LocalizedMessages");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Notification", b =>
@@ -645,7 +734,7 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasIndex("UserId", "IsRead");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Order", b =>
@@ -735,7 +824,7 @@ namespace SmartShop.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[VnpayTransactionId] IS NOT NULL");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.OrderItem", b =>
@@ -805,7 +894,7 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("OrderItems", (string)null);
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.OrderItemComponent", b =>
@@ -851,7 +940,7 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("OrderItemId")
                         .HasDatabaseName("IX_OrderItemComponents_OrderItemId");
 
-                    b.ToTable("OrderItemComponents", (string)null);
+                    b.ToTable("OrderItemComponents");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.PriceCampaign", b =>
@@ -1005,7 +1094,7 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasIndex("CategoryId", "IsActive");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.ProductEmbedding", b =>
@@ -1029,7 +1118,7 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("ProductId")
                         .IsUnique();
 
-                    b.ToTable("ProductEmbeddings", (string)null);
+                    b.ToTable("ProductEmbeddings");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.ProductSize", b =>
@@ -1074,7 +1163,7 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("ProductId", "SizeLabel")
                         .IsUnique();
 
-                    b.ToTable("ProductSizes", (string)null);
+                    b.ToTable("ProductSizes");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Province", b =>
@@ -1094,7 +1183,7 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Provinces", (string)null);
+                    b.ToTable("Provinces");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.ReturnRequest", b =>
@@ -1152,7 +1241,7 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ReturnRequests", (string)null);
+                    b.ToTable("ReturnRequests");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Review", b =>
@@ -1199,7 +1288,7 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("UserId", "ProductId")
                         .IsUnique();
 
-                    b.ToTable("Reviews", (string)null);
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.ReviewImage", b =>
@@ -1244,7 +1333,7 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasIndex("ReviewId", "DisplayOrder");
 
-                    b.ToTable("ReviewImages", (string)null);
+                    b.ToTable("ReviewImages");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Size", b =>
@@ -1518,7 +1607,7 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("StoreId", "ProductId", "SizeId")
                         .IsUnique();
 
-                    b.ToTable("StoreSizeInventories", (string)null);
+                    b.ToTable("StoreSizeInventories");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.User", b =>
@@ -1580,7 +1669,7 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.UserAddress", b =>
@@ -1644,7 +1733,7 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasIndex("WardId");
 
-                    b.ToTable("UserAddresses", (string)null);
+                    b.ToTable("UserAddresses");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Ward", b =>
@@ -1669,7 +1758,7 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasIndex("ProvinceId");
 
-                    b.ToTable("Wards", (string)null);
+                    b.ToTable("Wards");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.WishlistItem", b =>
@@ -1703,7 +1792,7 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("UserId", "ProductId")
                         .IsUnique();
 
-                    b.ToTable("WishlistItems", (string)null);
+                    b.ToTable("WishlistItems");
                 });
 
             modelBuilder.Entity("SmartShop.Infrastructure.Persistence.Configurations.PriceListStoreRow", b =>

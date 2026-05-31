@@ -11,7 +11,9 @@ namespace SmartShop.Application.Features.PriceCampaigns.Commands.DeletePriceCamp
 public class DeletePriceCampaignCommandHandler(
     IPriceCampaignRepository priceCampaignRepo,
     ICacheService cache,
-    IUnitOfWork uow
+    IUnitOfWork uow,
+    ILocalizationService localization,
+    ICurrentLanguageService languageService
 ) : IRequestHandler<DeletePriceCampaignCommand, ApiResponse<object?>>
 {
     public async Task<ApiResponse<object?>> Handle(
@@ -25,6 +27,7 @@ public class DeletePriceCampaignCommandHandler(
 
         await cache.RemoveByPrefixAsync("price:effective:", ct);
 
-        return ApiResponse<object?>.Ok(null, "Bảng giá đã được xóa.");
+        return ApiResponse<object?>.Ok(null,
+            localization.GetMessage("success.price_campaign_deleted", languageService.Language));
     }
 }

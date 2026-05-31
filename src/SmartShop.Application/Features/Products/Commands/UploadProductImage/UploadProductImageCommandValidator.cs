@@ -12,11 +12,11 @@ public class UploadProductImageCommandValidator : AbstractValidator<UploadProduc
         var config = UploadCategoryConfigProvider.Get(UploadCategory.ProductImage);
 
         RuleFor(x => x.File)
-            .NotNull().WithMessage("Vui lòng chọn file ảnh.")
-            .Must(f => f != null && f.Length > 0).WithMessage("File không được rỗng.")
+            .NotNull().WithMessage("validation.file_required")
+            .Must(f => f != null && f.Length > 0).WithMessage("validation.file_empty")
             .Must(f => f == null || f.Length <= config.MaxSizeBytes)
                 .WithMessage($"Kích thước file không được vượt quá {config.MaxSizeBytes / (1024 * 1024)} MB.")
             .Must(f => f == null || FileSecurityHelper.ValidateMagicBytes(f.OpenReadStream(), config.AllowedMimeTypes))
-                .WithMessage("Định dạng file không hợp lệ. Chỉ chấp nhận JPG, PNG, WebP.");
+                .WithMessage("validation.file_format_invalid");
     }
 }

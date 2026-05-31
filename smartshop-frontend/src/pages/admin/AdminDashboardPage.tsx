@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   FiPackage,
   FiShoppingBag,
@@ -51,13 +52,7 @@ type PeriodDays = 7 | 30 | 90;
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const STATUS_LABELS: Record<string, string> = {
-  Pending: 'Chờ xác nhận',
-  Confirmed: 'Đã xác nhận',
-  Shipped: 'Đang giao',
-  Delivered: 'Đã giao',
-  Cancelled: 'Đã hủy',
-};
+// STATUS_LABELS thay thế bằng getStatusLabel function dùng i18next
 
 const STATUS_COLORS: Record<string, string> = {
   Pending: '#f59e0b',
@@ -67,10 +62,11 @@ const STATUS_COLORS: Record<string, string> = {
   Cancelled: '#ef4444',
 };
 
-const PERIOD_OPTIONS: { label: string; days: PeriodDays }[] = [
-  { label: '7 ngày', days: 7 },
-  { label: '30 ngày', days: 30 },
-  { label: '90 ngày', days: 90 },
+// PERIOD_OPTIONS thay thế dùng translation keys
+const getPeriodOptions = (t: any) => [
+  { label: t('period7d'), days: 7 as PeriodDays },
+  { label: t('period30d'), days: 30 as PeriodDays },
+  { label: t('period90d'), days: 90 as PeriodDays },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -129,7 +125,12 @@ interface KpiCardProps {
   growth?: number;
 }
 
-function KpiCard({ label, value, icon: Icon, iconCls, growth }: KpiCardProps) {
+interface KpiCardComponentProps extends Omit<KpiCardProps, 'label'> {
+  label: string;
+}
+
+function KpiCard({ label, value, icon: Icon, iconCls, growth }: KpiCardComponentProps) {
+  const { t } = useTranslation('admin');
   const isPositive = growth !== undefined && growth >= 0;
   return (
     <div className="bg-white rounded-xl border shadow-sm p-5 flex items-start gap-4">
@@ -147,7 +148,7 @@ function KpiCard({ label, value, icon: Icon, iconCls, growth }: KpiCardProps) {
           >
             {isPositive ? <FiTrendingUp size={12} /> : <FiTrendingDown size={12} />}
             {isPositive ? '+' : ''}
-            {growth.toFixed(1)}% so với kỳ trước
+            {growth.toFixed(1)}% {t('growthVsPrev')}
           </p>
         )}
       </div>
@@ -181,6 +182,7 @@ function RevenueTooltip({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminDashboardPage() {
+  const { t } = useTranslation('admin');
   const [stats, setStats] = useState<Stats | null>(null);
   const [period, setPeriod] = useState<PeriodDays>(30);
   const [lowStockCount, setLowStockCount] = useState<number | null>(null);
@@ -251,23 +253,25 @@ export default function AdminDashboardPage() {
 
   // ── Derived data ────────────────────────────────────────────────────────────
 
+  const getStatusLabel = (status: string) => t(`status_${status}`, { ns: 'order' });
+
   const statCards = [
     {
-      label: 'Món ăn',
+      label: t('statFood'),
       value: stats?.totalProducts,
       icon: FiPackage,
       to: '/admin/products',
       iconCls: 'bg-rose-50 text-rose-600 border-rose-100',
     },
     {
-      label: 'Đơn giao',
+      label: t('statOrders'),
       value: stats?.totalOrders,
       icon: FiShoppingBag,
       to: '/admin/orders',
       iconCls: 'bg-purple-50 text-purple-600 border-purple-100',
     },
     {
-      label: 'Chờ xác nhận',
+      label: t('statPending'),
       value: stats?.pendingOrders,
       icon: FiClock,
       to: '/admin/orders',
@@ -276,7 +280,7 @@ export default function AdminDashboardPage() {
   ];
 
   const pieData = orderStatus.map((s) => ({
-    name: STATUS_LABELS[s.status] ?? s.status,
+    name: getStatusLabel(s.status),
     value: s.count,
     color: STATUS_COLORS[s.status] ?? '#94a3b8',
   }));
@@ -284,7 +288,7 @@ export default function AdminDashboardPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <AdminLayout title="Tổng quan">
+    <AdminLayout title={t('overview')}>
 
       {/* ── Static stat cards ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
@@ -318,15 +322,15 @@ export default function AdminDashboardPage() {
             <p className={`text-2xl font-bold ${lowStockCount && lowStockCount > 0 ? 'text-red-600' : 'text-gray-800'}`}>
               {lowStockCount != null ? lowStockCount : '—'}
             </p>
-            <p className="text-sm text-gray-500">Sắp hết hàng</p>
+            <p className="text-sm text-gray-500">{t('statLowStock')}</p>
           </div>
         </Link>
       </div>
 
       {/* ── Period selector ────────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 mb-5">
-        <span className="text-sm text-gray-500 mr-1">Khoảng thời gian:</span>
-        {PERIOD_OPTIONS.map(({ label, days }) => (
+        <span className="text-sm text-gray-500 mr-1">{t('periodLabel')}</span>
+        {getPeriodOptions(t).map(({ label, days }) => (
           <button
             key={days}
             onClick={() => setPeriod(days)}
@@ -348,26 +352,26 @@ export default function AdminDashboardPage() {
         ) : (
           <>
             <KpiCard
-              label="Doanh thu"
+              label={t('kpiRevenue')}
               value={summary ? formatVnd(summary.totalRevenue) : '—'}
               icon={FiDollarSign}
               iconCls="bg-emerald-50 text-emerald-600 border-emerald-100"
               growth={summary?.revenueGrowthPercent}
             />
             <KpiCard
-              label="Đơn hàng"
+              label={t('kpiOrderCount')}
               value={summary ? String(summary.totalOrders) : '—'}
               icon={FiShoppingBag}
               iconCls="bg-rose-50 text-rose-600 border-rose-100"
             />
             <KpiCard
-              label="Khách mới"
+              label={t('kpiNewCustomers')}
               value={summary ? String(summary.newCustomers) : '—'}
               icon={FiUsers}
               iconCls="bg-violet-50 text-violet-600 border-violet-100"
             />
             <KpiCard
-              label="Giá trị TB đơn"
+              label={t('kpiAvgOrder')}
               value={summary ? formatVnd(summary.averageOrderValue) : '—'}
               icon={FiTrendingUp}
               iconCls="bg-orange-50 text-orange-600 border-orange-100"
@@ -381,7 +385,7 @@ export default function AdminDashboardPage() {
         <SkeletonChart height={280} />
       ) : (
         <div className="bg-white rounded-xl border shadow-sm p-5 mb-6">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4">Doanh thu theo ngày</h2>
+          <h2 className="text-sm font-semibold text-gray-700 mb-4">{t('chartRevByDay')}</h2>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={revenueData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -421,9 +425,9 @@ export default function AdminDashboardPage() {
           <SkeletonChart height={260} />
         ) : (
           <div className="bg-white rounded-xl border shadow-sm p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">Top 5 sản phẩm bán chạy</h2>
+            <h2 className="text-sm font-semibold text-gray-700 mb-4">{t('chartTop5')}</h2>
             {topProducts.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-16">Không có dữ liệu</p>
+              <p className="text-sm text-gray-400 text-center py-16">{t('noData', { ns: 'common' })}</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart
@@ -462,9 +466,9 @@ export default function AdminDashboardPage() {
           <SkeletonChart height={260} />
         ) : (
           <div className="bg-white rounded-xl border shadow-sm p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">Phân bố trạng thái đơn hàng</h2>
+            <h2 className="text-sm font-semibold text-gray-700 mb-4">{t('chartOrderStatus')}</h2>
             {pieData.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-16">Không có dữ liệu</p>
+              <p className="text-sm text-gray-400 text-center py-16">{t('noData', { ns: 'common' })}</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
@@ -501,7 +505,7 @@ export default function AdminDashboardPage() {
           className="group bg-white rounded-xl border shadow-sm p-5 hover:shadow-md transition-shadow"
         >
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-800">Quản lý món ăn</h3>
+            <h3 className="font-semibold text-gray-800">{t('manageFood')}</h3>
             <FiArrowRight
               size={16}
               className="text-gray-400 group-hover:text-rose-600 transition-colors"
@@ -517,7 +521,7 @@ export default function AdminDashboardPage() {
           className="group bg-white rounded-xl border shadow-sm p-5 hover:shadow-md transition-shadow"
         >
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-800">Quản lý đơn giao</h3>
+            <h3 className="font-semibold text-gray-800">{t('manageDeliveries')}</h3>
             <FiArrowRight
               size={16}
               className="text-gray-400 group-hover:text-rose-600 transition-colors"
@@ -533,7 +537,7 @@ export default function AdminDashboardPage() {
           className="group bg-white rounded-xl border shadow-sm p-5 hover:shadow-md transition-shadow"
         >
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-800">Quản lý chi nhánh</h3>
+            <h3 className="font-semibold text-gray-800">{t('manageBranches')}</h3>
             <FiArrowRight
               size={16}
               className="text-gray-400 group-hover:text-rose-600 transition-colors"

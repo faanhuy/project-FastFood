@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { FiEdit2, FiTrash2, FiPlus, FiX, FiCheck, FiLayers, FiAlertTriangle } from 'react-icons/fi';
 import AdminLayout from '../../components/AdminLayout';
 import { promotionService } from '../../services/promotionService';
@@ -44,6 +45,7 @@ const defaultForm = () => ({
 });
 
 export default function AdminPromotionalPricePage() {
+  const { t } = useTranslation(['admin', 'common', 'toast']);
   const [campaigns, setCampaigns] = useState<PriceCampaignSummaryDto[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -64,7 +66,7 @@ export default function AdminPromotionalPricePage() {
       const result = await promotionService.getPriceCampaigns();
       setCampaigns(result.items);
     } catch {
-      toast.error('Không tải được danh sách campaign.');
+      toast.error(t('campaignLoadFailed', { ns: 'toast' }));
     } finally {
       setLoading(false);
     }
@@ -160,25 +162,25 @@ export default function AdminPromotionalPricePage() {
         startsAt: dto.startsAt.slice(0, 16),
         endsAt: dto.endsAt.slice(0, 16),
         appliesToAll: dto.appliesToAll,
-        storeIds: dto.stores?.map((s) => s.id) ?? [],
+        storeIds: dto.storeIds ?? [],
         items,
       });
       setItemSizes(sizesMap);
       setShowForm(true);
     } catch {
-      toast.error('Không tải được campaign.');
+      toast.error(t('error', { ns: 'common' }));
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Xóa campaign này?')) return;
+    if (!confirm(t('campaignDeleteConfirm', { name: 'campaign' }))) return;
     setDeletingId(id);
     try {
       await promotionService.deletePriceCampaign(id);
       setCampaigns((prev) => prev.filter((c) => c.id !== id));
-      toast.success('Đã xóa campaign.');
+      toast.success(t('campaignDeleted', { ns: 'toast' }));
     } catch {
-      toast.error('Xóa thất bại.');
+      toast.error(t('campaignDeleteFailed', { ns: 'toast' }));
     } finally {
       setDeletingId(null);
     }
@@ -284,7 +286,7 @@ export default function AdminPromotionalPricePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.startsAt || !form.endsAt) {
-      toast.error('Vui lòng điền đầy đủ tên, ngày bắt đầu và ngày kết thúc.');
+      toast.error(t('campaignValidationRequired'));
       return;
     }
     const flatItems: CreatePriceCampaignRequest['items'] = [];
@@ -324,15 +326,15 @@ export default function AdminPromotionalPricePage() {
     try {
       if (editingId) {
         await promotionService.updatePriceCampaign(editingId, body);
-        toast.success('Đã cập nhật campaign.');
+        toast.success(t('campaignUpdated', { ns: 'toast' }));
       } else {
         await promotionService.createPriceCampaign(body);
-        toast.success('Đã tạo campaign mới.');
+        toast.success(t('campaignCreated', { ns: 'toast' }));
       }
       setShowForm(false);
       await loadCampaigns();
     } catch (e: any) {
-      toast.error(e.response?.data?.message ?? 'Lưu thất bại.');
+      toast.error(e.response?.data?.message ?? t('saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -342,34 +344,34 @@ export default function AdminPromotionalPricePage() {
     new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   return (
-    <AdminLayout title="Quản lý giá khuyến mãi">
+    <AdminLayout title={t('managePriceCampaign')}>
       <div className="flex items-center justify-between mb-6">
-        <p className="text-sm text-gray-500">Quản lý các chiến dịch giá (Price Campaign) theo sản phẩm và size.</p>
+        <p className="text-sm text-gray-500">{t('campaignDescription')}</p>
         <button
           onClick={openCreate}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors"
         >
           <FiPlus size={14} />
-          Tạo campaign
+          {t('createCampaign')}
         </button>
       </div>
 
       {/* Campaign list */}
       <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-gray-400 text-sm">Đang tải...</div>
+          <div className="p-8 text-center text-gray-400 text-sm">{t('loading', { ns: 'common' })}</div>
         ) : campaigns.length === 0 ? (
-          <div className="p-8 text-center text-gray-400 text-sm">Chưa có campaign nào.</div>
+          <div className="p-8 text-center text-gray-400 text-sm">{t('noCampaigns')}</div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-gray-50">
-                <th className="text-left px-5 py-3 font-semibold text-gray-600">Tên</th>
-                <th className="text-center px-5 py-3 font-semibold text-gray-600">Thời gian</th>
-                <th className="text-center px-5 py-3 font-semibold text-gray-600">Phạm vi</th>
-                <th className="text-center px-5 py-3 font-semibold text-gray-600">Số item</th>
-                <th className="text-center px-5 py-3 font-semibold text-gray-600">Trạng thái</th>
-                <th className="text-right px-5 py-3 font-semibold text-gray-600">Thao tác</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">{t('campaignName')}</th>
+                <th className="text-center px-5 py-3 font-semibold text-gray-600">{t('campaignTime')}</th>
+                <th className="text-center px-5 py-3 font-semibold text-gray-600">{t('campaignScope')}</th>
+                <th className="text-center px-5 py-3 font-semibold text-gray-600">{t('campaignItemCount')}</th>
+                <th className="text-center px-5 py-3 font-semibold text-gray-600">{t('status')}</th>
+                <th className="text-right px-5 py-3 font-semibold text-gray-600">{t('actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -381,10 +383,10 @@ export default function AdminPromotionalPricePage() {
                   </td>
                   <td className="px-5 py-3 text-center">
                     {c.appliesToAll ? (
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Tất cả</span>
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{t('all', { ns: 'common' })}</span>
                     ) : (
                       <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                        {c.storeCount} chi nhánh
+                        {c.storeCount} {t('branches')}
                       </span>
                     )}
                   </td>
@@ -392,11 +394,11 @@ export default function AdminPromotionalPricePage() {
                   <td className="px-5 py-3 text-center">
                     {c.isActive ? (
                       <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
-                        Hoạt động
+                        {t('active')}
                       </span>
                     ) : (
                       <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
-                        Không hoạt động
+                        {t('inactive')}
                       </span>
                     )}
                   </td>
@@ -405,7 +407,7 @@ export default function AdminPromotionalPricePage() {
                       <button
                         onClick={() => openEdit(c.id)}
                         className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-rose-600 transition-colors"
-                        title="Sửa"
+                        title={t('edit')}
                       >
                         <FiEdit2 size={14} />
                       </button>
@@ -413,7 +415,7 @@ export default function AdminPromotionalPricePage() {
                         onClick={() => handleDelete(c.id)}
                         disabled={deletingId === c.id}
                         className="p-1.5 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
-                        title="Xóa"
+                        title={t('delete')}
                       >
                         <FiTrash2 size={14} />
                       </button>
@@ -432,7 +434,7 @@ export default function AdminPromotionalPricePage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-8">
             <div className="flex items-center justify-between px-6 py-4 border-b">
               <h3 className="text-base font-semibold text-gray-800">
-                {editingId ? 'Sửa campaign' : 'Tạo campaign mới'}
+                {editingId ? t('editCampaign') : t('createCampaign')}
               </h3>
               <button
                 onClick={() => setShowForm(false)}
@@ -446,14 +448,14 @@ export default function AdminPromotionalPricePage() {
               {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tên campaign <span className="text-red-500">*</span>
+                  {t('campaignName')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
-                  placeholder="VD: Khuyến mãi hè 2026"
+                  placeholder={t('campaignNamePlaceholder')}
                 />
               </div>
 
@@ -461,7 +463,7 @@ export default function AdminPromotionalPricePage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Bắt đầu <span className="text-red-500">*</span>
+                    {t('campaignStartsAt')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="datetime-local"
@@ -472,7 +474,7 @@ export default function AdminPromotionalPricePage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Kết thúc <span className="text-red-500">*</span>
+                    {t('campaignEndsAt')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="datetime-local"
@@ -494,13 +496,13 @@ export default function AdminPromotionalPricePage() {
                     }
                     className="accent-rose-600"
                   />
-                  Áp dụng cho tất cả chi nhánh
+                  {t('campaignApplyAll')}
                 </label>
                 {!form.appliesToAll && (
                   <div>
-                    <p className="text-xs text-gray-500 mb-2">Chọn chi nhánh áp dụng:</p>
+                    <p className="text-xs text-gray-500 mb-2">{t('campaignSelectStores')}</p>
                     {stores.length === 0 ? (
-                      <p className="text-xs text-gray-400">Không có chi nhánh nào.</p>
+                      <p className="text-xs text-gray-400">{t('storeNoData')}</p>
                     ) : (
                       <div className="grid grid-cols-2 gap-1.5 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50">
                         {stores.map((s) => {
@@ -532,7 +534,7 @@ export default function AdminPromotionalPricePage() {
                       </div>
                     )}
                     {form.storeIds.length === 0 && (
-                      <p className="text-xs text-amber-600 mt-1">Chưa chọn chi nhánh nào.</p>
+                      <p className="text-xs text-amber-600 mt-1">{t('campaignNoStoresSelected')}</p>
                     )}
                   </div>
                 )}
@@ -541,18 +543,18 @@ export default function AdminPromotionalPricePage() {
               {/* Items */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium text-gray-700">Sản phẩm áp dụng</label>
+                  <label className="text-sm font-medium text-gray-700">{t('campaignItems')}</label>
                   <button
                     type="button"
                     onClick={addItem}
                     className="flex items-center gap-1 text-xs text-rose-600 hover:text-rose-700 font-medium"
                   >
                     <FiPlus size={12} />
-                    Thêm dòng
+                    {t('addRow')}
                   </button>
                 </div>
                 {form.items.length === 0 ? (
-                  <p className="text-sm text-gray-400 py-2">Chưa có item nào. Nhấn "Thêm dòng" để thêm.</p>
+                  <p className="text-sm text-gray-400 py-2">{t('campaignNoItems')}</p>
                 ) : (
                   <div className="space-y-2">
                     {form.items.map((it, idx) => (
@@ -639,12 +641,12 @@ export default function AdminPromotionalPricePage() {
                                         (se) => se.discountValue !== '' && parseFloat(se.discountValue) > 0,
                                       ).length
                                     }{' '}
-                                    size đã cài giá
+                                    {t('sizesPriced')}
                                   </span>
                                 ) : (
                                   <span className="text-xs text-amber-600 flex items-center gap-1">
                                     <FiAlertTriangle size={11} />
-                                    Chưa cài giá cho size nào
+                                    {t('sizesPricedNone')}
                                   </span>
                                 )}
                               </>
@@ -663,7 +665,7 @@ export default function AdminPromotionalPricePage() {
                   onClick={() => setShowForm(false)}
                   className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg"
                 >
-                  Hủy
+                  {t('cancel', { ns: 'common' })}
                 </button>
                 <button
                   type="submit"
@@ -675,7 +677,7 @@ export default function AdminPromotionalPricePage() {
                   ) : (
                     <FiCheck size={14} />
                   )}
-                  {editingId ? 'Cập nhật' : 'Tạo mới'}
+                  {editingId ? t('update') : t('create')}
                 </button>
               </div>
             </form>
@@ -689,7 +691,7 @@ export default function AdminPromotionalPricePage() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
             <div className="flex items-center justify-between px-5 py-4 border-b">
               <div>
-                <h4 className="text-sm font-semibold text-gray-800">Cài giá theo size</h4>
+                <h4 className="text-sm font-semibold text-gray-800">{t('campaignPriceBySize')}</h4>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {products.find((p) => p.id === form.items[sizePopupIdx!].productId)?.name ?? ''}
                 </p>

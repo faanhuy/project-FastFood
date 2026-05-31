@@ -7,13 +7,13 @@ public class UpdateProductCommandValidator : AbstractValidator<UpdateProductComm
     public UpdateProductCommandValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Tên sản phẩm không được để trống.")
+            .NotEmpty().WithMessage("validation.product_name_required")
             .MaximumLength(200);
 
         RuleFor(x => x.Description)
-            .NotEmpty().WithMessage("Mô tả không được để trống.");
+            .NotEmpty().WithMessage("validation.product_description_required");
 
         RuleFor(x => x.Price)
-            .GreaterThan(0).WithMessage("Giá phải lớn hơn 0.");
+            .GreaterThan(0).WithMessage("validation.price_positive");
     }
 }

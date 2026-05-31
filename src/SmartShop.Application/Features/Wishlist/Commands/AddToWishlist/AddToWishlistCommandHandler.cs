@@ -12,7 +12,9 @@ public class AddToWishlistCommandHandler(
     IWishlistRepository wishlistRepository,
     IProductRepository productRepository,
     IUnitOfWork unitOfWork,
-    ICurrentUserService currentUserService) : IRequestHandler<AddToWishlistCommand, ApiResponse<bool>>
+    ICurrentUserService currentUserService,
+    ILocalizationService localization,
+    ICurrentLanguageService languageService) : IRequestHandler<AddToWishlistCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(AddToWishlistCommand request, CancellationToken cancellationToken)
     {
@@ -23,12 +25,13 @@ public class AddToWishlistCommandHandler(
 
         var alreadyExists = await wishlistRepository.ExistsAsync(userId, request.ProductId, cancellationToken);
         if (alreadyExists)
-            throw new ConflictException("Sản phẩm đã có trong danh sách yêu thích.");
+            throw new ConflictException("error.wishlist_already_exists", null);
 
         var item = WishlistItem.Create(userId, request.ProductId);
         await wishlistRepository.AddAsync(item, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return ApiResponse<bool>.Ok(true, "Đã thêm vào danh sách yêu thích.");
+        return ApiResponse<bool>.Ok(true,
+            localization.GetMessage("success.wishlist_added", languageService.Language));
     }
 }

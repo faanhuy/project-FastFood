@@ -78,6 +78,11 @@ export const sizeService = {
     return data.data!;
   },
 
+  toggleSizeActive: async (id: string): Promise<SizeDto> => {
+    const { data } = await api.patch<ApiResponse<SizeDto>>(`/admin/sizes/${id}/toggle-active`);
+    return data.data!;
+  },
+
   deleteMasterSize: async (id: string): Promise<void> => {
     await api.delete(`/admin/sizes/${id}`);
   },

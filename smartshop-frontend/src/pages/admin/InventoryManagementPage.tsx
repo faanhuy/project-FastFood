@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { FiAlertTriangle, FiEdit2, FiCheck, FiX, FiPlusCircle, FiLayers, FiEye, FiTrash2, FiPlus, FiChevronDown, FiChevronRight } from 'react-icons/fi';
 import AdminLayout from '../../components/AdminLayout';
 import { storeService } from '../../services/storeService';
@@ -20,6 +21,8 @@ const toReceiptSizeEntry = (size: ProductSize) => ({
 });
 
 export default function InventoryManagementPage() {
+  const { t } = useTranslation(['admin', 'common', 'toast']);
+  const { t: tToast } = useTranslation('toast');
   const [stores, setStores] = useState<Store[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState<string>('');
   const [storesLoading, setStoresLoading] = useState(true);
@@ -73,7 +76,7 @@ export default function InventoryManagementPage() {
         setStores(list);
         if (list.length > 0) setSelectedStoreId(list[0].id);
       })
-      .catch(() => toast.error('Không tải được danh sách chi nhánh.'))
+      .catch(() => toast.error(t('storeLoadFailed', { ns: 'toast' })))
       .finally(() => setStoresLoading(false));
   }, []);
 
@@ -85,7 +88,7 @@ export default function InventoryManagementPage() {
       const data = await storeService.getStoreInventory(storeId);
       setInventory(data);
     } catch {
-      toast.error('Không tải được tồn kho.');
+      toast.error(t('inventoryLoadFailed', { ns: 'toast' }));
     } finally {
       setInventoryLoading(false);
     }
@@ -104,7 +107,7 @@ export default function InventoryManagementPage() {
       const data = await stockReceiptService.getList(storeId, 1, 50, status);
       setReceipts(data.items);
     } catch {
-      toast.error('Không tải được danh sách phiếu nhập kho.');
+      toast.error(t('stockReceiptLoadFailed', { ns: 'toast' }));
     } finally {
       setReceiptsLoading(false);
     }
@@ -195,10 +198,10 @@ export default function InventoryManagementPage() {
     : [];
 
   return (
-    <AdminLayout title="Quản lý tồn kho">
+    <AdminLayout title={t('manageInventory')}>
       {/* Store selector */}
       <div className="flex items-center gap-3 mb-6">
-        <label className="text-sm font-medium text-gray-700 shrink-0">Chi nhánh:</label>
+        <label className="text-sm font-medium text-gray-700 shrink-0">{t('branch')}:</label>
         {storesLoading ? (
           <div className="h-9 w-48 bg-gray-100 rounded-lg animate-pulse" />
         ) : (
@@ -224,7 +227,7 @@ export default function InventoryManagementPage() {
             }`}
           >
             <FiPlusCircle size={13} />
-            Phiếu nhập kho
+            {t('stockReceiptLabel')}
           </button>
           <button
             onClick={() => setTab('all')}
@@ -232,7 +235,7 @@ export default function InventoryManagementPage() {
               tab === 'all' ? 'border-rose-600 text-rose-600' : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            Tất cả ({inventory.length})
+            {t('all', { ns: 'common' })} ({inventory.length})
           </button>
           <button
             onClick={() => setTab('lowStock')}
@@ -241,7 +244,7 @@ export default function InventoryManagementPage() {
             }`}
           >
             <FiAlertTriangle size={13} />
-            Sắp hết hàng
+            {t('lowStock')}
             {lowStockCount > 0 && (
               <span className="bg-red-100 text-red-600 text-xs px-1.5 py-0.5 rounded-full font-semibold">
                 {lowStockCount}
@@ -255,7 +258,7 @@ export default function InventoryManagementPage() {
             }`}
           >
             <FiLayers size={13} />
-            Theo size
+            {t('bySize')}
           </button>
         </div>
 
@@ -271,7 +274,7 @@ export default function InventoryManagementPage() {
             className="mb-2 flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors shrink-0"
           >
             <FiPlus size={14} />
-            Tạo phiếu nhập kho
+            {t('createStockReceipt')}
           </button>
         )}
       </div>
@@ -279,19 +282,19 @@ export default function InventoryManagementPage() {
       {/* Inventory table — read-only, shown for all/lowStock tabs */}
       {(tab === 'all' || tab === 'lowStock') && <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
         {inventoryLoading ? (
-          <div className="p-8 text-center text-gray-400 text-sm">Đang tải tồn kho...</div>
+          <div className="p-8 text-center text-gray-400 text-sm">{t('loading', { ns: 'common' })}</div>
         ) : displayedItems.length === 0 ? (
           <div className="p-8 text-center text-gray-400 text-sm">
-            {tab === 'lowStock' ? 'Không có sản phẩm sắp hết hàng.' : 'Không có dữ liệu tồn kho.'}
+            {tab === 'lowStock' ? t('noLowStockItems') : t('noInventoryData')}
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-gray-50">
-                <th className="text-left px-5 py-3 font-semibold text-gray-600">Sản phẩm</th>
-                <th className="text-center px-5 py-3 font-semibold text-gray-600">Tồn kho</th>
-                <th className="text-center px-5 py-3 font-semibold text-gray-600">Ngưỡng cảnh báo</th>
-                <th className="text-center px-5 py-3 font-semibold text-gray-600">Trạng thái</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">{t('product', { ns: 'common' })}</th>
+                <th className="text-center px-5 py-3 font-semibold text-gray-600">{t('stock')}</th>
+                <th className="text-center px-5 py-3 font-semibold text-gray-600">{t('lowStockThreshold')}</th>
+                <th className="text-center px-5 py-3 font-semibold text-gray-600">{t('status')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -313,11 +316,11 @@ export default function InventoryManagementPage() {
                       {isLow ? (
                         <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-medium">
                           <FiAlertTriangle size={10} />
-                          Sắp hết
+                          {t('lowStock')}
                         </span>
                       ) : (
                         <span className="inline-block bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                          Bình thường
+                          {t('normal')}
                         </span>
                       )}
                     </td>
@@ -334,7 +337,7 @@ export default function InventoryManagementPage() {
         <div className="space-y-4">
           {/* Filter */}
           <div className="flex items-center gap-3 flex-wrap">
-            <label className="text-sm font-medium text-gray-700 shrink-0">Trạng thái:</label>
+            <label className="text-sm font-medium text-gray-700 shrink-0">{t('status')}:</label>
             <div className="flex gap-2">
               {(['all', 'Pending', 'Completed', 'Cancelled'] as const).map((status) => (
                 <button
@@ -346,7 +349,7 @@ export default function InventoryManagementPage() {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  {status === 'all' ? 'Tất cả' : status === 'Pending' ? 'Chờ xử lý' : status === 'Completed' ? 'Hoàn thành' : 'Đã hủy'}
+                  {status === 'all' ? t('all', { ns: 'common' }) : status === 'Pending' ? t('pending') : status === 'Completed' ? t('completed') : t('cancelled')}
                 </button>
               ))}
             </div>
@@ -355,18 +358,18 @@ export default function InventoryManagementPage() {
           {/* Receipts table */}
           <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
             {receiptsLoading ? (
-              <div className="p-8 text-center text-gray-400 text-sm">Đang tải phiếu nhập kho...</div>
+              <div className="p-8 text-center text-gray-400 text-sm">{t('loading', { ns: 'common' })}</div>
             ) : receipts.length === 0 ? (
-              <div className="p-8 text-center text-gray-400 text-sm">Không có phiếu nhập kho nào.</div>
+              <div className="p-8 text-center text-gray-400 text-sm">{t('noReceipts')}</div>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50">
-                    <th className="text-left px-5 py-3 font-semibold text-gray-600">Số phiếu</th>
-                    <th className="text-left px-5 py-3 font-semibold text-gray-600">Ngày nhập</th>
-                    <th className="text-left px-5 py-3 font-semibold text-gray-600 hidden sm:table-cell">Ghi chú</th>
-                    <th className="text-center px-5 py-3 font-semibold text-gray-600">Trạng thái</th>
-                    <th className="text-right px-5 py-3 font-semibold text-gray-600">Thao tác</th>
+                    <th className="text-left px-5 py-3 font-semibold text-gray-600">{t('receiptNumber')}</th>
+                    <th className="text-left px-5 py-3 font-semibold text-gray-600">{t('receiptDate')}</th>
+                    <th className="text-left px-5 py-3 font-semibold text-gray-600 hidden sm:table-cell">{t('notes')}</th>
+                    <th className="text-center px-5 py-3 font-semibold text-gray-600">{t('status')}</th>
+                    <th className="text-right px-5 py-3 font-semibold text-gray-600">{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -389,7 +392,7 @@ export default function InventoryManagementPage() {
                               : 'bg-gray-100 text-gray-700'
                           }`}
                         >
-                          {receipt.status === 'Pending' ? 'Chờ xử lý' : receipt.status === 'Completed' ? 'Hoàn thành' : 'Đã hủy'}
+                          {receipt.status === 'Pending' ? t('pending') : receipt.status === 'Completed' ? t('completed') : t('cancelled')}
                         </span>
                       </td>
                       <td className="px-5 py-3 text-right">
@@ -402,13 +405,13 @@ export default function InventoryManagementPage() {
                                 setCollapsedDetailProducts({});
                                 setSelectedReceipt(detail);
                               } catch {
-                                toast.error('Không tải được chi tiết phiếu.');
+                                toast.error(t('error', { ns: 'common' }));
                               } finally {
                                 setDetailLoading(false);
                               }
                             }}
                             className="p-1.5 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                            title="Xem chi tiết"
+                            title={t('view')}
                           >
                             <FiEye size={14} />
                           </button>
@@ -475,14 +478,14 @@ export default function InventoryManagementPage() {
                                   setReceiptItems(rows);
                                   setCreateReceiptOpen(true);
                                 } catch {
-                                  toast.error('Không tải được chi tiết phiếu.');
+                                  toast.error(t('error', { ns: 'common' }));
                                 } finally {
                                   setDetailLoading(false);
                                 }
                               }}
                               disabled={detailLoading}
                               className="p-1.5 rounded-lg text-gray-500 hover:bg-yellow-50 hover:text-yellow-600 transition-colors disabled:opacity-50"
-                              title="Chỉnh sửa phiếu"
+                              title={t('edit')}
                             >
                               <FiEdit2 size={14} />
                             </button>
@@ -490,7 +493,7 @@ export default function InventoryManagementPage() {
                           {receipt.status === 'Pending' && (
                             <button
                               onClick={async () => {
-                                if (!confirm('Hoàn thành phiếu nhập kho này? Tồn kho sẽ được cộng.')) return;
+                                if (!confirm(t('confirmCompleteReceipt'))) return;
                                 setCompletingReceipt(true);
                                 try {
                                   await stockReceiptService.complete(receipt.id);
@@ -499,16 +502,16 @@ export default function InventoryManagementPage() {
                                       r.id === receipt.id ? { ...r, status: 'Completed' as const } : r,
                                     ),
                                   );
-                                  toast.success('Đã hoàn thành phiếu nhập kho.');
+                                  toast.success(t('stockReceiptCompleted', { ns: 'toast' }));
                                 } catch (err: any) {
-                                  toast.error(err.response?.data?.message ?? 'Hoàn thành thất bại.');
+                                  toast.error(err.response?.data?.message ?? t('stockReceiptCompleteFailed', { ns: 'toast' }));
                                 } finally {
                                   setCompletingReceipt(false);
                                 }
                               }}
                               disabled={completingReceipt}
                               className="p-1.5 rounded-lg text-gray-500 hover:bg-green-50 hover:text-green-600 transition-colors disabled:opacity-50"
-                              title="Hoàn thành"
+                              title={t('complete')}
                             >
                               <FiCheck size={14} />
                             </button>
@@ -517,8 +520,8 @@ export default function InventoryManagementPage() {
                             <button
                               onClick={async () => {
                                 const msg = receipt.status === 'Completed'
-                                  ? 'Hủy phiếu đã hoàn thành? Tồn kho sẽ bị giảm tương ứng.'
-                                  : 'Hủy phiếu nhập kho này?';
+                                  ? t('confirmCancelCompleted')
+                                  : t('confirmCancelReceipt');
                                 if (!confirm(msg)) return;
                                 setCancellingReceipt(true);
                                 try {
@@ -528,16 +531,16 @@ export default function InventoryManagementPage() {
                                       r.id === receipt.id ? { ...r, status: 'Cancelled' as const } : r,
                                     ),
                                   );
-                                  toast.success('Đã hủy phiếu nhập kho.');
+                                  toast.success(t('stockReceiptCancelled', { ns: 'toast' }));
                                 } catch (err: any) {
-                                  toast.error(err.response?.data?.message ?? 'Hủy phiếu thất bại.');
+                                  toast.error(err.response?.data?.message ?? t('stockReceiptCancelFailed', { ns: 'toast' }));
                                 } finally {
                                   setCancellingReceipt(false);
                                 }
                               }}
                               disabled={cancellingReceipt}
                               className="p-1.5 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
-                              title="Hủy phiếu"
+                              title={t('cancel', { ns: 'common' })}
                             >
                               <FiX size={14} />
                             </button>
@@ -826,7 +829,7 @@ export default function InventoryManagementPage() {
                                   i === idx ? { ...it, productId: pid, productName: prod?.name ?? '', hasSizes: true, quantity: '', sizeEntries: activeSizes.map(toReceiptSizeEntry) } : it,
                                 ));
                               } catch {
-                                toast.error('Không tải được sizes.');
+                                toast.error(tToast('sizeLoadFailed'));
                               }
                             } else {
                               setReceiptItems(items => items.map((it, i) =>
@@ -930,7 +933,7 @@ export default function InventoryManagementPage() {
                     return !it.sizeEntries.some(se => se.quantity !== '' && parseInt(se.quantity, 10) > 0);
                   });
                   if (receiptItems.length === 0 || invalid) {
-                    toast.error('Vui lòng nhập đủ thông tin. Sản phẩm có size cần ít nhất 1 size với số lượng > 0.');
+                    toast.error(tToast('receiptFormRequired'));
                     return;
                   }
                   setCreatingReceipt(true);
@@ -955,7 +958,7 @@ export default function InventoryManagementPage() {
                         items: mappedItems,
                       });
                       setReceipts((prev) => prev.map((r) => r.id === editReceiptId ? { ...r, receiptDate: updated.receiptDate, notes: updated.notes } : r));
-                      toast.success('Đã cập nhật phiếu nhập kho.');
+                      toast.success(tToast('stockReceiptUpdated'));
                     } else {
                       const req: CreateStockReceiptRequest = {
                         storeId: selectedStoreId,
@@ -965,12 +968,12 @@ export default function InventoryManagementPage() {
                       };
                       const created = await stockReceiptService.create(req);
                       setReceipts((prev) => [created, ...prev]);
-                      toast.success('Đã tạo phiếu nhập kho.');
+                      toast.success(tToast('stockReceiptCreated'));
                     }
                     setCreateReceiptOpen(false);
                     setEditReceiptId(null);
                   } catch (err: any) {
-                    toast.error(err.response?.data?.message ?? (editReceiptId ? 'Cập nhật phiếu thất bại.' : 'Tạo phiếu thất bại.'));
+                    toast.error(err.response?.data?.message ?? (editReceiptId ? tToast('stockReceiptUpdateFailed') : tToast('stockReceiptCreateFailed')));
                   } finally {
                     setCreatingReceipt(false);
                   }

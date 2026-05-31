@@ -1,4 +1,5 @@
 using MediatR;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Common.Exceptions;
@@ -7,7 +8,11 @@ using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.Application.Features.Inventory.Commands.DeleteSize;
 
-public class DeleteSizeCommandHandler(ISizeRepository repo, IUnitOfWork uow)
+public class DeleteSizeCommandHandler(
+    ISizeRepository repo,
+    IUnitOfWork uow,
+    ILocalizationService localization,
+    ICurrentLanguageService languageService)
     : IRequestHandler<DeleteSizeCommand, ApiResponse<object>>
 {
     public async Task<ApiResponse<object>> Handle(DeleteSizeCommand request, CancellationToken ct)
@@ -19,6 +24,7 @@ public class DeleteSizeCommandHandler(ISizeRepository repo, IUnitOfWork uow)
         repo.Update(size);
         await uow.SaveChangesAsync(ct);
 
-        return ApiResponse<object>.Ok(new { message = "Size đã bị vô hiệu hóa." });
+        return ApiResponse<object>.Ok(new { },
+            localization.GetMessage("success.size_deactivated", languageService.Language));
     }
 }

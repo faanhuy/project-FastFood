@@ -7,13 +7,13 @@ public class ValidateCouponQueryValidator : AbstractValidator<ValidateCouponQuer
     public ValidateCouponQueryValidator()
     {
         RuleFor(x => x.Code)
-            .NotEmpty().WithMessage("Mã coupon không được để trống.")
-            .MaximumLength(50).WithMessage("Mã coupon tối đa 50 ký tự.");
+            .NotEmpty().WithMessage("validation.coupon_code_required")
+            .MaximumLength(50).WithMessage("validation.coupon_code_max_length");
 
         RuleFor(x => x.OrderTotal)
-            .GreaterThan(0).WithMessage("Tổng đơn hàng phải lớn hơn 0.");
+            .GreaterThan(0).WithMessage("validation.order_amount_positive");
 
         RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("UserId không hợp lệ.");
+            .NotEmpty().WithMessage("validation.user_id_invalid");
     }
 }

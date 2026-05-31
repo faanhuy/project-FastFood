@@ -1,4 +1,5 @@
 using MediatR;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Common.Exceptions;
@@ -9,7 +10,9 @@ namespace SmartShop.Application.Features.Payments.Commands.CreateVNPayPayment;
 
 public class CreateVNPayPaymentCommandHandler(
     IOrderRepository orderRepository,
-    IPaymentGateway paymentGateway) : IRequestHandler<CreateVNPayPaymentCommand, ApiResponse<string>>
+    IPaymentGateway paymentGateway,
+    ILocalizationService localization,
+    ICurrentLanguageService languageService) : IRequestHandler<CreateVNPayPaymentCommand, ApiResponse<string>>
 {
     public async Task<ApiResponse<string>> Handle(CreateVNPayPaymentCommand command, CancellationToken ct)
     {
@@ -17,19 +20,19 @@ public class CreateVNPayPaymentCommandHandler(
             ?? throw new NotFoundException(nameof(Domain.Entities.Order), command.OrderId);
 
         if (order.UserId.ToString() != command.UserId)
-            throw new UnauthorizedException("Không có quyền truy cập đơn hàng này.");
+            throw new UnauthorizedException("error.payment_unauthorized", null);
 
         if (order.PaymentMethod != PaymentMethod.VNPay)
-            throw new ConflictException("Đơn hàng này không sử dụng phương thức thanh toán VNPay.");
+            throw new ConflictException("error.payment_not_vnpay", null);
 
         if (order.PaymentStatus == PaymentStatus.Paid)
-            throw new ConflictException("Đơn hàng này đã thanh toán thành công, không thể tạo lại link thanh toán.");
+            throw new ConflictException("error.payment_already_paid", null);
 
         if (order.Status == OrderStatus.Cancelled)
-            throw new ConflictException("Đơn hàng đã bị hủy, không thể thực hiện thanh toán.");
+            throw new ConflictException("error.payment_order_cancelled", null);
 
         if (order.PaymentStatus != PaymentStatus.Pending && order.PaymentStatus != PaymentStatus.Failed)
-            throw new ConflictException("Trạng thái thanh toán không hợp lệ để tạo link thanh toán.");
+            throw new ConflictException("error.payment_invalid_status", null);
 
         var txnRef = $"{order.Id}_{DateTime.UtcNow:yyyyMMddHHmmss}";
 
@@ -43,6 +46,7 @@ public class CreateVNPayPaymentCommandHandler(
 
         var paymentUrl = paymentGateway.CreatePaymentUrl(paymentRequest);
 
-        return ApiResponse<string>.Ok(paymentUrl, "Tạo link thanh toán thành công.");
+        return ApiResponse<string>.Ok(paymentUrl,
+            localization.GetMessage("success.payment_link_created", languageService.Language));
     }
 }

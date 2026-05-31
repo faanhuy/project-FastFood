@@ -7,9 +7,9 @@ public class UpdateOrderStatusCommandValidator : AbstractValidator<UpdateOrderSt
     public UpdateOrderStatusCommandValidator()
     {
         RuleFor(x => x.OrderId)
-            .NotEmpty().WithMessage("OrderId không hợp lệ.");
+            .NotEmpty().WithMessage("validation.order_id_invalid");
 
         RuleFor(x => x.NewStatus)
-            .IsInEnum().WithMessage("Trạng thái đơn hàng không hợp lệ.");
+            .IsInEnum().WithMessage("validation.order_status_invalid");
     }
 }

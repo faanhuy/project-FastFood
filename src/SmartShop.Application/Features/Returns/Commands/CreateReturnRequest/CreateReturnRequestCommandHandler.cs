@@ -27,7 +27,7 @@ public class CreateReturnRequestCommandHandler(
 
         // Validate order belongs to current user
         if (order.UserId != userId)
-            throw new UnauthorizedException("Bạn không có quyền tạo yêu cầu trả hàng cho đơn hàng này.");
+            throw new UnauthorizedException("error.return_unauthorized", null);
 
         // Validate order is eligible for return:
         // Case 1 — Delivered: allow within 7 days of delivery
@@ -38,22 +38,22 @@ public class CreateReturnRequestCommandHandler(
             && Array.Exists(preShipStatuses, s => s == order.Status);
 
         if (!isDelivered && !isPaidBeforeShip)
-            throw new ConflictException("Chỉ có thể yêu cầu hoàn tiền khi đơn hàng đã giao hoặc đã thanh toán và chưa được vận chuyển.");
+            throw new ConflictException("error.return_invalid_status", null);
 
         if (isDelivered)
         {
             if (order.DeliveredAt == null)
-                throw new ConflictException("Đơn hàng chưa được đánh dấu là đã giao.");
+                throw new ConflictException("error.return_not_delivered", null);
 
             var daysSinceDelivery = (DateTime.UtcNow - order.DeliveredAt.Value).Days;
             if (daysSinceDelivery > 7)
-                throw new ConflictException("Thời hạn trả hàng là 7 ngày kể từ khi giao. Bạn không thể trả hàng nữa.");
+                throw new ConflictException("error.return_expired", null);
         }
 
         // Check if a return request already exists for this order
         var existingReturn = await returnRequestRepository.GetByOrderIdAsync(request.OrderId, cancellationToken);
         if (existingReturn != null && existingReturn.Status != ReturnStatus.Rejected)
-            throw new ConflictException("Đã có yêu cầu trả hàng đang chờ xử lý hoặc đã được duyệt cho đơn hàng này.");
+            throw new ConflictException("error.return_already_pending", null);
 
         var refundAmount = order.TotalAmount;
         ReturnRequest returnRequest;

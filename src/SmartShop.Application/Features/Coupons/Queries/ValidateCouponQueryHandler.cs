@@ -21,17 +21,17 @@ public class ValidateCouponQueryHandler : IRequestHandler<ValidateCouponQuery, V
             ?? throw new NotFoundException(nameof(Coupon), request.Code);
 
         if (coupon.IsExpired())
-            throw new ConflictException("Coupon đã hết hạn.");
+            throw new ConflictException("error.coupon_expired", null);
 
         if (!coupon.HasRemaining())
-            throw new ConflictException("Coupon đã hết lượt sử dụng.");
+            throw new ConflictException("error.coupon_used_up", null);
 
         if (!coupon.MeetsMinOrderValue(request.OrderTotal))
-            throw new ConflictException("Đơn hàng không đủ giá trị tối thiểu để áp dụng coupon.");
+            throw new ConflictException("error.coupon_min_value", null);
 
         var usedByUser = await _couponRepository.HasUsageByUserAsync(coupon.Id, request.UserId, cancellationToken);
         if (usedByUser)
-            throw new ConflictException("Bạn đã sử dụng coupon này rồi.");
+            throw new ConflictException("error.coupon_already_used", null);
 
         var discount = coupon.CalculateDiscount(request.OrderTotal);
         var finalAmount = request.OrderTotal - discount;

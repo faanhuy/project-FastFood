@@ -20,7 +20,7 @@ public class DeleteProductSizeCommandHandler(
 
         var hasInventory = await productSizeRepository.HasInventoryAsync(request.SizeId, cancellationToken);
         if (hasInventory)
-            throw new ConflictException("Không thể xóa size đang có tồn kho. Vui lòng set tồn kho về 0 trước.");
+            throw new ConflictException("error.product_size_has_inventory", null);
 
         productSizeRepository.Delete(size);
         await unitOfWork.SaveChangesAsync(cancellationToken);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { cartService } from '../services/cartService';
 import { productService } from '../services/productService';
@@ -20,6 +21,10 @@ import { couponService } from '../services/couponService';
 import { getImageUrl } from '../utils/imageUrl';
 
 export default function CartPage() {
+  const { t } = useTranslation('cart');
+  const { t: tCommon } = useTranslation('common');
+  const { t: tProduct } = useTranslation('product');
+  const { t: tToast } = useTranslation('toast');
   const [cart, setCart] = useState<CartDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -73,7 +78,7 @@ export default function CartPage() {
       setAppliedCoupon(null);
       setAppliedCode('');
       couponSession.clear();
-      toast('Mã giảm giá đã bị gỡ vì giỏ món không còn đủ điều kiện.', { icon: 'ℹ️' });
+      toast(tToast('couponRemovedInvalid'), { icon: 'ℹ️' });
     }
   };
 
@@ -83,7 +88,7 @@ export default function CartPage() {
       setCart(data);
       return data;
     } catch {
-      setError('Không thể tải giỏ hàng.');
+      setError(tToast('cartLoadFailed'));
       return null;
     } finally {
       setLoading(false);
@@ -127,28 +132,39 @@ export default function CartPage() {
   }, []);
 
   const handleUpdateQuantity = async (item: CartItemDto, quantity: number) => {
-    if (quantity <= 0) return handleRemove(item);
+    if (quantity <= 0) {
+      if (!confirm(t('confirmZeroQuantity', { name: item.displayName }))) return;
+      try {
+        const updated = await cartService.removeItemByLineId(item.id);
+        setCart(updated);
+        if (appliedCode) await revalidateCoupon(updated, appliedCode);
+      } catch {
+        toast.error(tToast('removeItemFailed'));
+      }
+      return;
+    }
     try {
       const updated = await cartService.updateItemByLineId(item.id, quantity);
       setCart(updated);
       if (appliedCode) await revalidateCoupon(updated, appliedCode);
     } catch (err) {
-      toast.error(getApiError(err, 'Cập nhật thất bại.'));
+      toast.error(getApiError(err, tToast('updateFailed')));
     }
   };
 
   const handleRemove = async (item: CartItemDto) => {
+    if (!confirm(t('confirmRemoveItem', { name: item.displayName }))) return;
     try {
       const updated = await cartService.removeItemByLineId(item.id);
       setCart(updated);
       if (appliedCode) await revalidateCoupon(updated, appliedCode);
     } catch {
-      toast.error('Gỡ món thất bại.');
+      toast.error(tToast('removeItemFailed'));
     }
   };
 
   const handleClear = async () => {
-    if (!confirm('Xóa toàn bộ giỏ món?')) return;
+    if (!confirm(t('confirmClearCart'))) return;
     try {
       await cartService.clearCart();
       setCart(null);
@@ -156,7 +172,7 @@ export default function CartPage() {
       setAppliedCode('');
       couponSession.clear();
     } catch {
-      toast.error('Xóa giỏ món thất bại.');
+      toast.error(tToast('clearCartFailed'));
     }
   };
 
@@ -177,7 +193,7 @@ export default function CartPage() {
     setAppliedCoupon(result);
     setAppliedCode(code);
     couponSession.save(code, result);
-    toast.success(`Áp dụng mã ${code} thành công!`);
+    toast.success(tToast('couponApplied', { code }));
   };
 
   const handleCouponClear = () => {
@@ -193,9 +209,9 @@ export default function CartPage() {
       setCart(updated);
       setSuggestions((prev) => prev.filter((p) => p.id !== product.id));
       if (appliedCode) await revalidateCoupon(updated, appliedCode);
-      toast.success(`Đã thêm "${product.name}" vào giỏ món`);
+      toast.success(tToast('addedToCart', { name: product.name }));
     } catch (err) {
-      toast.error(getApiError(err, 'Thêm món vào giỏ thất bại.'));
+      toast.error(getApiError(err, tToast('addToCartFailed')));
     } finally {
       setAddingId(null);
     }
@@ -205,7 +221,7 @@ export default function CartPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="p-8 text-center text-gray-400">Đang tải...</div>
+        <div className="p-8 text-center text-gray-400">{tCommon('loading')}</div>
       </div>
     );
 
@@ -220,28 +236,28 @@ export default function CartPage() {
         <div id="cart-main" className="flex-1 min-w-[350px] max-w-xl flex flex-col items-center">
           <div className="flex items-center justify-between gap-4 mb-6 w-full">
             <h1 id="cart-title" className="text-xl font-bold ml-8">
-              Giỏ món của bạn:
+              {t('yourCart')}
             </h1>
             {cart && cart.items.length > 0 && (
               <button
                 onClick={handleClear}
                 className="rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-600 transition-colors hover:border-red-300 hover:text-red-500"
               >
-                Xóa giỏ
+                {t('clearCart')}
               </button>
             )}
           </div>
           {error && <p className="text-red-500 mb-4">{error}</p>}
           {!cart || cart.items.length === 0 ? (
             <div className="text-center py-16 text-gray-500">
-              <p className="text-lg mb-4">Giỏ món đang trống</p>
+              <p className="text-lg mb-4">{t('emptyCart')}</p>
               <button
                 onClick={() => navigate('/products')}
                 className="bg-rose-600 text-white px-6 py-2 rounded hover:bg-rose-700 flex items-center gap-2 mx-auto"
-                title="Tiếp tục đặt món"
+                title={t('continueShopping')}
               >
                 <FiPlus size={18} />
-                Tiếp tục đặt món
+                {t('continueShopping')}
               </button>
             </div>
           ) : (
@@ -294,14 +310,14 @@ export default function CartPage() {
                             className="text-amber-600 hover:underline"
                             onClick={() => handleRemove(item)}
                           >
-                            Gỡ món
+                            {t('removeItem')}
                           </button>
                           {item.itemType === 'Combo' && item.components.length > 0 && (
                             <button
                               className="text-gray-500 hover:underline flex items-center gap-1"
                               onClick={() => toggleComponents(item.id)}
                             >
-                              {expandedComponents.has(item.id) ? 'Ẩn' : 'Xem'} chi tiết
+                              {expandedComponents.has(item.id) ? tCommon('hide') : tCommon('show')} {tCommon('details')}
                             </button>
                           )}
                         </div>
@@ -331,7 +347,7 @@ export default function CartPage() {
                       item.components.length > 0 && (
                         <div className="border-t bg-orange-50 px-4 py-3">
                           <p className="text-xs font-semibold text-orange-700 mb-2">
-                            Gồm các món:
+                            {t('comboContains')}
                           </p>
                           <ul className="space-y-1">
                             {item.components.map((c, idx) => (
@@ -368,21 +384,21 @@ export default function CartPage() {
               {/* Bảng giá */}
               <div className="space-y-2 text-lg mb-4">
                 <div className="flex justify-between">
-                  <span className="font-semibold">Tổng</span>
+                  <span className="font-semibold">{tCommon('subtotal')}</span>
                   <span className="text-rose-600 font-semibold">
                     {originalTotal.toLocaleString('vi-VN')} <span className="underline">đ</span>
                   </span>
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between">
-                    <span className="font-semibold">Giảm giá ({appliedCode})</span>
+                    <span className="font-semibold">{t('discount')} ({appliedCode})</span>
                     <span className="text-green-600 font-semibold">
                       -{discountAmount.toLocaleString('vi-VN')} <span className="underline">đ</span>
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-xl border-t pt-2">
-                  <span>Tổng cộng</span>
+                  <span>{t('grandTotal')}</span>
                   <span className="text-rose-600">
                     {finalTotal.toLocaleString('vi-VN')} <span className="underline">đ</span>
                   </span>
@@ -393,7 +409,7 @@ export default function CartPage() {
                 onClick={() => navigate('/checkout')}
                 className="w-full bg-rose-600 text-white py-3 rounded-full font-bold text-lg hover:bg-rose-700 transition-colors mt-2"
               >
-                Xác nhận đặt món
+                {t('confirmOrder')}
               </button>
             </div>
           )}
@@ -406,9 +422,9 @@ export default function CartPage() {
             className="w-full md:w-[380px] bg-white rounded-3xl shadow p-6 flex-shrink-0 border"
           >
             <h2 id="suggestion-title" className="text-lg font-semibold mb-1">
-              Món gợi ý thêm
+              {t('suggestedItems')}
             </h2>
-            <p className="text-xs text-gray-400 mb-4">Bán chạy cùng nhóm món hôm nay</p>
+            <p className="text-xs text-gray-400 mb-4">{t('suggestedSubtitle')}</p>
             <div
               id="suggestion-list"
               className="divide-y max-h-[calc(100vh-240px)] overflow-y-auto"
@@ -452,7 +468,7 @@ export default function CartPage() {
                       className="mt-2 flex items-center gap-1.5 border border-rose-500 text-rose-600 rounded-full px-3 py-1 text-xs font-semibold hover:bg-rose-50 transition-colors disabled:opacity-50"
                     >
                       <FiShoppingCart size={12} />
-                      {addingId === p.id ? 'Đang thêm...' : 'Thêm món'}
+                      {addingId === p.id ? tProduct('adding') : tProduct('addItem')}
                     </button>
                   </div>
                 </div>

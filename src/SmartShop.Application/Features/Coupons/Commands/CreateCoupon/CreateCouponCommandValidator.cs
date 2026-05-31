@@ -8,30 +8,30 @@ public class CreateCouponCommandValidator : AbstractValidator<CreateCouponComman
     public CreateCouponCommandValidator()
     {
         RuleFor(x => x.Code)
-            .NotEmpty().WithMessage("Mã coupon không được để trống.")
-            .MaximumLength(50).WithMessage("Mã coupon tối đa 50 ký tự.");
+            .NotEmpty().WithMessage("validation.coupon_code_required")
+            .MaximumLength(50).WithMessage("validation.coupon_code_max_length");
 
         RuleFor(x => x.DiscountType)
-            .IsInEnum().WithMessage("Loại giảm giá không hợp lệ.");
+            .IsInEnum().WithMessage("validation.discount_type_invalid");
 
         RuleFor(x => x.DiscountValue)
-            .GreaterThan(0).WithMessage("Giá trị giảm phải lớn hơn 0.");
+            .GreaterThan(0).WithMessage("validation.discount_value_positive");
 
         RuleFor(x => x.DiscountValue)
-            .LessThanOrEqualTo(100).WithMessage("Phần trăm giảm giá không được vượt quá 100%.")
+            .LessThanOrEqualTo(100).WithMessage("validation.discount_percent_max")
             .When(x => x.DiscountType == DiscountType.Percentage);
 
         RuleFor(x => x.MinOrderValue)
-            .GreaterThanOrEqualTo(0).WithMessage("Giá trị đơn hàng tối thiểu không được âm.");
+            .GreaterThanOrEqualTo(0).WithMessage("validation.min_order_non_negative");
 
         RuleFor(x => x.MaxUsage)
-            .GreaterThan(0).WithMessage("Số lần sử dụng tối đa phải lớn hơn 0.");
+            .GreaterThan(0).WithMessage("validation.max_usage_positive");
 
         RuleFor(x => x.ExpiresAt)
-            .GreaterThan(DateTime.UtcNow).WithMessage("Ngày hết hạn phải ở tương lai.");
+            .GreaterThan(DateTime.UtcNow).WithMessage("validation.coupon_expires_future");
 
         RuleFor(x => x.Description)
-            .MaximumLength(500).WithMessage("Mô tả tối đa 500 ký tự.")
+            .MaximumLength(500).WithMessage("validation.description_max_length")
             .When(x => x.Description is not null);
     }
 }

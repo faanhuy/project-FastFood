@@ -13,7 +13,7 @@ public class GetOrderByIdQueryHandler(IOrderRepository orderRepository)
             ?? throw new NotFoundException("Order", request.OrderId);
 
         if (order.UserId != request.UserId)
-            throw new UnauthorizedException("Bạn không có quyền xem đơn hàng này.");
+            throw new UnauthorizedException("error.order_view_unauthorized", null);
 
         return new OrderDto
         {

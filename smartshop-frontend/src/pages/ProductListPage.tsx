@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { categoryService, productService } from '../services/productService';
 import { catalogService } from '../services/catalogService';
@@ -20,6 +21,9 @@ import { formatPrice } from '../utils/formatters';
 import { getImageUrl } from '../utils/imageUrl';
 
 export default function ProductListPage() {
+  const { t } = useTranslation('product');
+  const { t: tCommon } = useTranslation('common');
+  const { t: tToast } = useTranslation('toast');
   const navigate = useNavigate();
   const { isAuthenticated, refreshCartCount } = useAuthStore();
   const { selectedStore } = useStoreSelectionStore();
@@ -38,13 +42,14 @@ export default function ProductListPage() {
   const [stockLoading, setStockLoading] = useState(false);
   const [stockByProductId, setStockByProductId] = useState<Record<string, number>>({});
   const [addingId, setAddingId] = useState<string | null>(null);
+  const [showComboView, setShowComboView] = useState(false);
+  const [comboSearch, setComboSearch] = useState('');
 
   useEffect(() => {
     categoryService.getCategories().then(setCategories).catch(console.error);
-    // Fetch combos on mount
     setCombosLoading(true);
     catalogService
-      .getCatalog(1, 8)
+      .getCatalog(1, 50)
       .then((result) => setCombos(result.combos))
       .catch((error) => {
         console.warn('Failed to fetch combos:', error);
@@ -97,6 +102,15 @@ export default function ProductListPage() {
   const handleCategoryChange = (id: string | undefined) => {
     setCategoryId(id);
     setPage(1);
+    setShowComboView(false);
+  };
+
+  const handleToggleComboView = () => {
+    setShowComboView((v) => !v);
+    if (!showComboView) {
+      setCategoryId(undefined);
+      setComboSearch('');
+    }
   };
 
   const handleSortChange = (value: number) => {
@@ -111,22 +125,22 @@ export default function ProductListPage() {
       return;
     }
     if (product.hasSizes) {
-      toast('Vui lòng chọn size trước khi thêm vào giỏ.');
+      toast(tToast('selectSizeFirst'));
       navigate(`/products/${product.slug}`);
       return;
     }
     if (selectedStore && stockByProductId[product.id] === 0) {
-      toast.error('Sản phẩm đang hết hàng tại chi nhánh đã chọn.');
+      toast.error(tToast('outOfStockAtSelectedBranch'));
       return;
     }
     setAddingId(product.id);
     try {
       await cartService.addToCart(product.id, 1);
       refreshCartCount();
-      toast.success(`Đã thêm "${product.name}" vào giỏ món!`);
+      toast.success(tToast('addedToCart', { name: product.name }));
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
-      toast.error(msg ?? 'Thêm món vào giỏ thất bại.');
+      toast.error(msg ?? tToast('addToCartFailed'));
     } finally {
       setAddingId(null);
     }
@@ -172,46 +186,63 @@ export default function ProductListPage() {
       <div className="max-w-7xl mx-auto px-4 py-6 flex gap-6">
         {/* Sidebar Categories */}
         <aside className="w-48 shrink-0">
-          <h3 className="font-semibold text-gray-700 mb-3">Nhóm món</h3>
+          <h3 className="font-semibold text-gray-700 mb-3">{t('categoryHeader')}</h3>
           <ul className="space-y-1">
             <li>
               <button
                 onClick={() => handleCategoryChange(undefined)}
-                className={`w-full text-left px-3 py-1.5 rounded text-sm ${!categoryId ? 'bg-rose-100 text-rose-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+                className={`w-full text-left px-3 py-1.5 rounded text-sm ${!categoryId && !showComboView ? 'bg-rose-100 text-rose-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
               >
-                Tất cả món
+                {tCommon('all')}
               </button>
             </li>
             {categories.map((cat) => (
               <li key={cat.id}>
                 <button
                   onClick={() => handleCategoryChange(cat.id)}
-                  className={`w-full text-left px-3 py-1.5 rounded text-sm ${categoryId === cat.id ? 'bg-rose-100 text-rose-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+                  className={`w-full text-left px-3 py-1.5 rounded text-sm ${categoryId === cat.id && !showComboView ? 'bg-rose-100 text-rose-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
                 >
                   {cat.name}
                 </button>
               </li>
             ))}
           </ul>
+
+          {combos.length > 0 && (
+            <div className="mt-5">
+              <div className="border-t border-gray-100 pt-4">
+                <h3 className="font-semibold text-gray-700 mb-2">{t('specialCombos')}</h3>
+                <button
+                  onClick={handleToggleComboView}
+                  className={`w-full text-left px-3 py-1.5 rounded text-sm flex items-center gap-2 transition-colors ${
+                    showComboView
+                      ? 'bg-amber-100 text-amber-700 font-medium'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <span>🎁</span>
+                  <span>{t('viewAllCombos', { count: combos.length })}</span>
+                </button>
+              </div>
+            </div>
+          )}
         </aside>
 
         {/* Main */}
         <main className="flex-1">
           <div className="mb-6 rounded-3xl bg-gradient-to-r from-rose-600 via-red-500 to-amber-500 px-6 py-7 text-white shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rose-100">Fast delivery menu</p>
-            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">Đặt đồ ăn nhanh, giao nóng hổi trong vài chạm</h1>
-            <p className="mt-2 max-w-2xl text-sm text-rose-50 sm:text-base">
-              Chọn burger, gà rán, pizza, mì Ý và đồ uống cho bữa trưa văn phòng, bữa tối nhẹ nhàng hoặc combo xem phim cuối tuần.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rose-100">{t('bannerTag')}</p>
+            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{t('bannerTitle')}</h1>
+            <p className="mt-2 max-w-2xl text-sm text-rose-50 sm:text-base">{t('bannerSub')}</p>
           </div>
 
           {/* Toolbar: result count + sort */}
           <div className="mb-4 flex items-center justify-between gap-4 flex-wrap">
             <span className="text-sm text-gray-500">
-              {products && `Hiển thị ${products.items.length} / ${products.totalCount} món ăn`}
+              {products && t('showingItems', { current: products.items.length, total: products.totalCount })}
             </span>
             <div className="flex items-center gap-1.5 flex-wrap justify-end">
-              <span className="text-sm text-gray-500 hidden sm:inline mr-1">Sắp xếp:</span>
+              <span className="text-sm text-gray-500 hidden sm:inline mr-1">{tCommon('sortBy')}</span>
 
               {/* Pill: Mới */}
               <button
@@ -221,7 +252,7 @@ export default function ProductListPage() {
                     ? 'bg-rose-600 text-white border-rose-600'
                     : 'bg-white text-gray-600 border-gray-300 hover:border-rose-400 hover:text-rose-600'}`}
               >
-                Mới
+                {t('sortNewest')}
               </button>
 
               {/* Pill: Bán chạy */}
@@ -232,7 +263,7 @@ export default function ProductListPage() {
                     ? 'bg-rose-600 text-white border-rose-600'
                     : 'bg-white text-gray-600 border-gray-300 hover:border-rose-400 hover:text-rose-600'}`}
               >
-                Bán chạy
+                {t('sortBestSeller')}
               </button>
 
               {/* Combo: Giá */}
@@ -244,9 +275,9 @@ export default function ProductListPage() {
                     ? 'border-rose-600 text-rose-600 bg-rose-50'
                     : 'border-gray-300 text-gray-600 bg-white hover:border-rose-400 hover:text-rose-600'}`}
               >
-                <option value="" disabled>Giá ↕</option>
-                <option value={1}>Giá tăng dần</option>
-                <option value={2}>Giá giảm dần</option>
+                <option value="" disabled>{t('sortPrice')}</option>
+                <option value={1}>{t('sortPriceAsc')}</option>
+                <option value={2}>{t('sortPriceDesc')}</option>
               </select>
 
               {/* Combo: Tên */}
@@ -258,30 +289,86 @@ export default function ProductListPage() {
                     ? 'border-rose-600 text-rose-600 bg-rose-50'
                     : 'border-gray-300 text-gray-600 bg-white hover:border-rose-400 hover:text-rose-600'}`}
               >
-                <option value="" disabled>Tên ↕</option>
-                <option value={3}>Tên A → Z</option>
-                <option value={4}>Tên Z → A</option>
+                <option value="" disabled>{t('sortName')}</option>
+                <option value={3}>{t('sortNameAZ')}</option>
+                <option value={4}>{t('sortNameZA')}</option>
               </select>
             </div>
           </div>
 
-          {/* Combos Section */}
-          {!combosLoading && combos.length > 0 && (
-            <div className="mb-10">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Combo đặc biệt</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {combos.map((combo) => (
-                  <ComboCard key={combo.id} combo={combo} />
-                ))}
+          {/* Combo View Mode */}
+          {showComboView ? (
+            <div>
+              <div className="mb-5 flex items-center gap-3 flex-wrap">
+                <h2 className="text-xl font-bold text-gray-900">{t('specialCombos')}</h2>
+                <span className="text-sm text-gray-400">({combos.length} combo)</span>
+                <div className="ml-auto relative">
+                  <input
+                    type="text"
+                    value={comboSearch}
+                    onChange={(e) => setComboSearch(e.target.value)}
+                    placeholder={t('searchCombo')}
+                    className="border border-gray-300 rounded-lg pl-3 pr-8 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 w-52"
+                  />
+                  {comboSearch && (
+                    <button
+                      onClick={() => setComboSearch('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+                    >✕</button>
+                  )}
+                </div>
               </div>
+              {combosLoading ? (
+                <div className="flex items-center justify-center h-40 text-gray-400">{tCommon('loading')}</div>
+              ) : (
+                <>
+                  {(() => {
+                    const filtered = combos.filter((c) =>
+                      c.name.toLowerCase().includes(comboSearch.toLowerCase())
+                    );
+                    return filtered.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {filtered.map((combo) => (
+                          <ComboCard key={combo.id} combo={combo} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-40 text-gray-400 gap-2">
+                        <span className="text-3xl">🎁</span>
+                        <p className="text-sm">{t('noComboFound')}</p>
+                      </div>
+                    );
+                  })()}
+                </>
+              )}
             </div>
-          )}
-
-          {loading ? (
-            <div className="flex items-center justify-center h-64 text-gray-400">Đang tải...</div>
           ) : (
             <>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Tất cả sản phẩm</h2>
+              {/* Combos Preview Section */}
+              {!combosLoading && combos.length > 0 && (
+                <div className="mb-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-gray-900">{t('specialCombos')}</h2>
+                    <button
+                      onClick={handleToggleComboView}
+                      className="text-sm text-amber-600 hover:text-amber-700 font-medium hover:underline"
+                    >
+                      {t('viewAllCombos', { count: combos.length })} →
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {combos.slice(0, 4).map((combo) => (
+                      <ComboCard key={combo.id} combo={combo} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {loading ? (
+                <div className="flex items-center justify-center h-64 text-gray-400">{tCommon('loading')}</div>
+              ) : (
+                <>
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">{t('allProducts')}</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {products?.items.map((product) => {
                   const stock = selectedStore ? stockByProductId[product.id] : null;
@@ -301,7 +388,7 @@ export default function ProductListPage() {
                     </div>
                     {outOfStock && (
                       <span className="absolute left-2 top-2 rounded-full bg-gray-900/80 px-2 py-0.5 text-[11px] font-medium text-white">
-                        Hết hàng
+                        {t('outOfStock')}
                       </span>
                     )}
                     <div className="bg-gray-100 rounded-lg h-36 flex items-center justify-center mb-3 overflow-hidden">
@@ -327,10 +414,10 @@ export default function ProductListPage() {
                       {selectedStore && (
                         <p className={`mt-1 text-xs ${outOfStock ? 'text-red-500' : 'text-green-600'}`}>
                           {stockLoading && stock === undefined
-                            ? 'Đang kiểm tra tồn kho...'
+                            ? t('checkingStock')
                             : outOfStock
-                            ? 'Hết hàng tại chi nhánh'
-                            : `Còn ${stock ?? 0} sản phẩm`}
+                            ? t('outOfStockAtBranch')
+                            : t('stockLeft', { count: stock ?? 0 })}
                         </p>
                       )}
                     </div>
@@ -340,12 +427,12 @@ export default function ProductListPage() {
                       className="mt-2 w-full text-xs bg-rose-600 text-white rounded-lg py-1.5 hover:bg-rose-700 disabled:opacity-50 transition-colors"
                     >
                       {addingId === product.id
-                        ? 'Đang thêm...'
+                        ? t('adding')
                         : outOfStock
-                        ? 'Hết hàng'
+                        ? t('outOfStock')
                         : product.hasSizes
-                        ? 'Chọn size'
-                        : '+ Thêm món'}
+                        ? t('selectSize')
+                        : t('addItem')}
                     </button>
                   </Link>
                   );
@@ -360,7 +447,7 @@ export default function ProductListPage() {
                     disabled={page === 1}
                     className="px-3 py-1.5 rounded border text-sm disabled:opacity-40 hover:bg-gray-100"
                   >
-                    ← Trước
+                    {tCommon('prev')}
                   </button>
                   {Array.from({ length: products.totalPages }, (_, i) => i + 1).map((p) => (
                     <button
@@ -376,10 +463,12 @@ export default function ProductListPage() {
                     disabled={page === products.totalPages}
                     className="px-3 py-1.5 rounded border text-sm disabled:opacity-40 hover:bg-gray-100"
                   >
-                    Sau →
+                    {tCommon('next')}
                   </button>
                 </div>
               )}
+            </>
+          )}
             </>
           )}
         </main>

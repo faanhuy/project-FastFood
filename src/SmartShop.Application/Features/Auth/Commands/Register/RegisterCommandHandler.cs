@@ -18,7 +18,7 @@ public class RegisterCommandHandler(
     public async Task<AuthResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
         if (await userRepository.ExistsAsync(request.Email, cancellationToken))
-            throw new ConflictException($"Email '{request.Email}' đã được sử dụng.");
+            throw new ConflictException("error.auth_email_exists", new Dictionary<string, string> { ["email"] = request.Email });
 
         var passwordHash = passwordHasher.Hash(request.Password);
         var user = User.Create(request.Email, passwordHash, request.FirstName, request.LastName);

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   FiShoppingCart, FiPackage, FiLogOut, FiGrid,
   FiUser, FiHeart, FiMapPin, FiChevronDown, FiCheck,
@@ -18,6 +19,7 @@ interface NavbarProps {
 
 export default function Navbar({ children }: NavbarProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { isAuthenticated, user, logout, cartVersion } = useAuthStore();
   const wishlistCount = useWishlistStore((s) => s.productIds.size);
   const [cartCount, setCartCount] = useState(0);
@@ -118,7 +120,7 @@ export default function Navbar({ children }: NavbarProps) {
           >
             <FiMapPin size={13} className={selectedStore ? 'text-rose-500' : 'text-gray-400'} />
             <span className="max-w-[120px] truncate font-medium">
-              {selectedStore ? selectedStore.name : 'Chọn chi nhánh'}
+              {selectedStore ? selectedStore.name : t('selectBranch', { ns: 'common' })}
             </span>
             <FiChevronDown
               size={13}
@@ -129,10 +131,10 @@ export default function Navbar({ children }: NavbarProps) {
           {storeDropdownOpen && (
             <div className="absolute left-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
               <p className="px-3 py-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
-                Chọn chi nhánh
+                {t('selectBranch', { ns: 'common' })}
               </p>
               {activeStores.length === 0 ? (
-                <p className="px-3 py-3 text-sm text-gray-400 text-center">Không có chi nhánh nào.</p>
+                <p className="px-3 py-3 text-sm text-gray-400 text-center">{t('noBranches', { ns: 'common' })}</p>
               ) : (
                 activeStores.map((store) => {
                   const isSelected = selectedStore?.id === store.id;
@@ -184,7 +186,7 @@ export default function Navbar({ children }: NavbarProps) {
               <Link
                 to="/profile"
                 className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-rose-700 bg-rose-100 hover:bg-rose-200 px-2.5 py-1 rounded-full transition-colors mr-1"
-                title="Trang cá nhân"
+                title={t('profile', { ns: 'auth' })}
               >
                 <span className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center text-[10px] font-bold">
                   {user?.firstName?.charAt(0)?.toUpperCase() ?? <FiUser size={10} />}
@@ -192,7 +194,7 @@ export default function Navbar({ children }: NavbarProps) {
                 {user?.firstName}
               </Link>
 
-              <Link to="/wishlist" className="relative p-2 rounded-full text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Yêu thích">
+              <Link to="/wishlist" className="relative p-2 rounded-full text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-colors" title={t('addToWishlist', { ns: 'product' })}>
                 <FiHeart size={19} />
                 {wishlistCount > 0 && (
                   <span className="absolute top-0.5 right-0.5 bg-rose-500 text-white text-[9px] font-bold min-w-4 h-4 px-0.5 rounded-full flex items-center justify-center leading-none">
@@ -203,7 +205,7 @@ export default function Navbar({ children }: NavbarProps) {
 
               <NotificationBell />
 
-              <Link to="/cart" className="relative p-2 rounded-full text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Giỏ hàng">
+              <Link to="/cart" className="relative p-2 rounded-full text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-colors" title={t('cart', { ns: 'common' })}>
                 <FiShoppingCart size={19} />
                 {cartCount > 0 && (
                   <span className="absolute top-0.5 right-0.5 bg-red-500 text-white text-[9px] font-bold min-w-4 h-4 px-0.5 rounded-full flex items-center justify-center leading-none">
@@ -212,7 +214,7 @@ export default function Navbar({ children }: NavbarProps) {
                 )}
               </Link>
 
-              <Link to="/orders" className="relative p-2 rounded-full text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Đơn hàng">
+              <Link to="/orders" className="relative p-2 rounded-full text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-colors" title={t('orders', { ns: 'common' })}>
                 <FiPackage size={19} />
                 {orderCount > 0 && (
                   <span className="absolute top-0.5 right-0.5 bg-red-500 text-white text-[9px] font-bold min-w-4 h-4 px-0.5 rounded-full flex items-center justify-center leading-none">
@@ -222,7 +224,7 @@ export default function Navbar({ children }: NavbarProps) {
               </Link>
 
               {user?.role === 'Admin' && (
-                <Link to="/admin" className="p-2 rounded-full text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Admin Panel">
+                <Link to="/admin" className="p-2 rounded-full text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-colors" title={t('adminPanel', { ns: 'auth' })}>
                   <FiGrid size={18} />
                 </Link>
               )}
@@ -230,16 +232,16 @@ export default function Navbar({ children }: NavbarProps) {
               <button
                 onClick={handleLogout}
                 className="p-2 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                title="Đăng xuất"
+                title={t('logoutTitle', { ns: 'auth' })}
               >
                 <FiLogOut size={19} />
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="text-sm text-gray-500 hover:text-rose-600 px-3 py-1.5 rounded-full hover:bg-rose-50 transition-colors">Đăng nhập</Link>
+              <Link to="/login" className="text-sm text-gray-500 hover:text-rose-600 px-3 py-1.5 rounded-full hover:bg-rose-50 transition-colors">{t('login', { ns: 'auth' })}</Link>
               <Link to="/register" className="text-sm bg-rose-600 text-white px-4 py-1.5 rounded-full hover:bg-rose-700 transition-colors font-medium shadow-sm">
-                Đăng ký
+                {t('register', { ns: 'auth' })}
               </Link>
             </>
           )}

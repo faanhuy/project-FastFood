@@ -28,7 +28,7 @@ public class RejectReturnCommandHandler(
             ?? throw new NotFoundException("Return Request", request.ReturnRequestId);
 
         if (returnRequest.Status != ReturnStatus.Pending)
-            throw new ConflictException("Chỉ có thể từ chối yêu cầu trả hàng đang chờ xử lý.");
+            throw new ConflictException("error.return_reject_invalid_status", null);
 
         var order = await orderRepository.GetByIdAsync(returnRequest.OrderId, cancellationToken)
             ?? throw new NotFoundException(nameof(Order), returnRequest.OrderId);

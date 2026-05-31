@@ -21,7 +21,7 @@ public class SetProductSizesCommandHandler(
             ?? throw new NotFoundException(nameof(Product), request.ProductId);
 
         if (!product.HasSizes)
-            throw new ConflictException("Sản phẩm này không hỗ trợ phân loại theo kích cỡ.");
+            throw new ConflictException("error.product_no_size_support", null);
 
         var existing = await productSizeRepository.GetByProductIdAsync(request.ProductId, cancellationToken);
         foreach (var ps in existing)

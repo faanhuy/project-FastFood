@@ -1,4 +1,5 @@
 using MediatR;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Entities;
@@ -8,7 +9,9 @@ namespace SmartShop.Application.Features.Addresses.Commands.AddAddress;
 
 public class AddAddressCommandHandler(
     IUserAddressRepository addressRepository,
-    IUnitOfWork unitOfWork) : IRequestHandler<AddAddressCommand, ApiResponse<AddressDto>>
+    IUnitOfWork unitOfWork,
+    ILocalizationService localization,
+    ICurrentLanguageService languageService) : IRequestHandler<AddAddressCommand, ApiResponse<AddressDto>>
 {
     public async Task<ApiResponse<AddressDto>> Handle(AddAddressCommand command, CancellationToken cancellationToken)
     {
@@ -29,6 +32,7 @@ public class AddAddressCommandHandler(
         await addressRepository.AddAsync(address, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return ApiResponse<AddressDto>.Ok(AddressDto.From(address), "Đã thêm địa chỉ giao hàng.");
+        return ApiResponse<AddressDto>.Ok(AddressDto.From(address),
+            localization.GetMessage("success.address_added", languageService.Language));
     }
 }

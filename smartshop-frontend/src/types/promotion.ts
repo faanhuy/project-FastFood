@@ -15,7 +15,7 @@ export interface PriceCampaignDto {
   endsAt: string;
   appliesToAll: boolean;
   isActive: boolean;
-  stores: { id: string; name: string }[];
+  storeIds: string[];
   items: PriceCampaignItem[];
 }
 

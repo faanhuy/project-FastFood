@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { FiChevronDown, FiChevronRight } from 'react-icons/fi';
 import AdminLayout from '../../components/AdminLayout';
 import { orderService } from '../../services/orderService';
@@ -47,30 +48,31 @@ function PaymentDetail({
   paidAt?: string | null;
   transactionId?: string | null;
 }) {
+  const { t } = useTranslation('admin');
   if (!method) return null;
   const methodLabel = PAYMENT_METHOD_LABEL[method] ?? method;
   const st = status ? PAYMENT_STATUS_CONFIG[status] : null;
   return (
     <div className="mb-3 inline-flex flex-wrap gap-x-6 gap-y-1 rounded-lg border border-rose-100 bg-white px-4 py-2.5 text-xs">
       <div className="flex items-center gap-1.5 text-gray-500">
-        <span className="font-medium text-gray-700">Phương thức:</span>
+        <span className="font-medium text-gray-700">{t('methodLabel')}</span>
         <span>{methodLabel}</span>
       </div>
       {st && (
         <div className="flex items-center gap-1.5 text-gray-500">
-          <span className="font-medium text-gray-700">Thanh toán:</span>
+          <span className="font-medium text-gray-700">{t('paymentLabel')}</span>
           <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${st.cls}`}>{st.label}</span>
         </div>
       )}
       {paidAt && (
         <div className="flex items-center gap-1.5 text-gray-500">
-          <span className="font-medium text-gray-700">Thời gian TT:</span>
+          <span className="font-medium text-gray-700">{t('paymentTimeLabel')}</span>
           <span>{new Date(paidAt).toLocaleString('vi-VN')}</span>
         </div>
       )}
       {transactionId && (
         <div className="flex items-center gap-1.5 text-gray-500">
-          <span className="font-medium text-gray-700">Mã GD:</span>
+          <span className="font-medium text-gray-700">{t('transactionIdLabel')}</span>
           <span className="font-mono">{transactionId}</span>
         </div>
       )}
@@ -79,6 +81,7 @@ function PaymentDetail({
 }
 
 export default function AdminOrderPage() {
+  const { t } = useTranslation('admin');
   const [allOrders,    setAllOrders]    = useState<OrderDto[]>([]);
   const [totalCount,   setTotalCount]   = useState(0);
   const [loading,      setLoading]      = useState(true);
@@ -95,7 +98,7 @@ export default function AdminOrderPage() {
       setAllOrders(result.items);
       setTotalCount(result.totalCount);
     } catch {
-      toast.error('Không thể tải danh sách đơn giao.');
+      toast.error(t('error', { ns: 'common' }));
     } finally {
       if (showLoading) setLoading(false);
     }
@@ -131,9 +134,9 @@ export default function AdminOrderPage() {
     try {
       await orderService.updateOrderStatus(orderId, newStatus);
       await loadOrders(page, statusFilter, false);
-      toast.success('Đã cập nhật trạng thái đơn giao.');
+      toast.success(t('orderStatusUpdated'));
     } catch {
-      toast.error('Cập nhật trạng thái thất bại.');
+      toast.error(t('error', { ns: 'common' }));
       await loadOrders(page, statusFilter, false);
     } finally {
       setUpdatingIds((prev) => {
@@ -147,7 +150,7 @@ export default function AdminOrderPage() {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
 
   return (
-    <AdminLayout title="Quản lý đơn giao">
+    <AdminLayout title={t('ordersTitle')}>
       {/* Bộ lọc trạng thái */}
       <div className="flex gap-1.5 flex-wrap mb-4">
         <button
@@ -159,7 +162,7 @@ export default function AdminOrderPage() {
               : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
           } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
-          Tất cả
+          {t('all', { ns: 'common' })}
         </button>
         {ORDER_STATUSES.map((s) => (
           <button
@@ -190,7 +193,7 @@ export default function AdminOrderPage() {
         </div>
       )}
 
-      <p className="text-xs text-gray-400 mb-3">Tổng {totalCount} đơn giao</p>
+      <p className="text-xs text-gray-400 mb-3">Tổng {totalCount} {t('statOrders')}</p>
 
       {/* Bảng đơn hàng */}
       {loading ? (
@@ -199,19 +202,19 @@ export default function AdminOrderPage() {
         <>
           <div className="bg-white rounded-xl border shadow-sm overflow-x-auto">
             {allOrders.length === 0 ? (
-              <p className="text-center text-gray-400 py-12">Không có đơn giao nào.</p>
+              <p className="text-center text-gray-400 py-12">{t('noData', { ns: 'common' })}</p>
             ) : (
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 text-gray-500 text-xs uppercase border-b">
                   <tr>
                     <th className="w-8 px-3 py-3" />
-                    <th className="px-4 py-3 text-left">Mã đơn</th>
-                    <th className="px-4 py-3 text-left">Người đặt</th>
-                    <th className="px-4 py-3 text-left hidden sm:table-cell">Địa chỉ</th>
-                    <th className="px-4 py-3 text-right">Tổng tiền</th>
-                    <th className="px-4 py-3 text-left hidden lg:table-cell">Thanh toán</th>
-                    <th className="px-4 py-3 text-left hidden md:table-cell">Ngày đặt</th>
-                    <th className="px-4 py-3 text-left">Trạng thái</th>
+                    <th className="px-4 py-3 text-left">{t('orderCode')}</th>
+                    <th className="px-4 py-3 text-left">{t('customer')}</th>
+                    <th className="px-4 py-3 text-left hidden sm:table-cell">{t('address')}</th>
+                    <th className="px-4 py-3 text-right">{t('total')}</th>
+                    <th className="px-4 py-3 text-left hidden lg:table-cell">{t('payment')}</th>
+                    <th className="px-4 py-3 text-left hidden md:table-cell">{t('createdAt')}</th>
+                    <th className="px-4 py-3 text-left">{t('status')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -271,7 +274,7 @@ export default function AdminOrderPage() {
                                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                                     </svg>
-                                    <span className="ml-1 text-[10px] text-rose-500 font-medium">Đang xử lý...</span>
+                                    <span className="ml-1 text-[10px] text-rose-500 font-medium">{t('updating')}</span>
                                   </div>
                                 )}
                               </div>

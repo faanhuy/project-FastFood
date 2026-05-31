@@ -22,11 +22,11 @@ public class AddProductSizeCommandHandler(
             ?? throw new NotFoundException(nameof(Product), request.ProductId);
 
         if (!product.HasSizes)
-            throw new ConflictException("Sản phẩm này không hỗ trợ phân loại theo size.");
+            throw new ConflictException("error.product_no_size_support", null);
 
         var existing = await productSizeRepository.GetByProductIdAsync(request.ProductId, cancellationToken);
         if (existing.Any(s => s.SizeLabel.Equals(request.SizeLabel, StringComparison.OrdinalIgnoreCase)))
-            throw new ConflictException($"Size '{request.SizeLabel}' đã tồn tại cho sản phẩm này.");
+            throw new ConflictException("error.product_size_exists", new Dictionary<string, string> { ["size"] = request.SizeLabel });
 
         var size = ProductSize.Create(request.ProductId, request.SizeLabel, request.DisplayOrder);
         await productSizeRepository.AddAsync(size, cancellationToken);

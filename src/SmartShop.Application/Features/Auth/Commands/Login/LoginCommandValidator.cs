@@ -7,10 +7,10 @@ public class LoginCommandValidator : AbstractValidator<LoginCommand>
     public LoginCommandValidator()
     {
         RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("Email không được để trống.")
-            .EmailAddress().WithMessage("Email không hợp lệ.");
+            .NotEmpty().WithMessage("validation.email_required")
+            .EmailAddress().WithMessage("validation.email_invalid");
 
         RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("Mật khẩu không được để trống.");
+            .NotEmpty().WithMessage("validation.password_required");
     }
 }

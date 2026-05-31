@@ -12,24 +12,24 @@ public class AddReviewImagesCommandValidator : AbstractValidator<AddReviewImages
     public AddReviewImagesCommandValidator()
     {
         RuleFor(x => x.ReviewId)
-            .NotEmpty().WithMessage("ReviewId không hợp lệ.");
+            .NotEmpty().WithMessage("validation.review_id_invalid");
 
         RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("UserId không hợp lệ.");
+            .NotEmpty().WithMessage("validation.user_id_invalid");
 
         RuleFor(x => x.Files)
-            .NotEmpty().WithMessage("Phải chọn ít nhất một tệp.");
+            .NotEmpty().WithMessage("validation.review_images_required");
 
         RuleFor(x => x.Files)
             .Must(files => files.Count <= MaxFiles)
-            .WithMessage($"Tối đa {MaxFiles} ảnh được phép.");
+            .WithMessage("validation.review_images_max");
 
         RuleForEach(x => x.Files)
             .Must(file => file.Length <= MaxFileSize)
-            .WithMessage($"Mỗi ảnh phải nhỏ hơn {MaxFileSize / (1024 * 1024)}MB.");
+            .WithMessage("validation.review_image_size");
 
         RuleForEach(x => x.Files)
             .Must(file => AllowedMimeTypes.Contains(file.ContentType))
-            .WithMessage("Chỉ chấp nhận JPEG, PNG, WebP.");
+            .WithMessage("validation.review_image_format");
     }
 }

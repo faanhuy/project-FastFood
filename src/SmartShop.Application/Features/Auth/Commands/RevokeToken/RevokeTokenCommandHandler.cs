@@ -15,7 +15,7 @@ public class RevokeTokenCommandHandler(
         var user = await userRepository.GetByRefreshTokenAsync(request.RefreshToken, cancellationToken);
 
         if (user is null)
-            throw new UnauthorizedException("Refresh token không hợp lệ.");
+            throw new UnauthorizedException("error.auth_refresh_token_revoked", null);
 
         user.RevokeRefreshToken();
         await unitOfWork.SaveChangesAsync(cancellationToken);

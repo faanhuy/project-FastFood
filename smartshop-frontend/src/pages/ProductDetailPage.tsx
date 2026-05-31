@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { productService } from '../services/productService';
 import { cartService } from '../services/cartService';
@@ -20,6 +21,7 @@ const formatPrice = (price: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
 export default function ProductDetailPage() {
+  const { t: tToast } = useTranslation('toast');
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { isAuthenticated, refreshCartCount } = useAuthStore();
@@ -121,21 +123,21 @@ export default function ProductDetailPage() {
       return;
     }
     if (product.hasSizes && !selectedSizeId) {
-      toast.error('Vui lòng chọn size trước khi thêm vào giỏ.');
+      toast.error(tToast('selectSizeFirst'));
       return;
     }
     if (isOutOfStock) {
-      toast.error('Size đã chọn đang hết hàng tại chi nhánh này.');
+      toast.error(tToast('outOfStockAtSelectedBranch'));
       return;
     }
     setAddingToCart(true);
     try {
       await cartService.addToCart(product.id, quantity, selectedSizeId ?? undefined);
       refreshCartCount();
-      toast.success(`Đã thêm ${quantity} vào giỏ hàng!`);
+      toast.success(tToast('addToCartSuccess'));
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
-      toast.error(msg ?? 'Thêm vào giỏ thất bại.');
+      toast.error(msg ?? tToast('addToCartFailed'));
     } finally {
       setAddingToCart(false);
     }
@@ -147,11 +149,11 @@ export default function ProductDetailPage() {
       return;
     }
     if (product.hasSizes && !selectedSizeId) {
-      toast.error('Vui lòng chọn size trước khi đặt hàng.');
+      toast.error(tToast('selectSizeFirst'));
       return;
     }
     if (isOutOfStock) {
-      toast.error('Size đã chọn đang hết hàng tại chi nhánh này.');
+      toast.error(tToast('outOfStockAtSelectedBranch'));
       return;
     }
     setAddingToCart(true);
@@ -161,7 +163,7 @@ export default function ProductDetailPage() {
       navigate('/checkout');
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
-      toast.error(msg ?? 'Thêm vào giỏ thất bại.');
+      toast.error(msg ?? tToast('addToCartFailed'));
       setAddingToCart(false);
     }
   };

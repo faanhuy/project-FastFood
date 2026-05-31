@@ -11,7 +11,9 @@ namespace SmartShop.Application.Features.Wishlist.Commands.RemoveFromWishlist;
 public class RemoveFromWishlistCommandHandler(
     IWishlistRepository wishlistRepository,
     IUnitOfWork unitOfWork,
-    ICurrentUserService currentUserService) : IRequestHandler<RemoveFromWishlistCommand, ApiResponse<bool>>
+    ICurrentUserService currentUserService,
+    ILocalizationService localization,
+    ICurrentLanguageService languageService) : IRequestHandler<RemoveFromWishlistCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(RemoveFromWishlistCommand request, CancellationToken cancellationToken)
     {
@@ -23,6 +25,7 @@ public class RemoveFromWishlistCommandHandler(
         wishlistRepository.RemoveAsync(item);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return ApiResponse<bool>.Ok(true, "Đã xóa khỏi danh sách yêu thích.");
+        return ApiResponse<bool>.Ok(true,
+            localization.GetMessage("success.wishlist_removed", languageService.Language));
     }
 }

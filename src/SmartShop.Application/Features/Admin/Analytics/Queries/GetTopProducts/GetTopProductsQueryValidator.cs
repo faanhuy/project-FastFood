@@ -7,12 +7,12 @@ public class GetTopProductsQueryValidator : AbstractValidator<GetTopProductsQuer
     public GetTopProductsQueryValidator()
     {
         RuleFor(x => x.From)
-            .LessThan(x => x.To).WithMessage("Ngày bắt đầu phải nhỏ hơn ngày kết thúc.");
+            .LessThan(x => x.To).WithMessage("validation.date_from_before_to");
 
         RuleFor(x => x.To)
-            .LessThanOrEqualTo(DateTime.UtcNow.AddDays(1)).WithMessage("Ngày kết thúc không được ở tương lai.");
+            .LessThanOrEqualTo(DateTime.UtcNow.AddDays(1)).WithMessage("validation.date_to_not_future");
 
         RuleFor(x => x.Limit)
-            .InclusiveBetween(1, 100).WithMessage("Limit phải từ 1 đến 100.");
+            .InclusiveBetween(1, 100).WithMessage("validation.limit_range");
     }
 }

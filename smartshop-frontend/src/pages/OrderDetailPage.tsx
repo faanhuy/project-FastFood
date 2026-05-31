@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { FiArrowLeft, FiPackage } from 'react-icons/fi';
 import { orderService } from '../services/orderService';
@@ -23,6 +24,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
 };
 
 export default function OrderDetailPage() {
+  const { t: tToast } = useTranslation('toast');
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<OrderDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,7 @@ export default function OrderDetailPage() {
       const url = await paymentService.createVNPayUrl(order.id);
       window.location.href = url;
     } catch (err: any) {
-      toast.error(err.response?.data?.message ?? 'Không thể tạo link thanh toán');
+      toast.error(err.response?.data?.message ?? tToast('paymentLinkFailed'));
     } finally {
       setRetrying(false);
     }
@@ -77,9 +79,9 @@ export default function OrderDetailPage() {
     try {
       await orderService.cancelOrder(order.id);
       setOrder({ ...order, status: 'Cancelled' });
-      toast.success('Đã huỷ đơn giao.');
+      toast.success(tToast('orderCancelledSuccess'));
     } catch (err) {
-      toast.error(getApiError(err, 'Huỷ đơn giao thất bại.'));
+      toast.error(getApiError(err, tToast('orderCancelFailed')));
     } finally {
       setCancelling(false);
     }
@@ -116,7 +118,7 @@ export default function OrderDetailPage() {
         setExistingReturnRequest(existingReturn);
       }
     } catch (err) {
-      toast.error(getApiError(err, 'Không thể cập nhật dữ liệu.'));
+      toast.error(getApiError(err, tToast('loadFailed')));
     }
   };
 

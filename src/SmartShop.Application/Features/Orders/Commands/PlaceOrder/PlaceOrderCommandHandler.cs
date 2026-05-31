@@ -29,13 +29,13 @@ public class PlaceOrderCommandHandler(
             ?? throw new NotFoundException("Cart", request.UserId);
 
         if (!cart.Items.Any())
-            throw new ConflictException("Giỏ hàng đang trống.");
+            throw new ConflictException("error.order_cart_empty", null);
 
         var store = await storeRepository.GetByIdAsync(request.StoreId, cancellationToken)
             ?? throw new NotFoundException(nameof(Store), request.StoreId);
 
         if (!store.IsActive)
-            throw new ConflictException("Chi nhánh đã tạm ngừng hoạt động.");
+            throw new ConflictException("error.order_store_inactive", null);
 
         var productItems = cart.Items.Where(i => i.ItemType == CartItemType.Product).ToList();
         var comboItems   = cart.Items.Where(i => i.ItemType == CartItemType.Combo).ToList();
@@ -48,7 +48,7 @@ public class PlaceOrderCommandHandler(
                 ?? throw new NotFoundException("Product", item.ProductId!.Value);
 
             if (!product.IsActive)
-                throw new ConflictException($"Sản phẩm '{product.Name}' không còn bán.");
+                throw new ConflictException("error.order_product_discontinued", new Dictionary<string, string> { ["name"] = product.Name });
 
             products[item.ProductId!.Value] = product;
         }
@@ -168,17 +168,17 @@ public class PlaceOrderCommandHandler(
                 ?? throw new NotFoundException("Coupon", request.CouponCode);
 
             if (coupon.IsExpired())
-                throw new ConflictException($"Coupon '{request.CouponCode}' đã hết hạn.");
+                throw new ConflictException("error.order_coupon_expired", new Dictionary<string, string> { ["code"] = request.CouponCode! });
 
             if (!coupon.HasRemaining())
-                throw new ConflictException($"Coupon '{request.CouponCode}' đã hết lượt sử dụng.");
+                throw new ConflictException("error.order_coupon_used_up", new Dictionary<string, string> { ["code"] = request.CouponCode! });
 
             if (!coupon.MeetsMinOrderValue(order.TotalAmount))
-                throw new ConflictException($"Đơn hàng chưa đạt giá trị tối thiểu để dùng coupon.");
+                throw new ConflictException("error.order_coupon_min_value", null);
 
             var alreadyUsed = await couponRepository.HasUsageByUserAsync(coupon.Id, request.UserId, cancellationToken);
             if (alreadyUsed)
-                throw new ConflictException($"Bạn đã sử dụng coupon '{request.CouponCode}' trước đó.");
+                throw new ConflictException("error.order_coupon_already_used", new Dictionary<string, string> { ["code"] = request.CouponCode! });
 
             order.ApplyCoupon(coupon.Code, coupon.CalculateDiscount(order.TotalAmount));
             coupon.Use();
@@ -216,7 +216,7 @@ public class PlaceOrderCommandHandler(
             DeductComboStock(comboItems, freshInventories, freshSizeInventories);
 
             try { await unitOfWork.SaveChangesAsync(cancellationToken); }
-            catch (ConcurrencyException) { throw new ConflictException("Sản phẩm vừa hết hàng, vui lòng thử lại."); }
+            catch (ConcurrencyException) { throw new ConflictException("error.order_out_of_stock_race", null); }
         }
 
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
@@ -274,16 +274,20 @@ public class PlaceOrderCommandHandler(
             if (item.SizeId.HasValue)
             {
                 if (!sizeInventories.TryGetValue(item.SizeId.Value, out var sizeInv))
-                    throw new ConflictException($"Sản phẩm '{productName}' size {item.SizeLabel} không có trong kho chi nhánh này.");
+                    throw new ConflictException("error.order_inventory_no_size",
+                        new Dictionary<string, string> { ["name"] = productName, ["size"] = item.SizeLabel ?? "" });
                 if (item.Quantity > sizeInv.Quantity)
-                    throw new ConflictException($"Sản phẩm '{productName}' size {item.SizeLabel} chỉ còn {sizeInv.Quantity} trong kho.");
+                    throw new ConflictException("error.order_inventory_insufficient_size",
+                        new Dictionary<string, string> { ["name"] = productName, ["size"] = item.SizeLabel ?? "", ["qty"] = sizeInv.Quantity.ToString() });
             }
             else
             {
                 if (!inventories.TryGetValue(pid, out var inv))
-                    throw new ConflictException($"Sản phẩm '{productName}' không có trong kho chi nhánh này.");
+                    throw new ConflictException("error.order_inventory_no_stock",
+                        new Dictionary<string, string> { ["name"] = productName });
                 if (item.Quantity > inv.Quantity)
-                    throw new ConflictException($"Sản phẩm '{productName}' chỉ còn {inv.Quantity} trong kho.");
+                    throw new ConflictException("error.order_inventory_insufficient",
+                        new Dictionary<string, string> { ["name"] = productName, ["qty"] = inv.Quantity.ToString() });
             }
         }
     }
@@ -300,16 +304,20 @@ public class PlaceOrderCommandHandler(
                 if (c.SizeId.HasValue)
                 {
                     if (!sizeInventories.TryGetValue(c.SizeId.Value, out var sizeInv))
-                        throw new ConflictException($"Món '{c.ProductName}' size {c.SizeLabel} trong combo không có trong kho.");
+                        throw new ConflictException("error.order_combo_no_size",
+                            new Dictionary<string, string> { ["name"] = c.ProductName, ["size"] = c.SizeLabel ?? "" });
                     if (c.TotalQuantity > sizeInv.Quantity)
-                        throw new ConflictException($"Món '{c.ProductName}' size {c.SizeLabel} trong combo chỉ còn {sizeInv.Quantity} trong kho.");
+                        throw new ConflictException("error.order_combo_insufficient_size",
+                            new Dictionary<string, string> { ["name"] = c.ProductName, ["size"] = c.SizeLabel ?? "", ["qty"] = sizeInv.Quantity.ToString() });
                 }
                 else
                 {
                     if (!inventories.TryGetValue(c.ProductId, out var inv))
-                        throw new ConflictException($"Món '{c.ProductName}' trong combo không có trong kho chi nhánh này.");
+                        throw new ConflictException("error.order_combo_no_stock",
+                            new Dictionary<string, string> { ["name"] = c.ProductName });
                     if (c.TotalQuantity > inv.Quantity)
-                        throw new ConflictException($"Món '{c.ProductName}' trong combo chỉ còn {inv.Quantity} trong kho.");
+                        throw new ConflictException("error.order_combo_insufficient",
+                            new Dictionary<string, string> { ["name"] = c.ProductName, ["qty"] = inv.Quantity.ToString() });
                 }
             }
         }
@@ -327,7 +335,7 @@ public class PlaceOrderCommandHandler(
             {
                 sizeInventories[item.SizeId.Value].DeductStock(item.Quantity);
                 if (!inventories.TryGetValue(pid, out var inv))
-                    throw new ConflictException("Sản phẩm chưa có tồn tổng tại chi nhánh này.");
+                    throw new ConflictException("error.order_no_total_inventory", null);
                 inv.DeductStock(item.Quantity);
             }
             else

@@ -57,6 +57,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<ComboPromotion> ComboPromotions { get; set; }
     public DbSet<ReturnRequest> ReturnRequests { get; set; }
 
+    public DbSet<LocalizedMessage> LocalizedMessages { get; set; }
+    public DbSet<LocalizedFieldName> LocalizedFieldNames { get; set; }
+
     private static readonly TimeZoneInfo _vnTz =
         TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
 

@@ -34,7 +34,7 @@ export const useAuthStore = create<AuthState>()(
       cartVersion: 0,
       wishlistVersion: 0,
 
-      setAuth: (data: AuthResponse) =>
+      setAuth: (data: AuthResponse) => {
         set({
           accessToken: data.token,
           refreshToken: data.refreshToken,
@@ -45,7 +45,8 @@ export const useAuthStore = create<AuthState>()(
             role: data.role,
           },
           isAuthenticated: true,
-        }),
+        });
+      },
 
       setTokens: (accessToken: string, refreshToken: string) =>
         set({ accessToken, refreshToken }),

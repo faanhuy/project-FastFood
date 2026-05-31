@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { geographyService } from '@/services/geographyService';
 import type { Province, Ward } from '@/types/geography';
 
@@ -17,6 +18,7 @@ interface AddressSelectorProps {
 }
 
 export function AddressSelector({ value, onChange, disabled = false }: AddressSelectorProps) {
+  const { t } = useTranslation('cart');
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
   const [wardFilter, setWardFilter] = useState('');
@@ -106,14 +108,14 @@ export function AddressSelector({ value, onChange, disabled = false }: AddressSe
   return (
     <div className="space-y-3">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Tỉnh/Thành phố</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{t('addressProvince')}</label>
         <select
           value={selectedProvinceId}
           onChange={handleProvinceChange}
           disabled={disabled}
           className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="">-- Chọn tỉnh/thành phố --</option>
+          <option value="">{t('selectProvince')}</option>
           {provinces.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -124,10 +126,10 @@ export function AddressSelector({ value, onChange, disabled = false }: AddressSe
 
       {selectedProvinceId && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Phường/Xã</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('addressWard')}</label>
           <input
             type="text"
-            placeholder="Tìm phường/xã..."
+            placeholder={t('searchWard')}
             value={wardFilter}
             onChange={(e) => setWardFilter(e.target.value)}
             disabled={disabled}
@@ -139,7 +141,7 @@ export function AddressSelector({ value, onChange, disabled = false }: AddressSe
             disabled={disabled}
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">-- Chọn phường/xã --</option>
+            <option value="">{t('selectWard')}</option>
             {filteredWards.map((w) => (
               <option key={w.id} value={w.id}>
                 {w.name}
@@ -150,10 +152,10 @@ export function AddressSelector({ value, onChange, disabled = false }: AddressSe
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Số nhà, tên đường</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{t('addressStreet')}</label>
         <input
           type="text"
-          placeholder="Vd: 123 Đường Láng"
+          placeholder={t('streetPlaceholder')}
           value={street}
           onChange={handleStreetChange}
           disabled={disabled}

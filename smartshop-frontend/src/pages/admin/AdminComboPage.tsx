@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { FiEdit2, FiTrash2, FiPlus, FiX } from 'react-icons/fi';
 import AdminLayout from '../../components/AdminLayout';
 import { promotionService } from '../../services/promotionService';
@@ -52,6 +53,7 @@ function toDatetimeLocal(iso: string) {
 }
 
 export default function AdminComboPage() {
+  const { t } = useTranslation(['admin', 'common', 'toast']);
   const [combos, setCombos] = useState<ComboSummaryDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -70,7 +72,7 @@ export default function AdminComboPage() {
       const result = await promotionService.getCombos();
       setCombos(result.items);
     } catch {
-      toast.error('Không tải được danh sách combo');
+      toast.error(t('toast:comboLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -102,7 +104,8 @@ export default function AdminComboPage() {
 
   const openEdit = async (id: string) => {
     try {
-      const dto: ComboDto = await promotionService.getComboById(id);
+      const dto: ComboDto | null = await promotionService.getComboById(id);
+      if (!dto) throw new Error('Not found');
       setEditingId(id);
       setForm({
         name: dto.name,
@@ -130,18 +133,18 @@ export default function AdminComboPage() {
       setActiveDropdown(null);
       setShowForm(true);
     } catch {
-      toast.error('Không tải được combo');
+      toast.error(t('toast:comboLoadOneFailed'));
     }
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Xóa combo "${name}"?`)) return;
+    if (!confirm(t('admin:comboDeleteConfirm', { name }))) return;
     try {
       await promotionService.deleteCombo(id);
-      toast.success('Đã xóa combo');
+      toast.success(t('toast:comboDeleted'));
       loadCombos();
     } catch {
-      toast.error('Xóa thất bại');
+      toast.error(t('toast:comboDeleteFailed'));
     }
   };
 
@@ -202,11 +205,11 @@ export default function AdminComboPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.title.trim() || !form.salePrice || !form.startsAt) {
-      toast.error('Vui lòng điền đủ thông tin bắt buộc');
+      toast.error(t('toast:comboRequiredFields'));
       return;
     }
     if (form.items.length === 0) {
-      toast.error('Combo phải có ít nhất 1 sản phẩm');
+      toast.error(t('toast:comboMustHaveItem'));
       return;
     }
 
@@ -231,15 +234,15 @@ export default function AdminComboPage() {
     try {
       if (editingId) {
         await promotionService.updateCombo(editingId, payload);
-        toast.success('Đã cập nhật combo');
+        toast.success(t('toast:comboUpdated'));
       } else {
         await promotionService.createCombo(payload);
-        toast.success('Đã tạo combo mới');
+        toast.success(t('toast:comboCreated'));
       }
       setShowForm(false);
       loadCombos();
     } catch {
-      toast.error('Lưu thất bại');
+      toast.error(t('toast:comboSaveFailed'));
     } finally {
       setSaving(false);
     }
@@ -283,22 +286,22 @@ export default function AdminComboPage() {
   });
 
   return (
-    <AdminLayout title="Quản lý Combo">
+    <AdminLayout title={t('admin:manageCombo')}>
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <p className="text-sm text-gray-500">{combos.length} combo</p>
+          <p className="text-sm text-gray-500">{t('admin:comboCount', { count: combos.length })}</p>
           <button
             onClick={openCreate}
             className="flex items-center gap-2 bg-rose-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-rose-700"
           >
-            <FiPlus size={15} /> Thêm combo
+            <FiPlus size={15} /> {t('admin:addCombo')}
           </button>
         </div>
 
         {loading ? (
-          <p className="text-center py-12 text-gray-400">Đang tải...</p>
+          <p className="text-center py-12 text-gray-400">{t('common:loading')}</p>
         ) : combos.length === 0 ? (
-          <p className="text-center py-12 text-gray-400">Chưa có combo nào</p>
+          <p className="text-center py-12 text-gray-400">{t('admin:noCombo')}</p>
         ) : (
           <div className="grid gap-3">
             {combos.map((c) => (
@@ -323,7 +326,7 @@ export default function AdminComboPage() {
                     <span className="text-rose-600 font-semibold">{fmt(c.salePrice)}</span>
                     <span className="text-gray-300">|</span>
                     <span>
-                      {fmtDate(c.startsAt)} {c.endsAt ? `→ ${fmtDate(c.endsAt)}` : '(không hạn)'}
+                      {fmtDate(c.startsAt)} {c.endsAt ? `→ ${fmtDate(c.endsAt)}` : `(${t('admin:noExpiry')})`}
                     </span>
                     <span
                       className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
@@ -332,7 +335,7 @@ export default function AdminComboPage() {
                           : 'bg-gray-100 text-gray-500'
                       }`}
                     >
-                      {c.isCurrentlyActive ? 'Đang chạy' : 'Không hoạt động'}
+                      {c.isCurrentlyActive ? t('admin:comboRunning') : t('admin:comboInactive')}
                     </span>
                   </div>
                 </div>
@@ -362,7 +365,7 @@ export default function AdminComboPage() {
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b">
               <h2 className="font-semibold text-gray-800">
-                {editingId ? 'Sửa combo' : 'Thêm combo mới'}
+                {editingId ? t('admin:editCombo') : t('admin:createCombo')}
               </h2>
               <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">
                 <FiX size={18} />
@@ -372,7 +375,7 @@ export default function AdminComboPage() {
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-gray-600">Tên combo *</label>
+                  <label className="text-xs font-medium text-gray-600">{t('admin:comboName')} *</label>
                   <input
                     className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
                     value={form.name}
@@ -382,7 +385,7 @@ export default function AdminComboPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-gray-600">Tiêu đề hiển thị *</label>
+                  <label className="text-xs font-medium text-gray-600">{t('admin:comboTitle')} *</label>
                   <input
                     className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
                     value={form.title}
@@ -394,7 +397,7 @@ export default function AdminComboPage() {
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-600">Mô tả</label>
+                <label className="text-xs font-medium text-gray-600">{t('admin:comboDescription')}</label>
                 <textarea
                   className="mt-1 w-full border rounded-lg px-3 py-2 text-sm resize-none"
                   rows={2}
@@ -413,7 +416,7 @@ export default function AdminComboPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-gray-600">Giá khuyến mãi (đ) *</label>
+                  <label className="text-xs font-medium text-gray-600">{t('admin:comboSalePrice')} *</label>
                   <input
                     type="number"
                     min={0}
@@ -448,7 +451,7 @@ export default function AdminComboPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-gray-600">Bắt đầu *</label>
+                  <label className="text-xs font-medium text-gray-600">{t('admin:comboStartsAt')} *</label>
                   <input
                     type="datetime-local"
                     className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
@@ -458,7 +461,7 @@ export default function AdminComboPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-gray-600">Kết thúc (tùy chọn)</label>
+                  <label className="text-xs font-medium text-gray-600">{t('admin:comboEndsAt')}</label>
                   <input
                     type="datetime-local"
                     className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
@@ -471,18 +474,18 @@ export default function AdminComboPage() {
               {/* Items */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-medium text-gray-600">Sản phẩm trong combo</label>
+                  <label className="text-xs font-medium text-gray-600">{t('admin:comboItems')}</label>
                   <button
                     type="button"
                     onClick={addItem}
                     className="text-xs text-rose-600 hover:underline flex items-center gap-1"
                   >
-                    <FiPlus size={12} /> Thêm món
+                    <FiPlus size={12} /> {t('admin:addItemBtn')}
                   </button>
                 </div>
 
                 {form.items.length === 0 && (
-                  <p className="text-xs text-gray-400 italic">Chưa có món nào — nhấn "Thêm món"</p>
+                  <p className="text-xs text-gray-400 italic">{t('admin:noItemsYet')}</p>
                 )}
 
                 <div className="space-y-3">
@@ -506,7 +509,7 @@ export default function AdminComboPage() {
                                 <input
                                   type="text"
                                   className="w-full border rounded px-2.5 py-1.5 text-xs bg-white"
-                                  placeholder="Tìm tên sản phẩm..."
+                                  placeholder={t('admin:searchProductPlaceholder')}
                                   value={itemSearches[i] ?? ''}
                                   onChange={(e) => {
                                     setItemSearches((prev) => ({ ...prev, [i]: e.target.value }));
@@ -525,7 +528,7 @@ export default function AdminComboPage() {
                                   >
                                     {filteredProducts.length === 0 ? (
                                       <div className="px-3 py-2 text-xs text-gray-400">
-                                        Không tìm thấy sản phẩm
+                                        {t('admin:noProductFound')}
                                       </div>
                                     ) : (
                                       filteredProducts.map((p) => (
@@ -658,14 +661,14 @@ export default function AdminComboPage() {
                 onClick={() => setShowForm(false)}
                 className="px-4 py-2 text-sm rounded-lg border text-gray-600 hover:bg-gray-50"
               >
-                Hủy
+                {t('common:cancel')}
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={saving}
                 className="px-4 py-2 text-sm rounded-lg bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50"
               >
-                {saving ? 'Đang lưu...' : editingId ? 'Cập nhật' : 'Tạo combo'}
+                {saving ? t('common:saving') : editingId ? t('common:update') : t('admin:createCombo')}
               </button>
             </div>
           </div>

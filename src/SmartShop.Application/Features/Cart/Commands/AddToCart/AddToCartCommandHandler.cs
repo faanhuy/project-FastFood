@@ -33,10 +33,10 @@ public class AddToCartCommandHandler(
                 ?? throw new NotFoundException("ProductSize", request.SizeId.Value);
 
             if (!productSize.IsActive)
-                throw new ConflictException("Size đã chọn không còn khả dụng.");
+                throw new ConflictException("error.cart_size_unavailable", null);
 
             if (productSize.ProductId != product.Id)
-                throw new ConflictException("Size không thuộc sản phẩm này.");
+                throw new ConflictException("error.cart_size_not_belong", null);
 
             sizeId = productSize.Id;
             sizeLabel = productSize.SizeLabel;

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { notificationService } from '@/services/notificationService';
 import type { Notification } from '@/types/notification';
 import { useNotificationStore } from '@/store/notificationStore';
@@ -34,6 +35,8 @@ function formatRelativeTime(isoString: string): string {
 }
 
 export default function NotificationBell() {
+  const { t } = useTranslation('common');
+  const { t: tToast } = useTranslation('toast');
   const navigate = useNavigate();
   const { notifications, markOneRead, markAllRead, removeOne, removeAll } = useNotificationStore();
   const [open, setOpen] = useState(false);
@@ -56,7 +59,7 @@ export default function NotificationBell() {
         await notificationService.markAsRead(notification.id);
         markOneRead(notification.id);
       } catch {
-        toast.error('Có lỗi xảy ra');
+        toast.error(tToast('genericError'));
       }
     }
     setOpen(false);
@@ -68,7 +71,7 @@ export default function NotificationBell() {
       await notificationService.markAllAsRead();
       markAllRead();
     } catch (error: any) {
-      toast.error(error.response?.data?.message ?? 'Có lỗi xảy ra');
+      toast.error(error.response?.data?.message ?? tToast('genericError'));
     }
   };
 
@@ -78,7 +81,7 @@ export default function NotificationBell() {
       await notificationService.deleteOne(id);
       removeOne(id);
     } catch {
-      toast.error('Có lỗi xảy ra');
+      toast.error(tToast('genericError'));
     }
   };
 
@@ -88,7 +91,7 @@ export default function NotificationBell() {
       await notificationService.markAsRead(id);
       markOneRead(id);
     } catch {
-      toast.error('Có lỗi xảy ra');
+      toast.error(tToast('genericError'));
     }
   };
 
@@ -97,7 +100,7 @@ export default function NotificationBell() {
       await notificationService.deleteAll();
       removeAll();
     } catch (error: any) {
-      toast.error(error.response?.data?.message ?? 'Có lỗi xảy ra');
+      toast.error(error.response?.data?.message ?? tToast('genericError'));
     }
   };
 
@@ -106,7 +109,7 @@ export default function NotificationBell() {
       <button
         onClick={() => setOpen((o) => !o)}
         className="relative text-gray-500 hover:text-rose-600 p-1"
-        title="Thông báo"
+        title={t('notifications')}
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -122,7 +125,7 @@ export default function NotificationBell() {
       {open && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-[999] flex flex-col max-h-[420px]">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-            <span className="font-semibold text-sm text-gray-800">Thông báo</span>
+            <span className="font-semibold text-sm text-gray-800">{t('notifications')}</span>
             {unreadCount > 0 && (
               <span className="text-xs text-rose-600 font-medium">{unreadCount} chưa đọc</span>
             )}
@@ -131,7 +134,7 @@ export default function NotificationBell() {
           <div className="overflow-y-auto flex-1">
             {notifications.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm text-gray-400">
-                Chưa có thông báo nào
+                {t('noNotifications')}
               </div>
             ) : (
               notifications.map((n) => (
@@ -164,7 +167,7 @@ export default function NotificationBell() {
                     {!n.isRead && (
                       <button
                         onClick={(e) => handleMarkOneRead(e, n.id)}
-                        title="Đánh dấu đã đọc"
+                        title={t('confirm', { ns: 'common' })}
                         className="p-1.5 rounded-md text-green-500 hover:text-green-700 hover:bg-green-50 transition-colors"
                       >
                         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -174,7 +177,7 @@ export default function NotificationBell() {
                     )}
                     <button
                       onClick={(e) => handleDeleteOne(e, n.id)}
-                      title="Xóa thông báo"
+                      title={t('deleteNotification')}
                       className="p-1.5 rounded-md text-gray-300 hover:text-red-600 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
                     >
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -196,13 +199,13 @@ export default function NotificationBell() {
                 onClick={handleMarkAllRead}
                 className="flex-1 text-xs text-center text-rose-600 hover:text-rose-700 font-medium py-1 rounded-md hover:bg-rose-50 transition-colors"
               >
-                Đọc tất cả
+                {t('markAllRead')}
               </button>
               <button
                 onClick={handleDeleteAll}
                 className="flex-1 text-xs text-center text-gray-500 hover:text-gray-700 font-medium py-1 rounded-md hover:bg-gray-50 transition-colors"
               >
-                Xóa tất cả
+                {t('delete', { ns: 'common' })}
               </button>
             </div>
           )}

@@ -1,4 +1,5 @@
 using MediatR;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Common.Exceptions;
@@ -9,7 +10,9 @@ namespace SmartShop.Application.Features.Addresses.Commands.DeleteAddress;
 
 public class DeleteAddressCommandHandler(
     IUserAddressRepository addressRepository,
-    IUnitOfWork unitOfWork) : IRequestHandler<DeleteAddressCommand, ApiResponse<bool>>
+    IUnitOfWork unitOfWork,
+    ILocalizationService localization,
+    ICurrentLanguageService languageService) : IRequestHandler<DeleteAddressCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(DeleteAddressCommand command, CancellationToken cancellationToken)
     {
@@ -17,7 +20,7 @@ public class DeleteAddressCommandHandler(
             ?? throw new NotFoundException(nameof(UserAddress), command.AddressId);
 
         if (address.UserId != command.UserId)
-            throw new UnauthorizedException("Không có quyền xóa địa chỉ này.");
+            throw new UnauthorizedException("error.address_delete_unauthorized", null);
 
         // If deleting the default address, promote the oldest remaining address
         if (address.IsDefault)
@@ -35,6 +38,7 @@ public class DeleteAddressCommandHandler(
         addressRepository.Remove(address);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return ApiResponse<bool>.Ok(true, "Đã xóa địa chỉ giao hàng.");
+        return ApiResponse<bool>.Ok(true,
+            localization.GetMessage("success.address_deleted", languageService.Language));
     }
 }

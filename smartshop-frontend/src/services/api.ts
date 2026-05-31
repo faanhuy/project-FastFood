@@ -8,12 +8,23 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Attach access token to every request
+// Attach access token and Accept-Language header to every request
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // Set Accept-Language header from localStorage or default to 'vi'
+  try {
+    const stored = localStorage.getItem('smartshop_language');
+    const parsed = stored ? JSON.parse(stored) : null;
+    const lang = parsed?.state?.language ?? 'vi';
+    config.headers['Accept-Language'] = lang;
+  } catch {
+    config.headers['Accept-Language'] = 'vi';
+  }
+
   return config;
 });
 

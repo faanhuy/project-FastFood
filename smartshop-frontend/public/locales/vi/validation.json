@@ -7,5 +7,7 @@
   "quantityMin": "Số lượng phải lớn hơn 0",
   "quantityMax": "Vượt quá số lượng trong kho",
   "selectAddress": "Vui lòng chọn địa chỉ giao hàng",
-  "selectPayment": "Vui lòng chọn phương thức thanh toán"
+  "selectPayment": "Vui lòng chọn phương thức thanh toán",
+  "recipientRequired": "Vui lòng điền đầy đủ họ tên người nhận và số điện thoại.",
+  "addressFieldsRequired": "Vui lòng chọn tỉnh/thành phố, phường/xã và nhập số nhà, đường."
 }

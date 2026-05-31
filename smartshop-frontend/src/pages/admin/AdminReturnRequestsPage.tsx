@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { FiX } from 'react-icons/fi';
 import returnRequestService from '../../services/returnRequestService';
 import type { ReturnRequestDto } from '../../types/returnRequest';
@@ -21,6 +22,7 @@ interface ActionModalState {
 }
 
 export default function AdminReturnRequestsPage() {
+  const { t } = useTranslation(['admin', 'common', 'order', 'toast']);
   const [returnRequests, setReturnRequests] = useState<ReturnRequestDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterStatus>('all');
@@ -42,7 +44,7 @@ export default function AdminReturnRequestsPage() {
       const data = await returnRequestService.getAll(statusParam);
       setReturnRequests(data);
     } catch (err) {
-      toast.error(getApiError(err, 'Không thể tải dữ liệu'));
+      toast.error(getApiError(err, t('toast:returnLoadFailed')));
     } finally {
       setLoading(false);
     }
@@ -69,10 +71,10 @@ export default function AdminReturnRequestsPage() {
       setReturnRequests((prev) =>
         prev.map((r) => (r.id === updated.id ? updated : r))
       );
-      toast.success('Đã duyệt yêu cầu trả hàng');
+      toast.success(t('toast:returnApproved'));
       setActionModal({ type: null, returnRequestId: null });
     } catch (err) {
-      toast.error(getApiError(err, 'Duyệt yêu cầu thất bại'));
+      toast.error(getApiError(err, t('toast:returnApproveFailed')));
     } finally {
       setActionLoading(false);
     }
@@ -81,7 +83,7 @@ export default function AdminReturnRequestsPage() {
   const handleReject = async () => {
     if (!actionModal.returnRequestId) return;
     if (!adminNote.trim()) {
-      toast.error('Vui lòng nhập lý do từ chối');
+      toast.error(t('toast:returnRejectReasonRequired'));
       return;
     }
     setActionLoading(true);
@@ -93,10 +95,10 @@ export default function AdminReturnRequestsPage() {
       setReturnRequests((prev) =>
         prev.map((r) => (r.id === updated.id ? updated : r))
       );
-      toast.success('Đã từ chối yêu cầu trả hàng');
+      toast.success(t('toast:returnRejected'));
       setActionModal({ type: null, returnRequestId: null });
     } catch (err) {
-      toast.error(getApiError(err, 'Từ chối yêu cầu thất bại'));
+      toast.error(getApiError(err, t('toast:returnRejectFailed')));
     } finally {
       setActionLoading(false);
     }
@@ -111,38 +113,38 @@ export default function AdminReturnRequestsPage() {
 
   if (loading && returnRequests.length === 0) {
     return (
-      <AdminLayout title="">
-        <div className="p-8 text-center text-gray-400">Đang tải...</div>
+      <AdminLayout title={t('manageReturns')}>
+        <div className="p-8 text-center text-gray-400">{t('common:loading')}</div>
       </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout title="">
+    <AdminLayout title={t('manageReturns')}>
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Yêu cầu trả hàng</h1>
+          <h1 className="text-2xl font-bold">{t('manageReturns')}</h1>
         </div>
 
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Lọc theo trạng thái
+            {t('filterByStatus')}
           </label>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as FilterStatus)}
             className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">Tất cả</option>
-            <option value={ReturnStatus.Pending}>Chờ xử lý</option>
-            <option value={ReturnStatus.Approved}>Đã duyệt</option>
-            <option value={ReturnStatus.Rejected}>Bị từ chối</option>
+            <option value="all">{t('common:all')}</option>
+            <option value={ReturnStatus.Pending}>{t('order:returnStatus_Pending')}</option>
+            <option value={ReturnStatus.Approved}>{t('order:returnStatus_Approved')}</option>
+            <option value={ReturnStatus.Rejected}>{t('order:returnStatus_Rejected')}</option>
           </select>
         </div>
 
         {returnRequests.length === 0 ? (
           <div className="bg-white rounded-lg p-8 text-center text-gray-500">
-            <p>Không có yêu cầu trả hàng nào.</p>
+            <p>{t('noReturnRequests')}</p>
           </div>
         ) : (
           <div className="bg-white rounded-lg overflow-hidden border">
@@ -151,25 +153,25 @@ export default function AdminReturnRequestsPage() {
                 <thead className="bg-gray-50 border-b">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                      Đơn hàng
+                      {t('returnOrderCol')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                       Email
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                      Lý do
+                      {t('returnReasonCol')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                      Hoàn tiền
+                      {t('returnRefundCol')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                      Trạng thái
+                      {t('status')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                      Ngày tạo
+                      {t('createdAt')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                      Hành động
+                      {t('actions')}
                     </th>
                   </tr>
                 </thead>
@@ -207,13 +209,13 @@ export default function AdminReturnRequestsPage() {
                               onClick={() => openApproveModal(request.id)}
                               className="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 text-xs font-medium"
                             >
-                              Duyệt
+                              {t('approve')}
                             </button>
                             <button
                               onClick={() => openRejectModal(request.id)}
                               className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-xs font-medium"
                             >
-                              Từ chối
+                              {t('reject')}
                             </button>
                           </div>
                         ) : request.adminNote ? (
@@ -224,7 +226,7 @@ export default function AdminReturnRequestsPage() {
                             }}
                             className="text-xs text-blue-600 hover:underline"
                           >
-                            Xem ghi chú
+                            {t('viewNote')}
                           </button>
                         ) : (
                           <span className="text-xs text-gray-400">-</span>
@@ -244,7 +246,7 @@ export default function AdminReturnRequestsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full">
             <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-lg font-bold">Ghi chú admin</h2>
+              <h2 className="text-lg font-bold">{t('adminNoteTitle')}</h2>
               <button onClick={closeActionModal} className="text-gray-400 hover:text-gray-600">
                 <FiX size={20} />
               </button>
@@ -255,7 +257,7 @@ export default function AdminReturnRequestsPage() {
                 onClick={closeActionModal}
                 className="mt-4 w-full px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200"
               >
-                Đóng
+                {t('common:close')}
               </button>
             </div>
           </div>
@@ -269,8 +271,8 @@ export default function AdminReturnRequestsPage() {
             <div className="flex items-center justify-between p-6 border-b">
               <h2 className="text-lg font-bold">
                 {actionModal.type === 'approve'
-                  ? 'Duyệt yêu cầu trả hàng'
-                  : 'Từ chối yêu cầu trả hàng'}
+                  ? t('approveReturn')
+                  : t('rejectReturn')}
               </h2>
               <button
                 onClick={closeActionModal}
@@ -295,16 +297,16 @@ export default function AdminReturnRequestsPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {actionModal.type === 'approve'
-                    ? 'Ghi chú (tùy chọn)'
-                    : 'Lý do từ chối *'}
+                    ? t('noteOptional')
+                    : t('rejectReasonRequired')}
                 </label>
                 <textarea
                   value={adminNote}
                   onChange={(e) => setAdminNote(e.target.value)}
                   placeholder={
                     actionModal.type === 'approve'
-                      ? 'Nhập ghi chú...'
-                      : 'Nhập lý do từ chối...'
+                      ? t('notePlaceholder')
+                      : t('rejectReasonPlaceholder')
                   }
                   required={actionModal.type === 'reject'}
                   className="w-full border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -319,7 +321,7 @@ export default function AdminReturnRequestsPage() {
                   disabled={actionLoading}
                   className="flex-1 px-4 py-2 border rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                 >
-                  Hủy
+                  {t('common:cancel')}
                 </button>
                 <button
                   type="submit"
@@ -334,10 +336,10 @@ export default function AdminReturnRequestsPage() {
                   }`}
                 >
                   {actionLoading
-                    ? 'Đang xử lý...'
+                    ? t('common:processing')
                     : actionModal.type === 'approve'
-                      ? 'Duyệt'
-                      : 'Từ chối'}
+                      ? t('approve')
+                      : t('reject')}
                 </button>
               </div>
             </form>

@@ -8,18 +8,18 @@ public class BulkImportProductsCommandValidator : AbstractValidator<BulkImportPr
     {
         RuleFor(x => x.File)
             .NotNull()
-            .WithMessage("File không được để trống.");
+            .WithMessage("validation.file_required");
 
         RuleFor(x => x.File.Length)
             .LessThanOrEqualTo(10 * 1024 * 1024)
-            .WithMessage("Kích thước file không được vượt quá 10MB.");
+            .WithMessage("validation.file_csv_size");
 
         RuleFor(x => x.File.ContentType)
             .Must(ct => ct == "text/csv" || ct == "application/csv")
-            .WithMessage("File phải có định dạng CSV.");
+            .WithMessage("validation.file_csv_required");
 
         RuleFor(x => x.File.FileName)
             .Must(fn => fn != null && (fn.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)))
-            .WithMessage("File phải có extension .csv.");
+            .WithMessage("validation.file_csv_extension");
     }
 }

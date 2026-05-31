@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import {
   FiArrowRight,
@@ -23,27 +24,17 @@ import Pagination from '../components/common/Pagination';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
-const paymentMethodLabels: Record<PaymentMethod, string> = {
-  COD: 'COD',
-  VNPay: 'VNPay',
-  BankTransfer: 'Chuyển khoản',
-};
-
-const paymentStatusStyles: Record<PaymentStatus, { label: string; className: string }> = {
+const paymentStatusStyles: Record<PaymentStatus, { className: string }> = {
   Pending: {
-    label: 'Chờ thanh toán',
     className: 'bg-amber-50 text-amber-700 border-amber-200',
   },
   Paid: {
-    label: 'Đã thanh toán',
     className: 'bg-green-50 text-green-700 border-green-200',
   },
   Failed: {
-    label: 'Thanh toán lỗi',
     className: 'bg-red-50 text-red-700 border-red-200',
   },
   Refunded: {
-    label: 'Đã hoàn tiền',
     className: 'bg-gray-100 text-gray-700 border-gray-200',
   },
 };
@@ -56,9 +47,10 @@ const getDisplayAddress = (order: OrderDto) => {
   return order.shippingAddress || 'Chưa có địa chỉ giao hàng';
 };
 
-const getPaymentLabel = (order: OrderDto) => {
-  if (!order.paymentMethod) return 'Chưa chọn';
-  return paymentMethodLabels[order.paymentMethod] ?? order.paymentMethod;
+const getPaymentLabel = (t: (key: string) => string, order: OrderDto) => {
+  if (!order.paymentMethod) return t('notSelected');
+  if (order.paymentMethod === 'BankTransfer') return t('paymentMethod_BankTransfer');
+  return order.paymentMethod; // COD, VNPay are technical names
 };
 
 const canRetryPayment = (order: OrderDto) =>
@@ -67,6 +59,8 @@ const canRetryPayment = (order: OrderDto) =>
   order.status !== 'Cancelled';
 
 export default function OrderHistoryPage() {
+  const { t } = useTranslation('order');
+  const { t: tCommon } = useTranslation('common');
   const [orders, setOrders] = useState<OrderDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -120,8 +114,8 @@ export default function OrderHistoryPage() {
           <div className="border-b border-rose-100 bg-rose-50/70 px-5 py-5 sm:px-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="mb-1 text-sm font-medium text-rose-600">Theo dõi đơn giao</p>
-                <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Đơn hàng của tôi</h1>
+                <p className="mb-1 text-sm font-medium text-rose-600">{t('trackingHeader')}</p>
+                <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">{t('myOrders')}</h1>
                 <p className="mt-2 max-w-2xl text-sm text-gray-600">
                   Xem trạng thái giao hàng, thanh toán lại đơn VNPay và mở chi tiết từng đơn.
                 </p>
@@ -132,14 +126,14 @@ export default function OrderHistoryPage() {
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
                 >
                   <FiRotateCcw size={17} />
-                  Trả hàng
+                  {t('returnRequest')}
                 </button>
                 <button
                   onClick={() => navigate('/products')}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rose-700"
                 >
                   <FiShoppingBag size={17} />
-                  Đặt món mới
+                  {t('placeNewOrder')}
                 </button>
               </div>
             </div>
@@ -151,7 +145,7 @@ export default function OrderHistoryPage() {
                 <FiClock size={20} />
               </div>
               <div>
-                <p className="text-xs font-medium uppercase text-gray-400">Đang xử lý</p>
+                <p className="text-xs font-medium uppercase text-gray-400">{t('statProcessing')}</p>
                 <p className="text-lg font-bold text-gray-900">{stats.activeOrders}</p>
               </div>
             </div>
@@ -160,7 +154,7 @@ export default function OrderHistoryPage() {
                 <FiCheckCircle size={20} />
               </div>
               <div>
-                <p className="text-xs font-medium uppercase text-gray-400">Đã giao</p>
+                <p className="text-xs font-medium uppercase text-gray-400">{t('statDelivered')}</p>
                 <p className="text-lg font-bold text-gray-900">{stats.deliveredOrders}</p>
               </div>
             </div>
@@ -169,7 +163,7 @@ export default function OrderHistoryPage() {
                 <FiCreditCard size={20} />
               </div>
               <div>
-                <p className="text-xs font-medium uppercase text-gray-400">Trang hiện tại</p>
+                <p className="text-xs font-medium uppercase text-gray-400">{t('statCurrentPage')}</p>
                 <p className="text-lg font-bold text-gray-900">{formatPrice(stats.totalAmount)}</p>
               </div>
             </div>
@@ -199,7 +193,7 @@ export default function OrderHistoryPage() {
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
               <FiPackage size={30} />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">Bạn chưa có đơn giao nào</h2>
+            <h2 className="text-xl font-bold text-gray-900">{t('noOrders')}</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">
               Khi bạn đặt món, toàn bộ lịch sử đơn hàng và trạng thái giao sẽ xuất hiện tại đây.
             </p>
@@ -208,7 +202,7 @@ export default function OrderHistoryPage() {
               className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-rose-700"
             >
               <FiShoppingBag size={17} />
-              Đặt món ngay
+              {t('orderNow')}
             </button>
           </section>
         ) : (
@@ -236,7 +230,7 @@ export default function OrderHistoryPage() {
                           </span>
                           {paymentInfo && (
                             <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${paymentInfo.className}`}>
-                              {paymentInfo.label}
+                              {t(`paymentStatus_${order.paymentStatus}`)}
                             </span>
                           )}
                         </div>
@@ -247,17 +241,17 @@ export default function OrderHistoryPage() {
                           </span>
                           <span className="inline-flex items-center gap-1.5">
                             <FiPackage size={15} />
-                            {order.items.length} món
+                            {t('itemCount', { count: order.items.length })}
                           </span>
                           <span className="inline-flex items-center gap-1.5">
                             <FiCreditCard size={15} />
-                            {getPaymentLabel(order)}
+                            {getPaymentLabel(t, order)}
                           </span>
                         </div>
                       </div>
 
                       <div className="text-left sm:text-right">
-                        <p className="text-xs font-medium uppercase text-gray-400">Tổng cộng</p>
+                        <p className="text-xs font-medium uppercase text-gray-400">{t('totalAmount')}</p>
                         <p className="text-xl font-bold text-rose-700">{formatPrice(order.totalAmount)}</p>
                       </div>
                     </div>
@@ -303,7 +297,7 @@ export default function OrderHistoryPage() {
                               className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-amber-600 disabled:opacity-60"
                             >
                               <FiRefreshCw className={retryingOrderId === order.id ? 'animate-spin' : ''} size={16} />
-                              {retryingOrderId === order.id ? 'Đang xử lý' : 'Thanh toán lại'}
+                              {retryingOrderId === order.id ? tCommon('processing') : t('retryPayment')}
                             </button>
                           )}
                           <button
@@ -313,7 +307,7 @@ export default function OrderHistoryPage() {
                             }}
                             className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
                           >
-                            Chi tiết
+                            {tCommon('detail')}
                             <FiArrowRight className="transition-transform group-hover:translate-x-0.5" size={16} />
                           </button>
                         </div>

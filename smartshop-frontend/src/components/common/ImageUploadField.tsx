@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { FiUploadCloud, FiX } from 'react-icons/fi';
 import { imageService } from '../../services/imageService';
@@ -14,17 +15,18 @@ interface ImageUploadFieldProps {
 }
 
 export default function ImageUploadField({ currentUrl, onUploaded, uploadFn }: ImageUploadFieldProps) {
+  const { t: tToast } = useTranslation('toast');
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(getImageUrl(currentUrl) || null);
   const [uploading, setUploading] = useState(false);
 
   const handleFile = async (file: File) => {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      toast.error('Chỉ chấp nhận JPG, PNG, WebP, GIF');
+      toast.error(tToast('imageFormatInvalid'));
       return;
     }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      toast.error(`Kích thước không được vượt quá ${MAX_SIZE_MB} MB`);
+      toast.error(tToast('imageSizeExceeded', { maxMb: MAX_SIZE_MB }));
       return;
     }
     setPreview(URL.createObjectURL(file));
@@ -33,9 +35,9 @@ export default function ImageUploadField({ currentUrl, onUploaded, uploadFn }: I
       const upload = uploadFn ?? imageService.upload;
       const url = await upload(file);
       onUploaded(url);
-      toast.success('Tải ảnh lên thành công');
+      toast.success(tToast('imageUploaded'));
     } catch {
-      toast.error('Tải ảnh lên thất bại');
+      toast.error(tToast('imageUploadFailed'));
       setPreview(getImageUrl(currentUrl) || null);
     } finally {
       setUploading(false);

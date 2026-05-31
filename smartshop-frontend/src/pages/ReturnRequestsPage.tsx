@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { FiArrowLeft } from 'react-icons/fi';
 import returnRequestService from '../services/returnRequestService';
@@ -15,6 +16,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function ReturnRequestsPage() {
+  const { t: tToast } = useTranslation('toast');
   const [returnRequests, setReturnRequests] = useState<ReturnRequestDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -27,14 +29,14 @@ export default function ReturnRequestsPage() {
         setReturnRequests(data);
       } catch (err) {
         setError(getApiError(err, 'Không thể tải danh sách yêu cầu trả hàng.'));
-        toast.error('Không thể tải dữ liệu');
+        toast.error(tToast('returnLoadFailed'));
       } finally {
         setLoading(false);
       }
     };
 
     loadData();
-  }, []);
+  }, [tToast]);
 
   if (loading) {
     return (

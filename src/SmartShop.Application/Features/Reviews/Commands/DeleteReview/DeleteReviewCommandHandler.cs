@@ -16,7 +16,7 @@ public class DeleteReviewCommandHandler(
             ?? throw new NotFoundException("Review", request.ReviewId);
 
         if (!request.IsAdmin && review.UserId != request.RequestingUserId)
-            throw new UnauthorizedException("Bạn không có quyền xóa đánh giá này.");
+            throw new UnauthorizedException("error.review_delete_unauthorized", null);
 
         reviewRepository.Delete(review);
         await unitOfWork.SaveChangesAsync(cancellationToken);

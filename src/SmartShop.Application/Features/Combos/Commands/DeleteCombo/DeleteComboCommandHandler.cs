@@ -1,4 +1,5 @@
 using MediatR;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Common.Exceptions;
@@ -9,7 +10,9 @@ namespace SmartShop.Application.Features.Combos.Commands.DeleteCombo;
 
 public class DeleteComboCommandHandler(
     IComboRepository comboRepository,
-    IUnitOfWork unitOfWork
+    IUnitOfWork unitOfWork,
+    ILocalizationService localization,
+    ICurrentLanguageService languageService
 ) : IRequestHandler<DeleteComboCommand, ApiResponse<object?>>
 {
     public async Task<ApiResponse<object?>> Handle(DeleteComboCommand command, CancellationToken cancellationToken)
@@ -22,6 +25,7 @@ public class DeleteComboCommandHandler(
         comboRepository.Update(combo);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return ApiResponse.Ok("Combo đã được vô hiệu hóa.");
+        return ApiResponse<object?>.Ok(null,
+            localization.GetMessage("success.combo_deactivated", languageService.Language));
     }
 }

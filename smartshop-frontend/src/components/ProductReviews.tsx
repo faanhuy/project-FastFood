@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { FiTrash2, FiImage } from 'react-icons/fi';
 import { useAuthStore } from '../store/authStore';
 import { reviewService } from '../services/reviewService';
@@ -16,6 +17,7 @@ interface Props {
 const PAGE_SIZE = 5;
 
 export default function ProductReviews({ productId }: Props) {
+  const { t } = useTranslation(['product', 'toast', 'common']);
   const { isAuthenticated, user } = useAuthStore();
 
   const [reviews,    setReviews]    = useState<ReviewDto[]>([]);
@@ -98,7 +100,7 @@ export default function ProductReviews({ productId }: Props) {
         try {
           await reviewService.uploadReviewImages(review.id, imageFiles);
         } catch (imgErr) {
-          toast.error(getApiError(imgErr, 'Upload ảnh thất bại, nhưng đánh giá đã lưu.'));
+          toast.error(getApiError(imgErr, t('toast:imageUploadPartialFail')));
         } finally {
           setUploadingImages(false);
         }
@@ -110,9 +112,9 @@ export default function ProductReviews({ productId }: Props) {
       setImagePreviews([]);
       setPage(1);
       await Promise.all([loadReviews(1), loadAvgRating()]);
-      toast.success('Đánh giá của bạn đã được ghi nhận!');
+      toast.success(t('toast:reviewSubmitted'));
     } catch (err) {
-      toast.error(getApiError(err, 'Gửi đánh giá thất bại.'));
+      toast.error(getApiError(err, t('toast:reviewSubmitFailed')));
     } finally {
       setSubmitting(false);
     }
@@ -124,9 +126,9 @@ export default function ProductReviews({ productId }: Props) {
       await reviewService.deleteReview(reviewId);
       setPage(1);
       await Promise.all([loadReviews(1), loadAvgRating()]);
-      toast.success('Đã xóa đánh giá.');
+      toast.success(t('toast:reviewDeleted'));
     } catch {
-      toast.error('Xóa thất bại.');
+      toast.error(t('toast:reviewDeleteFailed'));
     } finally {
       setDeletingId(null);
     }
@@ -139,10 +141,10 @@ export default function ProductReviews({ productId }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <h2 className="text-base font-semibold text-gray-800">Đánh giá món ăn</h2>
+          <h2 className="text-base font-semibold text-gray-800">{t('product:reviewsTitle')}</h2>
           {totalCount > 0 && (
             <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-              {totalCount} đánh giá
+              {t('product:reviewCount', { count: totalCount })}
             </span>
           )}
         </div>
@@ -157,10 +159,10 @@ export default function ProductReviews({ productId }: Props) {
       {/* Form gửi đánh giá */}
       {isAuthenticated && !myReview && (
         <form onSubmit={handleSubmit} className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
-          <p className="text-sm font-medium text-gray-700 mb-3">Chia sẻ cảm nhận về món này</p>
+          <p className="text-sm font-medium text-gray-700 mb-3">{t('product:shareYourThoughts')}</p>
 
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs text-gray-500">Đánh giá:</span>
+            <span className="text-xs text-gray-500">{t('product:ratingLabel')}</span>
             <StarRating value={rating} onChange={setRating} />
             <span className="text-xs text-gray-400 ml-1">{rating}/5</span>
           </div>
@@ -168,7 +170,7 @@ export default function ProductReviews({ productId }: Props) {
           <textarea
             required
             rows={3}
-            placeholder="Món có vừa miệng không, giao có nhanh không, bạn thích điểm nào nhất?"
+            placeholder={t('product:reviewPlaceholder')}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white"
@@ -177,7 +179,7 @@ export default function ProductReviews({ productId }: Props) {
           <div className="mt-2">
             <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-500 hover:text-rose-500 transition-colors w-fit">
               <FiImage size={14} />
-              <span>Thêm ảnh ({imageFiles.length}/5)</span>
+              <span>{t('product:addImages', { count: imageFiles.length })}</span>
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -212,7 +214,7 @@ export default function ProductReviews({ productId }: Props) {
               disabled={submitting || uploadingImages || !comment.trim()}
               className="px-4 py-2 bg-rose-600 text-white text-sm rounded-lg hover:bg-rose-700 disabled:opacity-50 transition-colors"
             >
-              {submitting ? 'Đang gửi...' : uploadingImages ? 'Đang upload ảnh...' : 'Gửi đánh giá'}
+              {submitting ? t('product:sendingReview') : uploadingImages ? t('product:uploadingImages') : t('product:submitReview')}
             </button>
           </div>
         </form>
@@ -220,16 +222,16 @@ export default function ProductReviews({ productId }: Props) {
 
       {!isAuthenticated && (
         <p className="text-sm text-gray-400 mb-5 italic">
-          <a href="/login" className="text-rose-600 hover:underline">Đăng nhập</a> để viết đánh giá.
+          <a href="/login" className="text-rose-600 hover:underline">{t('common:loggedInAs')}</a> {t('product:loginToReview')}
         </p>
       )}
 
       {/* Danh sách đánh giá */}
       {loading ? (
-        <div className="text-center py-8 text-gray-400 text-sm">Đang tải đánh giá...</div>
+        <div className="text-center py-8 text-gray-400 text-sm">{t('product:loadingReviews')}</div>
       ) : reviews.length === 0 ? (
         <p className="text-center py-8 text-gray-400 text-sm">
-          Chưa có đánh giá nào. Hãy là người đầu tiên!
+          {t('product:noReviewsYet')}
         </p>
       ) : (
         <div className="divide-y divide-gray-100">
@@ -249,7 +251,7 @@ export default function ProductReviews({ productId }: Props) {
                       <span className="text-sm font-medium text-gray-800">{review.userFullName}</span>
                       {isOwn && (
                         <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded font-medium">
-                          Bạn
+                          {t('product:youBadge')}
                         </span>
                       )}
                       <StarRating value={review.rating} />
@@ -261,7 +263,7 @@ export default function ProductReviews({ productId }: Props) {
                           onClick={() => handleDelete(review.id)}
                           disabled={deletingId === review.id}
                           className="text-gray-300 hover:text-red-500 transition-colors disabled:opacity-40"
-                          title="Xóa đánh giá"
+                          title={t('product:deleteReview')}
                         >
                           <FiTrash2 size={14} />
                         </button>

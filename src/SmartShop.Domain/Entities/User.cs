@@ -53,4 +53,5 @@ public class User : BaseAuditableEntity
     {
         AvatarUrl = avatarUrl;
     }
+
 }

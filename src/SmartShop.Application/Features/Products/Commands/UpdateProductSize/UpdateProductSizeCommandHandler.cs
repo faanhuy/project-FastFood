@@ -23,7 +23,7 @@ public class UpdateProductSizeCommandHandler(
         var siblings = await productSizeRepository.GetByProductIdAsync(size.ProductId, cancellationToken);
         if (siblings.Any(s => s.Id != request.SizeId &&
                               s.SizeLabel.Equals(request.SizeLabel, StringComparison.OrdinalIgnoreCase)))
-            throw new ConflictException($"Size '{request.SizeLabel}' đã tồn tại cho sản phẩm này.");
+            throw new ConflictException("error.product_size_exists", new Dictionary<string, string> { ["size"] = request.SizeLabel });
 
         size.Update(request.SizeLabel, request.DisplayOrder);
         productSizeRepository.Update(size);

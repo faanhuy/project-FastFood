@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import AdminLayout from '../../components/AdminLayout';
 import { couponService } from '../../services/couponService';
 import type { CouponDto, CreateCouponRequest } from '../../services/couponService';
@@ -38,6 +39,8 @@ function minExpiry() {
 }
 
 export default function AdminCouponsPage() {
+  const { t } = useTranslation('admin');
+  const { t: tToast } = useTranslation('toast');
   const [coupons, setCoupons] = useState<CouponDto[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,7 +54,7 @@ export default function AdminCouponsPage() {
     try {
       setCoupons(await couponService.getAll());
     } catch {
-      toast.error('Không thể tải danh sách mã giảm giá.');
+      toast.error(t('error', { ns: 'common' }));
     } finally {
       setLoading(false);
     }
@@ -76,7 +79,7 @@ export default function AdminCouponsPage() {
         expiresAt: new Date(form.expiresAt).toISOString(),
       });
       setShowCreate(false);
-      toast.success('Đã tạo mã giảm giá.');
+      toast.success(tToast('couponCreated'));
       await load();
     } catch (err) {
       setFormError(getApiError(err, 'Tạo mã giảm giá thất bại.'));
@@ -86,26 +89,26 @@ export default function AdminCouponsPage() {
   };
 
   const handleDelete = async (code: string) => {
-    if (!confirm(`Xoá mã giảm giá "${code}"?`)) return;
+    if (!confirm(t('confirmDeleteCoupon', { code }))) return;
     try {
       await couponService.remove(code);
-      toast.success('Đã xoá mã giảm giá.');
+      toast.success(tToast('couponDeleted'));
       await load();
     } catch {
-      toast.error('Xoá mã giảm giá thất bại.');
+      toast.error(t('error', { ns: 'common' }));
     }
   };
 
   const isExpired = (expiresAt: string) => new Date(expiresAt) < new Date();
 
   return (
-    <AdminLayout title="Quản lý mã giảm giá">
+    <AdminLayout title={t('manageCoupons')}>
       <div className="flex justify-end mb-4">
         <button
           onClick={openCreate}
           className="bg-rose-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-rose-700"
         >
-          + Tạo mã giảm giá
+          + {t('createCoupon')}
         </button>
       </div>
 
@@ -113,10 +116,10 @@ export default function AdminCouponsPage() {
       {showCreate && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 my-4">
-            <h2 className="text-lg font-semibold mb-4">Tạo mã giảm giá mới</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('createCoupon')}</h2>
             <form onSubmit={handleCreate} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mã giảm giá</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('couponCode')}</label>
                 <input
                   required
                   className={INPUT_CLS}
@@ -127,7 +130,7 @@ export default function AdminCouponsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Loại giảm giá</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('discountType')}</label>
                 <select
                   className={INPUT_CLS}
                   value={form.discountType}
@@ -135,9 +138,9 @@ export default function AdminCouponsPage() {
                     setForm((f) => ({ ...f, discountType: Number(e.target.value) as 1 | 2 }))
                   }
                 >
-                  {DISCOUNT_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
+                  {DISCOUNT_TYPES.map((dt) => (
+                    <option key={dt.value} value={dt.value}>
+                      {dt.label}
                     </option>
                   ))}
                 </select>
@@ -146,7 +149,7 @@ export default function AdminCouponsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Giá trị giảm {form.discountType === 1 ? '(%)' : '(VNĐ)'}
+                    {t('discountValue')} {form.discountType === 1 ? '(%)' : '(VNĐ)'}
                   </label>
                   <input
                     required
@@ -194,7 +197,7 @@ export default function AdminCouponsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hết hạn</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('expiryDate')}</label>
                   <input
                     required
                     type="datetime-local"
@@ -226,14 +229,14 @@ export default function AdminCouponsPage() {
                   onClick={() => setShowCreate(false)}
                   className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
-                  Huỷ
+                  {t('cancel', { ns: 'common' })}
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
                   className="px-4 py-2 text-sm bg-rose-600 text-white rounded-lg hover:bg-rose-700 disabled:opacity-60"
                 >
-                  {saving ? 'Đang lưu...' : 'Tạo mã'}
+                  {saving ? t('creating') : t('createCoupon')}
                 </button>
               </div>
             </form>
@@ -243,28 +246,28 @@ export default function AdminCouponsPage() {
 
       {/* Table */}
       {loading ? (
-        <div className="flex items-center justify-center h-64 text-gray-400">Đang tải...</div>
+        <div className="flex items-center justify-center h-64 text-gray-400">{t('loading', { ns: 'common' })}</div>
       ) : coupons.length === 0 ? (
         <div className="flex items-center justify-center h-64 text-gray-400">
-          Chưa có mã giảm giá nào.
+          {t('noData', { ns: 'common' })}
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Mã</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Loại</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Giá trị</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">{t('code')}</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">{t('type')}</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">{t('value')}</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600 hidden md:table-cell">
-                  Đơn tối thiểu
+                  {t('minOrder')}
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Đã dùng</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">{t('used')}</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600 hidden lg:table-cell">
-                  Hết hạn
+                  {t('expiry')}
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Trạng thái</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Thao tác</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">{t('status')}</th>
+                <th className="text-right px-4 py-3 font-medium text-gray-600">{t('actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -281,7 +284,7 @@ export default function AdminCouponsPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      {c.discountType === 1 ? 'Phần trăm' : 'Số tiền'}
+                      {c.discountType === 1 ? t('percent') : t('fixed')}
                     </td>
                     <td className="px-4 py-3 font-medium text-rose-600">
                       {c.discountType === 1
@@ -307,7 +310,7 @@ export default function AdminCouponsPage() {
                             : 'bg-orange-100 text-orange-600'
                         }`}
                       >
-                        {active ? 'Hoạt động' : expired ? 'Hết hạn' : 'Đã dùng hết'}
+                        {active ? t('active') : expired ? t('expired') : t('exhausted')}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -315,7 +318,7 @@ export default function AdminCouponsPage() {
                         onClick={() => handleDelete(c.code)}
                         className="text-red-500 hover:underline text-xs"
                       >
-                        Xoá
+                        {t('delete')}
                       </button>
                     </td>
                   </tr>

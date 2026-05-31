@@ -20,7 +20,7 @@ public class UpdateComboCommandHandler(
             ?? throw new NotFoundException(nameof(Combo), command.Id);
 
         if (command.Items.Count == 0)
-            throw new ConflictException("Combo phải có ít nhất 1 sản phẩm.");
+            throw new ConflictException("error.combo_min_products", null);
 
         var oldItems = combo.Items.ToList();
 
@@ -46,7 +46,7 @@ public class UpdateComboCommandHandler(
                 ?? throw new NotFoundException(nameof(Product), itemRequest.ProductId);
 
             if (!product.IsActive)
-                throw new ConflictException($"Sản phẩm '{product.Name}' không hoạt động.");
+                throw new ConflictException("error.combo_product_inactive", new Dictionary<string, string> { ["name"] = product.Name });
 
             string? sizeLabel = null;
             if (itemRequest.SizeId.HasValue)

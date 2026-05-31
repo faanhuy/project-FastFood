@@ -22,10 +22,10 @@ public class AddComboToCartCommandHandler(
             ?? throw new NotFoundException("Combo", request.ComboId);
 
         if (!combo.IsCurrentlyActive())
-            throw new ConflictException("Combo không còn khả dụng hoặc chưa đến thời gian bán.");
+            throw new ConflictException("error.cart_combo_unavailable", null);
 
         if (!combo.Items.Any())
-            throw new ConflictException("Combo không có món con, không thể thêm vào giỏ.");
+            throw new ConflictException("error.cart_combo_no_items", null);
 
         var cart = await cartRepository.GetByUserIdAsync(request.UserId, cancellationToken);
 

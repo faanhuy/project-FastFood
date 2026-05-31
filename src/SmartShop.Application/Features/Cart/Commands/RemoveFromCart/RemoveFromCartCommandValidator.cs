@@ -7,9 +7,9 @@ public class RemoveFromCartCommandValidator : AbstractValidator<RemoveFromCartCo
     public RemoveFromCartCommandValidator()
     {
         RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("UserId không hợp lệ.");
+            .NotEmpty().WithMessage("validation.user_id_invalid");
 
         RuleFor(x => x.ProductId)
-            .NotEmpty().WithMessage("ProductId không hợp lệ.");
+            .NotEmpty().WithMessage("validation.product_id_invalid");
     }
 }

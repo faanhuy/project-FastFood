@@ -2,17 +2,18 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import { wishlistService } from '@/services/wishlistService';
 import { cartService } from '@/services/cartService';
 import type { WishlistItem } from '@/types/wishlist';
 import Navbar from '@/components/Navbar';
 import { getImageUrl } from '../utils/imageUrl';
-
-const formatPrice = (price: number) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+import { formatPrice } from '../utils/formatters';
 
 export default function WishlistPage() {
+  const { t } = useTranslation('product');
+  const { t: tToast } = useTranslation('toast');
   const { isAuthenticated, refreshCartCount } = useAuthStore();
   const navigate = useNavigate();
   const [items, setItems] = useState<WishlistItem[]>([]);
@@ -26,18 +27,18 @@ export default function WishlistPage() {
     wishlistService
       .getWishlist()
       .then(setItems)
-      .catch(() => toast.error('Không thể tải danh sách yêu thích'))
+      .catch(() => toast.error(tToast('wishlistLoadFailed')))
       .finally(() => setLoading(false));
-  }, []);
+  }, [tToast]);
 
   const handleRemove = async (productId: string) => {
     setRemovingId(productId);
     try {
       await wishlistService.removeFromWishlist(productId);
       setItems((prev) => prev.filter((i) => i.productId !== productId));
-      toast.success('Đã xóa khỏi danh sách yêu thích');
+      toast.success(tToast('removeFromWishlistSuccess'));
     } catch (error: any) {
-      toast.error(error.response?.data?.message ?? 'Có lỗi xảy ra');
+      toast.error(error.response?.data?.message ?? tToast('genericError'));
     } finally {
       setRemovingId(null);
     }
@@ -48,9 +49,9 @@ export default function WishlistPage() {
     try {
       await cartService.addToCart(productId, 1);
       refreshCartCount();
-      toast.success('Đã thêm vào giỏ hàng');
+      toast.success(tToast('addToCartSuccess'));
     } catch (error: any) {
-      toast.error(error.response?.data?.message ?? 'Có lỗi xảy ra');
+      toast.error(error.response?.data?.message ?? tToast('genericError'));
     } finally {
       setAddingId(null);
     }
@@ -60,7 +61,7 @@ export default function WishlistPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Danh sách yêu thích </h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">{t('wishlist')}</h1>
 
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -84,13 +85,13 @@ export default function WishlistPage() {
             >
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
             </svg>
-            <p className="text-gray-500 text-lg font-medium mb-2">Chưa có sản phẩm nào yêu thích</p>
-            <p className="text-gray-400 text-sm mb-6">Thêm sản phẩm vào danh sách để xem lại sau</p>
+            <p className="text-gray-500 text-lg font-medium mb-2">{t('emptyWishlist')}</p>
+            <p className="text-gray-400 text-sm mb-6">{t('emptyWishlistSub')}</p>
             <Link
               to="/products"
               className="bg-rose-600 text-white px-6 py-2.5 rounded-lg hover:bg-rose-700 text-sm font-medium transition-colors"
             >
-              Khám phá sản phẩm
+              {t('exploreProducts')}
             </Link>
           </div>
         ) : (
@@ -117,14 +118,14 @@ export default function WishlistPage() {
                   </div>
                   {!item.isInStock && (
                     <span className="absolute top-2 left-2 bg-gray-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                      Het hang
+                      {t('outOfStock')}
                     </span>
                   )}
                   <button
                     onClick={() => handleRemove(item.productId)}
                     disabled={removingId === item.productId}
                     className="absolute top-2 right-2 bg-white rounded-full p-1 shadow text-gray-400 hover:text-red-500 disabled:opacity-50 transition-colors"
-                    title="Xoa khoi yeu thich"
+                    title={t('removeFromWishlist')}
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                       <polyline points="3 6 5 6 21 6" />
@@ -149,10 +150,10 @@ export default function WishlistPage() {
                     disabled={addingId === item.productId}
                     className="mt-2 w-full text-xs bg-rose-600 text-white rounded-lg py-1.5 hover:bg-rose-700 disabled:opacity-50 transition-colors"
                   >
-                    {addingId === item.productId ? 'Đang thêm...' : '+ Thêm vào giỏ hàng'}
+                    {addingId === item.productId ? t('adding') : `+ ${t('addToCart')}`}
                   </button>
                 ) : (
-                  <p className="mt-2 text-xs text-center text-gray-400 py-1">Tạm hết hàng</p>
+                  <p className="mt-2 text-xs text-center text-gray-400 py-1">{t('temporarilyOutOfStock')}</p>
                 )}
               </div>
             ))}

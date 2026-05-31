@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -131,6 +132,8 @@ if (app.Environment.IsDevelopment())
         options.DocumentTitle = "FastFood API Docs";
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "FastFood API v1");
     });
+
+    app.UseHangfireDashboard("/hangfire");
 
     await DbSeeder.SeedAsync(app.Services);
 }

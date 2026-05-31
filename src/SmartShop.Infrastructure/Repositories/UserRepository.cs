@@ -27,4 +27,33 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
 
     public async Task<bool> ExistsAsync(string email, CancellationToken ct = default)
         => await context.Users.AnyAsync(u => u.Email == email.ToLowerInvariant(), ct);
+
+    public async Task<PagedResult<User>> GetPagedAsync(
+        int page,
+        int pageSize,
+        string? roleFilter = null,
+        bool? bannedFilter = null,
+        string? searchEmail = null,
+        CancellationToken ct = default)
+    {
+        var query = context.Users.AsQueryable();
+
+        if (!string.IsNullOrEmpty(roleFilter))
+            query = query.Where(u => u.Role == roleFilter);
+
+        if (bannedFilter.HasValue)
+            query = query.Where(u => u.IsBanned == bannedFilter.Value);
+
+        if (!string.IsNullOrEmpty(searchEmail))
+            query = query.Where(u => u.Email.Contains(searchEmail));
+
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .OrderByDescending(u => u.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return new PagedResult<User>(items, total, page, pageSize);
+    }
 }

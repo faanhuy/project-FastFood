@@ -248,7 +248,7 @@ export default function AdminComboPage() {
     }
   };
 
-  const fmt = (n: number) => n.toLocaleString('vi-VN') + 'đ';
+  const fmt = (n: number) => n.toLocaleString('vi-VN') + t('common:currency');
   const fmtDate = (s: string) => new Date(s).toLocaleDateString('vi-VN');
 
   // Helper: Filter products by search query
@@ -320,7 +320,7 @@ export default function AdminComboPage() {
                   <p className="font-semibold text-gray-800 truncate">{c.name}</p>
                   <p className="text-xs text-gray-500 truncate">{c.title}</p>
                   <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                    <span>{c.itemCount} món</span>
+                    <span>{t('itemCount', { count: c.itemCount })}</span>
                     <span className="text-gray-300">|</span>
                     <span className="line-through">{fmt(c.originalPrice)}</span>
                     <span className="text-rose-600 font-semibold">{fmt(c.salePrice)}</span>
@@ -390,7 +390,7 @@ export default function AdminComboPage() {
                     className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
                     value={form.title}
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                    placeholder="Combo Gà Lớn"
+                    placeholder={t('comboNamePlaceholder')}
                     required
                   />
                 </div>
@@ -403,7 +403,7 @@ export default function AdminComboPage() {
                   rows={2}
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                  placeholder="Mô tả ngắn về combo..."
+                  placeholder={t('comboDescPlaceholder')}
                 />
               </div>
 
@@ -433,16 +433,16 @@ export default function AdminComboPage() {
                   <div className="flex justify-between items-center">
                     <div>
                       <div className="text-gray-600">
-                        Tổng giá gốc: <span className="font-semibold text-gray-800">{fmt(originalPrice)}</span>
+                        {t('originalPrice')} <span className="font-semibold text-gray-800">{fmt(originalPrice)}</span>
                       </div>
                       <div className="text-gray-600 mt-1">
-                        Giá combo: <span className="font-semibold text-gray-800">{fmt(Number(form.salePrice) || 0)}</span>
+                        {t('comboPrice')} <span className="font-semibold text-gray-800">{fmt(Number(form.salePrice) || 0)}</span>
                       </div>
                     </div>
                     {discountPercent > 0 && (
                       <div className="text-right">
                         <div className="text-xl font-bold text-amber-600">{discountPercent}%</div>
-                        <div className="text-xs text-gray-600">Tiết kiệm</div>
+                        <div className="text-xs text-gray-600">{t('savings')}</div>
                       </div>
                     )}
                   </div>
@@ -614,7 +614,7 @@ export default function AdminComboPage() {
                                 value={item.sizeId ?? ''}
                                 onChange={(e) => updateItem(i, 'sizeId', e.target.value || null)}
                               >
-                                <option value="">Không có size</option>
+                                <option value="">{t('noSize')}</option>
                                 {(itemSizes[i] ?? []).map((s) => (
                                   <option key={s.id} value={s.id}>
                                     {s.sizeLabel}

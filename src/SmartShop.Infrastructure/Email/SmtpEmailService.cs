@@ -93,9 +93,72 @@ public class SmtpEmailService(
         await SendAsync(toEmail, toName, subject, body);
     }
 
+    public async Task SendReturnApprovedAsync(
+        string toEmail,
+        string toName,
+        Guid orderId,
+        string orderNumber,
+        decimal refundAmount,
+        string? adminNote)
+    {
+        var subject = $"Yêu cầu trả hàng #{orderNumber} được duyệt";
+
+        var adminNoteHtml = string.IsNullOrWhiteSpace(adminNote)
+            ? string.Empty
+            : $"<p><strong>Ghi chú:</strong> {adminNote}</p>";
+
+        var body = $"""
+            <html><body style="font-family:Arial,sans-serif;color:#333;">
+            <h2 style="color:#2e7d32;">SmartShop — Yêu cầu trả hàng được duyệt</h2>
+            <p>Xin chào <strong>{toName}</strong>,</p>
+            <p>Yêu cầu trả hàng cho đơn hàng <strong>#{orderNumber}</strong> của bạn đã được duyệt!</p>
+            <p style="font-size:16px;font-weight:bold;color:#2e7d32;">
+                Số tiền hoàn: <span style="font-size:20px;">{refundAmount:N0} ₫</span>
+            </p>
+            {adminNoteHtml}
+            <p>Tiền hoàn sẽ được gửi về tài khoản của bạn trong 3-5 ngày làm việc.</p>
+            <p>Cảm ơn bạn đã sử dụng dịch vụ của SmartShop!</p>
+            </body></html>
+            """;
+
+        await SendAsync(toEmail, toName, subject, body);
+    }
+
+    public async Task SendReturnRejectedAsync(
+        string toEmail,
+        string toName,
+        Guid orderId,
+        string orderNumber,
+        string adminNote)
+    {
+        var subject = $"Yêu cầu trả hàng #{orderNumber} bị từ chối";
+
+        var body = $"""
+            <html><body style="font-family:Arial,sans-serif;color:#333;">
+            <h2 style="color:#c62828;">SmartShop — Yêu cầu trả hàng bị từ chối</h2>
+            <p>Xin chào <strong>{toName}</strong>,</p>
+            <p>Rất tiếc, yêu cầu trả hàng cho đơn hàng <strong>#{orderNumber}</strong> của bạn đã bị từ chối.</p>
+            <p><strong>Lý do:</strong></p>
+            <p style="background:#f5f5f5;padding:12px;border-left:4px solid #c62828;">{adminNote}</p>
+            <p>Nếu bạn có bất kỳ câu hỏi, vui lòng liên hệ đội hỗ trợ của chúng tôi.</p>
+            <p>Cảm ơn bạn đã sử dụng dịch vụ của SmartShop!</p>
+            </body></html>
+            """;
+
+        await SendAsync(toEmail, toName, subject, body);
+    }
+
     private async Task SendAsync(string toEmail, string toName, string subject, string htmlBody)
     {
-        var host = configuration["Email:SmtpHost"] ?? "smtp.gmail.com";
+        // Graceful skip if email is disabled or SmtpHost not configured
+        var enabled = configuration.GetValue("Email:Enabled", false);
+        var host = configuration["Email:SmtpHost"];
+        if (!enabled || string.IsNullOrWhiteSpace(host))
+        {
+            logger.LogInformation("Email skipped (disabled or SmtpHost not configured): {Subject}", subject);
+            return;
+        }
+
         var port = int.Parse(configuration["Email:SmtpPort"] ?? "587");
         var username = configuration["Email:Username"] ?? string.Empty;
         var password = configuration["Email:Password"] ?? string.Empty;

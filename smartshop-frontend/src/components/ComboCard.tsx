@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import type { CatalogItemDto } from '../types/catalog';
 import { formatPrice } from '../utils/formatters';
 import { getImageUrl } from '../utils/imageUrl';
@@ -12,6 +13,7 @@ interface ComboCardProps {
 }
 
 export default function ComboCard({ combo }: ComboCardProps) {
+  const { t } = useTranslation(['product', 'toast']);
   const [adding, setAdding] = useState(false);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
@@ -19,9 +21,9 @@ export default function ComboCard({ combo }: ComboCardProps) {
     setAdding(true);
     try {
       await cartService.addComboToCart(combo.id, 1);
-      toast.success(`Đã thêm combo "${combo.name}" vào giỏ hàng`);
+      toast.success(t('toast:comboAddedToCart', { name: combo.name }));
     } catch (err) {
-      toast.error(getApiError(err, 'Thêm combo thất bại.'));
+      toast.error(getApiError(err, t('toast:comboAddFailed')));
     } finally {
       setAdding(false);
     }
@@ -39,7 +41,7 @@ export default function ComboCard({ combo }: ComboCardProps) {
     const today = new Date();
     const daysLeft = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     if (daysLeft > 0) {
-      endDateText = `Còn ${daysLeft} ngày`;
+      endDateText = t('daysRemaining', { count: daysLeft });
     }
   }
 
@@ -67,7 +69,7 @@ export default function ComboCard({ combo }: ComboCardProps) {
 
       {/* Combo Item Count */}
       {combo.comboItemCount && (
-        <p className="text-xs text-gray-500 mt-0.5">{combo.comboItemCount} món</p>
+        <p className="text-xs text-gray-500 mt-0.5">{t('itemCount', { count: combo.comboItemCount })}</p>
       )}
 
       {/* Price Section */}
@@ -94,7 +96,7 @@ export default function ComboCard({ combo }: ComboCardProps) {
         disabled={adding}
         className="mt-2 w-full text-xs bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 text-white rounded-lg py-1.5 transition-colors font-semibold"
       >
-        {adding ? 'Đang thêm...' : 'Thêm vào giỏ'}
+        {adding ? t('adding') : t('addToCart')}
       </button>
     </Link>
   );

@@ -67,7 +67,6 @@
   "paymentSuccessDesc": "Đơn hàng của bạn đã được đặt và thanh toán thành công.",
   "orderId": "Mã đơn hàng",
   "paymentStatus": "Trạng thái",
-  "paymentMethod": "Phương thức",
   "paymentPaid": "Đã thanh toán",
   "paymentVNPay": "VNPay",
   "viewOrder": "Xem đơn hàng",
@@ -87,5 +86,7 @@
   "selectWard": "-- Chọn phường/xã --",
   "searchWard": "Tìm phường/xã...",
   "addressStreet": "Số nhà, tên đường",
-  "streetPlaceholder": "Vd: 123 Đường Láng"
+  "streetPlaceholder": "Vd: 123 Duong Lang",
+  "itemCount": "{{count}} món",
+  "servingCount": "x{{count}} phần"
 }

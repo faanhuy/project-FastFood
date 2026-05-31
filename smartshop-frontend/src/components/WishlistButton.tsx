@@ -49,11 +49,13 @@ export default function WishlistButton({ productId, className = '' }: WishlistBu
     }
   };
 
+  const { t } = useTranslation('common');
+
   return (
     <button
       onClick={handleToggle}
       disabled={loading}
-      title={isInWishlist ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
+      title={isInWishlist ? t('removeFromWishlist') : t('addToWishlist')}
       className={`p-1.5 rounded-full transition-colors disabled:opacity-50 ${
         isInWishlist
           ? 'text-rose-600 hover:text-rose-700'

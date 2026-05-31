@@ -10,7 +10,7 @@ using SmartShop.Application.Features.Orders.Commands.UpdateOrderStatus;
 using SmartShop.Application.Features.Orders.Queries.GetAllOrders;
 using SmartShop.Application.Features.Orders.Queries.GetMyOrders;
 using SmartShop.Application.Features.Orders.Queries.GetOrderById;
-using SmartShop.Application.Products.Queries.GetProducts;
+using SmartShop.Domain.Interfaces;
 using SmartShop.Domain.Enums;
 
 namespace SmartShop.WebAPI.Controllers;

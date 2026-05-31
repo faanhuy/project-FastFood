@@ -11,8 +11,8 @@ interface ImageParticle {
 }
 
 const LANGS = [
-  { code: 'vi' as const, label: 'Tiếng Việt', flag: '★', flagClass: '' },
-  { code: 'en' as const, label: 'English',     flag: 'EN', flagClass: 'en' },
+  { code: 'vi' as const, label: 'Vietnamese', flag: '★', flagClass: '' },
+  { code: 'en' as const, label: 'English',    flag: 'EN', flagClass: 'en' },
 ];
 
 const QUICK_REPLIES_KEYS = ['chatQuick1', 'chatQuick2', 'chatQuick3'] as const;
@@ -143,7 +143,7 @@ function LangSwitcher() {
 }
 
 /* ── Chat Widget ── */
-function ChatWidget() {
+function ChatWidgetComponent() {
   const { t } = useTranslation('auth');
   const [open, setOpen] = useState(false);
 
@@ -208,10 +208,10 @@ export default function AuthPageLayout({ children }: Props) {
           <div className="lp-form-wrap">
             {children}
           </div>
-          <div className="lp-copy">© {new Date().getFullYear()} SmartShop. {t('brandSub2', 'Mua sắm thông minh mỗi ngày.')}</div>
+          <div className="lp-copy">© {new Date().getFullYear()} SmartShop. {t('brandSub2')}</div>
         </section>
       </div>
-      <ChatWidget />
+      <ChatWidgetComponent />
     </>
   );
 }

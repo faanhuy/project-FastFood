@@ -560,9 +560,9 @@ export default function InventoryManagementPage() {
       {tab === 'bySize' && (
         <div className="mt-2">
           <div className="flex items-center gap-3 mb-4">
-            <label className="text-sm font-medium text-gray-700 shrink-0">Sản phẩm:</label>
+            <label className="text-sm font-medium text-gray-700 shrink-0">{t('inventoryProductLabel')}</label>
             {sizeProducts.length === 0 ? (
-              <p className="text-sm text-gray-400">Không có sản phẩm nào có size.</p>
+              <p className="text-sm text-gray-400">{t('inventoryNoSizesMsg')}</p>
             ) : (
               <select
                 value={selectedSizeProductId}
@@ -578,15 +578,15 @@ export default function InventoryManagementPage() {
 
           <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
             {sizeInventoryLoading ? (
-              <div className="p-8 text-center text-gray-400 text-sm">Đang tải sizes...</div>
+              <div className="p-8 text-center text-gray-400 text-sm">{t('inventoryLoadingSizes')}</div>
             ) : productSizes.length === 0 ? (
-              <div className="p-8 text-center text-gray-400 text-sm">Chọn sản phẩm để xem sizes.</div>
+              <div className="p-8 text-center text-gray-400 text-sm">{t('inventorySelectProductMsg')}</div>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50">
-                    <th className="text-left px-5 py-3 font-semibold text-gray-600">Size</th>
-                    <th className="text-center px-5 py-3 font-semibold text-gray-600">Tồn kho</th>
+                    <th className="text-left px-5 py-3 font-semibold text-gray-600">{t('inventorySizeCol')}</th>
+                    <th className="text-center px-5 py-3 font-semibold text-gray-600">{t('inventoryStockCol')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -614,7 +614,7 @@ export default function InventoryManagementPage() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl my-4">
             <div className="flex items-center justify-between px-6 py-4 border-b">
               <div>
-                <h3 className="text-base font-semibold text-gray-800">Chi tiết phiếu nhập kho</h3>
+                <h3 className="text-base font-semibold text-gray-800">{t('inventoryReceiptDetail')}</h3>
                 <p className="text-xs text-gray-500 mt-0.5">{selectedReceipt.receiptNumber}</p>
               </div>
               <button
@@ -631,13 +631,13 @@ export default function InventoryManagementPage() {
             <div className="px-6 py-4 space-y-3 max-h-96 overflow-y-auto">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-gray-500 text-xs">Ngày nhập</p>
+                  <p className="text-gray-500 text-xs">{t('inventoryReceiptDate')}</p>
                   <p className="font-medium text-gray-800">
                     {new Date(selectedReceipt.receiptDate).toLocaleDateString('vi-VN')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-500 text-xs">Trạng thái</p>
+                  <p className="text-gray-500 text-xs">{t('inventoryReceiptStatus')}</p>
                   <span
                     className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${
                       selectedReceipt.status === 'Pending'
@@ -647,20 +647,20 @@ export default function InventoryManagementPage() {
                         : 'bg-gray-100 text-gray-700'
                     }`}
                   >
-                    {selectedReceipt.status === 'Pending' ? 'Chờ xử lý' : selectedReceipt.status === 'Completed' ? 'Hoàn thành' : 'Đã hủy'}
+                    {selectedReceipt.status === 'Pending' ? t('pending') : selectedReceipt.status === 'Completed' ? t('completed') : t('cancelled')}
                   </span>
                 </div>
               </div>
 
               {selectedReceipt.notes && (
                 <div>
-                  <p className="text-gray-500 text-xs mb-1">Ghi chú</p>
+                  <p className="text-gray-500 text-xs mb-1">{t('notes')}</p>
                   <p className="text-sm text-gray-800">{selectedReceipt.notes}</p>
                 </div>
               )}
 
               <div>
-                <p className="text-gray-500 text-xs mb-2 font-medium">Danh sách sản phẩm</p>
+                <p className="text-gray-500 text-xs mb-2 font-medium">{t('inventoryProductList')}</p>
                 <div className="space-y-2">
                   {detailProductGroups.map((group) => {
                     const hasSizes = group.items.some((item) => item.sizeLabel);
@@ -684,17 +684,17 @@ export default function InventoryManagementPage() {
                               )}
                               <span className="min-w-0">
                                 <span className="block truncate font-semibold text-gray-800">{group.productName}</span>
-                                <span className="mt-0.5 block text-xs text-gray-500">{group.items.length} size</span>
+                                <span className="mt-0.5 block text-xs text-gray-500">{group.items.length} {t('admin:inventorySizeCol').toLowerCase()}</span>
                               </span>
                             </button>
                           ) : (
                             <div className="min-w-0 flex-1 px-1 py-1">
                               <p className="truncate font-semibold text-gray-800">{group.productName}</p>
-                              <p className="mt-0.5 text-xs text-gray-500">Không quản lý size</p>
+                              <p className="mt-0.5 text-xs text-gray-500">{t('inventoryNoSizeManaged')}</p>
                             </div>
                           )}
                           <div className="rounded-md bg-white px-2.5 py-1 text-right shadow-sm ring-1 ring-gray-200">
-                            <p className="text-[11px] text-gray-500">Tổng SL</p>
+                            <p className="text-[11px] text-gray-500">{t('inventoryTotalQty')}</p>
                             <p className="text-sm font-semibold text-gray-800">{group.totalQuantity}</p>
                           </div>
                         </div>
@@ -703,9 +703,9 @@ export default function InventoryManagementPage() {
                           <table className="w-full text-xs">
                             <thead className="bg-white text-gray-500">
                               <tr className="border-t border-gray-100">
-                                <th className="px-3 py-2 text-left font-semibold">Size</th>
-                                <th className="w-24 px-3 py-2 text-center font-semibold">Số lượng</th>
-                                <th className="hidden px-3 py-2 text-left font-semibold sm:table-cell">Ghi chú</th>
+                                <th className="px-3 py-2 text-left font-semibold">{t('inventorySizeHeader')}</th>
+                                <th className="w-24 px-3 py-2 text-center font-semibold">{t('inventoryQtyHeader')}</th>
+                                <th className="hidden px-3 py-2 text-left font-semibold sm:table-cell">{t('inventoryNotesHeader')}</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -726,7 +726,7 @@ export default function InventoryManagementPage() {
 
                         {!isCollapsed && !hasSizes && group.items[0]?.notes && (
                           <div className="border-t border-gray-100 px-3 py-2 text-xs text-gray-500">
-                            Ghi chú: {group.items[0].notes}
+                            {t('notes')}: {group.items[0].notes}
                           </div>
                         )}
                       </div>
@@ -744,7 +744,7 @@ export default function InventoryManagementPage() {
                 }}
                 className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                Đóng
+                {t('close', { ns: 'common' })}
               </button>
             </div>
           </div>
@@ -757,7 +757,7 @@ export default function InventoryManagementPage() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl my-4">
             <div className="flex items-center justify-between px-6 py-4 border-b">
               <h3 className="text-base font-semibold text-gray-800">
-                {editReceiptId ? 'Chỉnh sửa phiếu nhập kho' : 'Tạo phiếu nhập kho'}
+                {editReceiptId ? t('inventoryReceiptEditTitle') : t('inventoryReceiptCreateTitle')}
               </h3>
               <button
                 onClick={() => { setCreateReceiptOpen(false); setEditReceiptId(null); }}
@@ -771,7 +771,7 @@ export default function InventoryManagementPage() {
             <div className="px-6 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Ngày nhập</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('inventoryReceiptDateLabel')}</label>
                   <input
                     type="date"
                     value={receiptDate}
@@ -782,19 +782,19 @@ export default function InventoryManagementPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('inventoryReceiptNotesLabel')}</label>
                 <textarea
                   value={receiptNotes}
                   onChange={(e) => setReceiptNotes(e.target.value)}
                   rows={2}
-                  placeholder="Ghi chú về phiếu nhập (không bắt buộc)"
+                  placeholder={t('notePlaceholder')}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-rose-400 focus:outline-none"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Sản phẩm nhập kho</label>
+                  <label className="block text-sm font-medium text-gray-700">{t('inventoryProductsInputLabel')}</label>
                   <button
                     type="button"
                     onClick={() =>
@@ -806,7 +806,7 @@ export default function InventoryManagementPage() {
                     className="text-xs text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
                   >
                     <FiPlus size={11} />
-                    Thêm sản phẩm
+                    {t('inventoryAddProductBtn')}
                   </button>
                 </div>
 
@@ -839,10 +839,10 @@ export default function InventoryManagementPage() {
                           }}
                           className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-rose-400 focus:outline-none bg-white"
                         >
-                          <option value="">-- Chọn sản phẩm --</option>
+                          <option value="">{t('inventorySelectProductOption')}</option>
                           {allProducts.map((p) => (
                             <option key={p.id} value={p.id}>
-                              {p.name}{p.hasSizes ? ' (có size)' : ''}
+                              {p.name}{p.hasSizes ? t('inventoryProductWithSize') : ''}
                             </option>
                           ))}
                         </select>
@@ -856,7 +856,7 @@ export default function InventoryManagementPage() {
                             onChange={(e) =>
                               setReceiptItems(items => items.map((it, i) => i === idx ? { ...it, quantity: e.target.value } : it))
                             }
-                            placeholder="SL"
+                            placeholder={t('inventoryQtyPlaceholder')}
                             className="w-20 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-center focus:ring-1 focus:ring-rose-400 focus:outline-none bg-white"
                           />
                         )}
@@ -868,7 +868,7 @@ export default function InventoryManagementPage() {
                             setSizePopupIdx(null);
                           }}
                           className="p-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
-                          title="Xóa dòng"
+                          title={t('inventoryDeleteRowTitle')}
                         >
                           <FiTrash2 size={13} />
                         </button>
@@ -878,7 +878,7 @@ export default function InventoryManagementPage() {
                       {item.hasSizes && item.productId && (
                         <div className="px-3 py-2.5 bg-white border-t border-gray-100 flex items-center gap-3">
                           {item.sizeEntries.length === 0 ? (
-                            <p className="text-xs text-orange-600">Sản phẩm này chưa có size master hợp lệ để nhập kho.</p>
+                            <p className="text-xs text-orange-600">{t('inventoryNoValidSize')}</p>
                           ) : (
                             <>
                               <button
@@ -891,19 +891,19 @@ export default function InventoryManagementPage() {
                                 }`}
                               >
                                 <FiLayers size={12} />
-                                Nhập theo size
+                                {t('inventoryInputBySizeBtn')}
                               </button>
                               {item.sizeEntries.some(se => parseInt(se.quantity, 10) > 0) ? (
                                 <span className="text-xs text-gray-500">
-                                  {item.sizeEntries.filter(se => parseInt(se.quantity, 10) > 0).length} size ·{' '}
+                                  {item.sizeEntries.filter(se => parseInt(se.quantity, 10) > 0).length}{t('inventoryQtyBySize')}{' '}
                                   <span className="font-semibold text-gray-800">
-                                    {item.sizeEntries.reduce((sum, se) => sum + (parseInt(se.quantity, 10) || 0), 0)} SP
+                                    {item.sizeEntries.reduce((sum, se) => sum + (parseInt(se.quantity, 10) || 0), 0)}{t('inventoryTotalProducts')}
                                   </span>
                                 </span>
                               ) : (
                                 <span className="text-xs text-amber-600 flex items-center gap-1">
                                   <FiAlertTriangle size={11} />
-                                  Chưa nhập số lượng
+                                  {t('inventoryNotEnteredQty')}
                                 </span>
                               )}
                             </>
@@ -922,7 +922,7 @@ export default function InventoryManagementPage() {
                 disabled={creatingReceipt}
                 className="flex-1 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
               >
-                Hủy
+                {t('inventoryCancelBtn')}
               </button>
               <button
                 onClick={async () => {
@@ -981,7 +981,7 @@ export default function InventoryManagementPage() {
                 disabled={creatingReceipt}
                 className="flex-1 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors disabled:opacity-50"
               >
-                {creatingReceipt ? 'Đang lưu...' : editReceiptId ? 'Cập nhật phiếu' : 'Tạo phiếu'}
+                {creatingReceipt ? t('inventorySavingBtn') : editReceiptId ? t('inventoryUpdateBtn') : t('inventoryCreateBtn')}
               </button>
             </div>
           </div>
@@ -993,7 +993,7 @@ export default function InventoryManagementPage() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
             <div className="flex items-center justify-between px-5 py-4 border-b">
               <div>
-                <h4 className="text-sm font-semibold text-gray-800">Nhập số lượng theo size</h4>
+                <h4 className="text-sm font-semibold text-gray-800">{t('inventorySizePopupTitle')}</h4>
                 <p className="text-xs text-gray-500 mt-0.5">{receiptItems[sizePopupIdx].productName}</p>
               </div>
               <button
@@ -1035,9 +1035,9 @@ export default function InventoryManagementPage() {
             </div>
             <div className="flex items-center justify-between px-5 py-3 border-t bg-gray-50 rounded-b-2xl">
               <span className="text-xs text-gray-500">
-                Tổng:{' '}
+                {t('inventoryTotalLabel')}{' '}
                 <span className="font-semibold text-gray-800">
-                  {receiptItems[sizePopupIdx].sizeEntries.reduce((sum, se) => sum + (parseInt(se.quantity, 10) || 0), 0)} SP
+                  {receiptItems[sizePopupIdx].sizeEntries.reduce((sum, se) => sum + (parseInt(se.quantity, 10) || 0), 0)}{t('inventoryTotalProducts')}
                 </span>
               </span>
               <button
@@ -1045,7 +1045,7 @@ export default function InventoryManagementPage() {
                 onClick={() => setSizePopupIdx(null)}
                 className="px-4 py-1.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors"
               >
-                Xong
+                {t('inventoryDoneBtn')}
               </button>
             </div>
           </div>

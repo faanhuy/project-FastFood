@@ -53,7 +53,7 @@ const AlertIcon = () => (
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const { t } = useTranslation('auth');
+  const { t } = useTranslation(['auth', 'toast']);
   const setAuth = useAuthStore((s) => s.setAuth);
 
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '' });
@@ -75,10 +75,10 @@ export default function RegisterPage() {
       setStatus('success');
       setTimeout(() => navigate('/'), 600);
     } catch (err) {
-      setErrors(getApiErrors(err, 'Đăng ký thất bại.'));
+      setErrors(getApiErrors(err, t('registerFailedDefault')));
       setStatus('idle');
     }
-  }, [form, status, setAuth, navigate]);
+  }, [form, status, setAuth, navigate, t]);
 
   const btnLabel =
     status === 'loading' ? t('registering') :
@@ -107,7 +107,7 @@ export default function RegisterPage() {
             <div className="lp-input">
               <span className="lp-input-lead"><UserIcon /></span>
               <input id="rp-firstName" type="text" name="firstName" autoComplete="given-name"
-                placeholder="Nguyễn" value={form.firstName}
+                placeholder="John" value={form.firstName}
                 onChange={handleChange} required />
             </div>
           </div>
@@ -117,7 +117,7 @@ export default function RegisterPage() {
             <div className="lp-input">
               <span className="lp-input-lead"><UserIcon /></span>
               <input id="rp-lastName" type="text" name="lastName" autoComplete="family-name"
-                placeholder="Văn A" value={form.lastName}
+                placeholder="Doe" value={form.lastName}
                 onChange={handleChange} required />
             </div>
           </div>

@@ -419,7 +419,7 @@ export default function CheckoutPage() {
             <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-20">
               <h2 className="text-base font-semibold text-gray-800 mb-4">
                 {t('yourOrder')}
-                {cart && <span className="ml-2 text-xs text-gray-400 font-normal">({cart.items.length} món)</span>}
+                {cart && <span className="ml-2 text-xs text-gray-400 font-normal">({t('itemCount', { count: cart.items.length })})</span>}
               </h2>
 
               {cartLoading ? (
@@ -441,7 +441,7 @@ export default function CheckoutPage() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-800 truncate">{item.displayName}</p>
                           <p className="text-xs text-gray-500">
-                            x{item.quantity} phần{item.sizeLabel ? ` · ${item.sizeLabel}` : ''}
+                            {t('servingCount', { count: item.quantity })}{item.sizeLabel ? ` · ${item.sizeLabel}` : ''}
                           </p>
                         </div>
                         <p className="text-sm font-semibold text-rose-600 shrink-0">

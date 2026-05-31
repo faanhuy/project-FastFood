@@ -298,10 +298,10 @@ export default function CartPage() {
                           </div>
                         )}
                         <div className="flex gap-2 text-amber-600 font-bold items-center mb-1">
-                          <span className="text-xl">{(getEffectiveUnitPrice(item) * item.quantity).toLocaleString('vi-VN')} đ</span>
+                          <span className="text-xl">{(getEffectiveUnitPrice(item) * item.quantity).toLocaleString('vi-VN')} {tCommon('currency')}</span>
                           {item.itemType === 'Product' && effectivePrices.get(`${item.productId}:${item.sizeId ?? ''}`)?.hasPromotion && (
                             <span className="text-gray-400 line-through text-sm font-normal">
-                              {item.subTotal.toLocaleString('vi-VN')} đ
+                              {item.subTotal.toLocaleString('vi-VN')} {tCommon('currency')}
                             </span>
                           )}
                         </div>
@@ -360,7 +360,7 @@ export default function CartPage() {
                                   {' '}× {c.quantityPerCombo}
                                 </span>
                                 <span className="text-gray-400">
-                                  {c.unitPriceSnapshot.toLocaleString('vi-VN')} đ/cái
+                                  {c.unitPriceSnapshot.toLocaleString('vi-VN')} {tCommon('currency')}{tCommon('perUnit')}
                                 </span>
                               </li>
                             ))}
@@ -386,21 +386,21 @@ export default function CartPage() {
                 <div className="flex justify-between">
                   <span className="font-semibold">{tCommon('subtotal')}</span>
                   <span className="text-rose-600 font-semibold">
-                    {originalTotal.toLocaleString('vi-VN')} <span className="underline">đ</span>
+                    {originalTotal.toLocaleString('vi-VN')} <span className="underline">{tCommon('currency')}</span>
                   </span>
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between">
                     <span className="font-semibold">{t('discount')} ({appliedCode})</span>
                     <span className="text-green-600 font-semibold">
-                      -{discountAmount.toLocaleString('vi-VN')} <span className="underline">đ</span>
+                      -{discountAmount.toLocaleString('vi-VN')} <span className="underline">{tCommon('currency')}</span>
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-xl border-t pt-2">
                   <span>{t('grandTotal')}</span>
                   <span className="text-rose-600">
-                    {finalTotal.toLocaleString('vi-VN')} <span className="underline">đ</span>
+                    {finalTotal.toLocaleString('vi-VN')} <span className="underline">{tCommon('currency')}</span>
                   </span>
                 </div>
               </div>

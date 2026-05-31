@@ -18,4 +18,19 @@ public interface IEmailService
         Guid orderId,
         string orderNumber,
         string newStatus);
+
+    Task SendReturnApprovedAsync(
+        string toEmail,
+        string toName,
+        Guid orderId,
+        string orderNumber,
+        decimal refundAmount,
+        string? adminNote);
+
+    Task SendReturnRejectedAsync(
+        string toEmail,
+        string toName,
+        Guid orderId,
+        string orderNumber,
+        string adminNote);
 }

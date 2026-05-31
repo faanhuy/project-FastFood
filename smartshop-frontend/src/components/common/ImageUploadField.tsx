@@ -15,6 +15,7 @@ interface ImageUploadFieldProps {
 }
 
 export default function ImageUploadField({ currentUrl, onUploaded, uploadFn }: ImageUploadFieldProps) {
+  const { t } = useTranslation('common');
   const { t: tToast } = useTranslation('toast');
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(getImageUrl(currentUrl) || null);
@@ -58,7 +59,7 @@ export default function ImageUploadField({ currentUrl, onUploaded, uploadFn }: I
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Hình ảnh</label>
+      <label className="block text-sm font-medium text-gray-700 mb-1">{t('imageLabel')}</label>
       <input
         ref={inputRef}
         type="file"
@@ -72,7 +73,7 @@ export default function ImageUploadField({ currentUrl, onUploaded, uploadFn }: I
           <img src={preview} alt="preview" className="w-full h-full object-contain" />
           {uploading && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <span className="text-white text-xs font-medium animate-pulse">Đang tải lên...</span>
+              <span className="text-white text-xs font-medium animate-pulse">{t('uploadingImage')}</span>
             </div>
           )}
           {!uploading && (
@@ -82,7 +83,7 @@ export default function ImageUploadField({ currentUrl, onUploaded, uploadFn }: I
                 onClick={() => inputRef.current?.click()}
                 className="bg-white text-gray-700 text-xs px-3 py-1.5 rounded-lg shadow hover:bg-gray-100"
               >
-                Đổi ảnh
+                {t('changeImage')}
               </button>
               <button
                 type="button"
@@ -102,8 +103,8 @@ export default function ImageUploadField({ currentUrl, onUploaded, uploadFn }: I
           className="w-full h-28 rounded-xl border-2 border-dashed border-gray-300 hover:border-rose-400 bg-gray-50 hover:bg-rose-50 transition-colors cursor-pointer flex flex-col items-center justify-center gap-1.5"
         >
           <FiUploadCloud size={22} className="text-gray-400" />
-          <p className="text-xs text-gray-500">Kéo thả hoặc <span className="text-rose-600 font-medium">chọn file</span></p>
-          <p className="text-[10px] text-gray-400">JPG, PNG, WebP, GIF · tối đa {MAX_SIZE_MB} MB</p>
+          <p className="text-xs text-gray-500">{t('dragDropText')} <span className="text-rose-600 font-medium">{t('selectFile')}</span></p>
+          <p className="text-[10px] text-gray-400">{t('imageRequirement', { maxMb: MAX_SIZE_MB })}</p>
         </div>
       )}
     </div>

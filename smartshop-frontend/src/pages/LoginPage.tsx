@@ -52,7 +52,7 @@ const AlertIcon = () => (
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { t } = useTranslation('auth');
+  const { t } = useTranslation(['auth', 'toast']);
   const setAuth = useAuthStore((s) => s.setAuth);
 
   const [email, setEmail] = useState('');
@@ -73,10 +73,10 @@ export default function LoginPage() {
       setStatus('success');
       setTimeout(() => navigate('/'), 600);
     } catch (err) {
-      setErrors(getApiErrors(err, 'Đăng nhập thất bại.'));
+      setErrors(getApiErrors(err, t('loginFailedDefault')));
       setStatus('idle');
     }
-  }, [email, password, status, setAuth, navigate]);
+  }, [email, password, status, setAuth, navigate, t]);
 
   const btnLabel =
     status === 'loading' ? t('loggingIn') :

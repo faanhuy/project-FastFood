@@ -12,9 +12,10 @@ import type { ProductDto } from '../../types/product';
 import type { ProductSize } from '../../types/size';
 import type { AdminStore } from '../../types/store';
 
+// RULE_TYPES labels are now handled dynamically via translation since we need i18n
 const RULE_TYPES = [
-  { value: 1, label: 'Giảm theo % (Discount %)' },
-  { value: 2, label: 'Giá cố định (Fixed Price)' },
+  { value: 1 },
+  { value: 2 },
 ];
 
 interface SizeDiscountEntry {
@@ -568,7 +569,7 @@ export default function AdminPromotionalPricePage() {
                           >
                             {products.map((p) => (
                               <option key={p.id} value={p.id}>
-                                {p.name}{p.hasSizes ? ' (có size)' : ''}
+                                {p.name}{p.hasSizes ? t('hasSize') : ''}
                               </option>
                             ))}
                           </select>
@@ -579,9 +580,8 @@ export default function AdminPromotionalPricePage() {
                                 onChange={(e) => updateItem(idx, { ruleType: Number(e.target.value) })}
                                 className="w-36 border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400 bg-white"
                               >
-                                {RULE_TYPES.map((r) => (
-                                  <option key={r.value} value={r.value}>{r.label}</option>
-                                ))}
+                                <option value={1}>{t('ruleTypePercent')}</option>
+                                <option value={2}>{t('ruleTypeFixed')}</option>
                               </select>
                               <div className="relative w-24">
                                 <input
@@ -615,7 +615,7 @@ export default function AdminPromotionalPricePage() {
                         {it.hasSizes && it.productId && (
                           <div className="px-3 py-2.5 bg-white flex items-center gap-3">
                             {it.sizeEntries.length === 0 ? (
-                              <p className="text-xs text-orange-600">Sản phẩm này chưa có size master hợp lệ.</p>
+                              <p className="text-xs text-orange-600">{t('noValidSizeMsg')}</p>
                             ) : (
                               <>
                                 <button
@@ -630,7 +630,7 @@ export default function AdminPromotionalPricePage() {
                                   }`}
                                 >
                                   <FiLayers size={12} />
-                                  Cài giá theo size
+                                  {t('setPriceBySize')}
                                 </button>
                                 {it.sizeEntries.some(
                                   (se) => se.discountValue !== '' && parseFloat(se.discountValue) > 0,
@@ -759,7 +759,7 @@ export default function AdminPromotionalPricePage() {
                   ).length
                 }{' '}
                 /{' '}
-                {form.items[sizePopupIdx!].sizeEntries.length} size đã cài giá
+                {form.items[sizePopupIdx!].sizeEntries.length} {t('priceSetBySize')}
               </span>
               <button
                 type="button"

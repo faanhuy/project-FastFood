@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Features.Admin.Analytics.DTOs;
+using SmartShop.Application.Features.Admin.Analytics.Queries.ExportRevenueCsv;
+using SmartShop.Application.Features.Admin.Analytics.Queries.ExportRevenuePdf;
 using SmartShop.Application.Features.Admin.Analytics.Queries.GetOrderStatusBreakdown;
 using SmartShop.Application.Features.Admin.Analytics.Queries.GetRevenueByDate;
 using SmartShop.Application.Features.Admin.Analytics.Queries.GetRevenueSummary;
@@ -69,5 +71,31 @@ public class AnalyticsController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new GetOrderStatusBreakdownQuery(), ct);
         return Ok(ApiResponse<IReadOnlyList<OrderStatusBreakdownDto>>.Ok(result));
+    }
+
+    /// <summary>Xuất báo cáo doanh thu ra CSV</summary>
+    [HttpGet("export/csv")]
+    public async Task<IActionResult> ExportCsv(
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
+        CancellationToken ct)
+    {
+        var (defaultFrom, defaultTo) = DefaultRange();
+        var bytes = await mediator.Send(
+            new ExportRevenueCsvQuery(from ?? defaultFrom, to ?? defaultTo), ct);
+        return File(bytes, "text/csv; charset=utf-8", $"revenue_{DateTime.Now:yyyyMMdd}.csv");
+    }
+
+    /// <summary>Xuất báo cáo doanh thu ra PDF</summary>
+    [HttpGet("export/pdf")]
+    public async Task<IActionResult> ExportPdf(
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
+        CancellationToken ct)
+    {
+        var (defaultFrom, defaultTo) = DefaultRange();
+        var bytes = await mediator.Send(
+            new ExportRevenuePdfQuery(from ?? defaultFrom, to ?? defaultTo), ct);
+        return File(bytes, "application/pdf", $"revenue_{DateTime.Now:yyyyMMdd}.pdf");
     }
 }

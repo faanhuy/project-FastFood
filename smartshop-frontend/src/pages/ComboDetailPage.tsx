@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { FiArrowLeft } from 'react-icons/fi';
 import { comboService } from '../services/comboService';
 import { cartService } from '../services/cartService';
@@ -13,6 +14,7 @@ import Footer from '../components/Footer';
 import type { ComboDto } from '../types/promotion';
 
 export default function ComboDetailPage() {
+  const { t } = useTranslation(['product', 'toast', 'common']);
   const { id } = useParams<{ id: string }>();
   const { user, refreshCartCount } = useAuthStore();
 
@@ -28,7 +30,7 @@ export default function ComboDetailPage() {
     comboService
       .getComboById(id)
       .then(setCombo)
-      .catch(() => setError('Không tìm thấy combo.'))
+      .catch(() => setError(t('comboNotFound')))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -38,9 +40,9 @@ export default function ComboDetailPage() {
     try {
       await cartService.addComboToCart(combo.id, 1);
       refreshCartCount();
-      toast.success(`Đã thêm combo "${combo.name}" vào giỏ hàng`);
+      toast.success(t('toast:comboAddedToCart', { name: combo.name }));
     } catch (err) {
-      toast.error(getApiError(err, 'Thêm combo thất bại.'));
+      toast.error(getApiError(err, t('toast:comboAddFailed')));
     } finally {
       setAdding(false);
     }
@@ -54,11 +56,11 @@ export default function ComboDetailPage() {
         <Navbar>
           <Link to="/products" className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm">
             <FiArrowLeft size={16} />
-            Quay lại
+            {t('backToList')}
           </Link>
         </Navbar>
         <div className="flex-1 max-w-4xl mx-auto px-4 py-8 flex items-center justify-center">
-          <div className="text-gray-500">Đang tải...</div>
+          <div className="text-gray-500">{t('common:loading')}</div>
         </div>
         <Footer />
       </>
@@ -71,14 +73,14 @@ export default function ComboDetailPage() {
         <Navbar>
           <Link to="/products" className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm">
             <FiArrowLeft size={16} />
-            Quay lại
+            {t('backToList')}
           </Link>
         </Navbar>
         <div className="flex-1 max-w-4xl mx-auto px-4 py-8">
           <div className="bg-white rounded-lg shadow p-6 text-center">
-            <p className="text-red-600 mb-4">{error || 'Không tìm thấy combo.'}</p>
+            <p className="text-red-600 mb-4">{error || t('comboNotFound')}</p>
             <Link to="/products" className="text-blue-600 hover:text-blue-700">
-              Quay lại trang sản phẩm
+              {t('backToProducts')}
             </Link>
           </div>
         </div>
@@ -98,23 +100,23 @@ export default function ComboDetailPage() {
 
   let validityText = '';
   if (combo.startsAt) {
-    validityText = `Từ ${formatDate(combo.startsAt)}`;
+    validityText = t('from', { date: formatDate(combo.startsAt) });
     if (endDate) {
-      validityText += ` đến ${formatDate(combo.endsAt!)}`;
+      validityText += ` ${t('to', { date: formatDate(combo.endsAt!) })}`;
     } else {
-      validityText += ' (Không hạn)';
+      validityText += ` ${t('noExpiry')}`;
     }
   }
 
   const daysLeft = endDate ? Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0;
-  const daysLeftText = daysLeft > 0 ? `Còn ${daysLeft} ngày` : '';
+  const daysLeftText = daysLeft > 0 ? t('daysRemaining', { count: daysLeft }) : '';
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar>
         <Link to="/products" className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm">
           <FiArrowLeft size={16} />
-          Quay lại
+          {t('backToList')}
         </Link>
       </Navbar>
 
@@ -142,11 +144,11 @@ export default function ComboDetailPage() {
               <div className="flex items-center gap-2 mb-2">
                 {isActive ? (
                   <span className="inline-block bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
-                    Đang chạy
+                    {t('comboActive')}
                   </span>
                 ) : (
                   <span className="inline-block bg-gray-100 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full">
-                    Không hoạt động
+                    {t('comboInactive')}
                   </span>
                 )}
               </div>
@@ -176,7 +178,7 @@ export default function ComboDetailPage() {
                 )}
                 {discountPercent > 0 && (
                   <p className="mt-1 text-sm text-green-600 font-medium">
-                    Tiết kiệm {formatPrice(realtimeOriginal - combo.salePrice)}
+                    {t('savings', { amount: formatPrice(realtimeOriginal - combo.salePrice) })}
                   </p>
                 )}
               </div>
@@ -204,7 +206,7 @@ export default function ComboDetailPage() {
                       onClick={() => setDescExpanded(v => !v)}
                       className="mt-1 text-xs text-orange-500 hover:text-orange-600 font-medium"
                     >
-                      {descExpanded ? 'Thu gọn' : 'Xem thêm'}
+                      {descExpanded ? t('collapse') : t('expand')}
                     </button>
                   )}
                 </div>
@@ -216,7 +218,7 @@ export default function ComboDetailPage() {
                 disabled={adding || !isActive}
                 className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 text-white font-semibold py-3 rounded-lg transition-colors"
               >
-                {adding ? 'Đang thêm...' : !isActive ? 'Combo không hoạt động' : 'Thêm combo vào giỏ hàng'}
+                {adding ? t('adding') : !isActive ? t('comboInactiveMessage') : t('addComboToCart')}
               </button>
             </div>
           </div>
@@ -225,7 +227,7 @@ export default function ComboDetailPage() {
         {/* Items in Combo */}
         {combo.items && combo.items.length > 0 && (
           <div className="mt-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Các món trong combo</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('itemsInCombo')}</h2>
             <div className="space-y-3">
               {combo.items.map((item) => (
                 <div
@@ -235,7 +237,7 @@ export default function ComboDetailPage() {
                   <div className="flex-1">
                     <p className="text-gray-900 font-medium">{item.productName}</p>
                     {item.sizeLabel && (
-                      <p className="text-xs text-gray-500 mt-0.5">Size: {item.sizeLabel}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{t('sizeLabel', { label: item.sizeLabel })}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-4 ml-4 shrink-0">

@@ -85,3 +85,11 @@ export interface BulkImportResult {
   failed: number;
   errors: ImportRowError[];
 }
+
+export interface ProductImageDto {
+  id: string;
+  productId: string;
+  imageUrl: string;
+  isPrimary: boolean;
+  sortOrder: number;
+}

@@ -10,11 +10,11 @@ import { formatPrice } from '../../utils/formatters';
 import { slugify } from '../../utils/slugify';
 import type { BulkImportResult, CategoryDto, CreateProductRequest, ProductDto, UpdateProductRequest } from '../../types/product';
 import type { SizeDto, SizeCategory } from '../../types/size';
-import { SIZE_CATEGORY_LABELS } from '../../types/size';
 import GenerateDescriptionButton from '../../components/GenerateDescriptionButton';
 import AdminLayout from '../../components/AdminLayout';
 import ImageUploadField from '../../components/common/ImageUploadField';
 import Pagination from '../../components/common/Pagination';
+import ProductImagesManager from '../../components/admin/ProductImagesManager';
 import { getImageUrl } from '../../utils/imageUrl';
 
 const EMPTY_CREATE: CreateProductRequest = {
@@ -47,12 +47,10 @@ export default function AdminProductPage() {
   const [editError,   setEditError]   = useState<string | null>(null);
   const [editing,     setEditing]     = useState(false);
 
-  // Size management modal
-  const [sizeProduct,    setSizeProduct]    = useState<ProductDto | null>(null);
+  // Size management (inline in edit modal)
   const [masterSizes,    setMasterSizes]    = useState<SizeDto[]>([]);
   const [checkedSizeIds, setCheckedSizeIds] = useState<Set<string>>(new Set());
   const [sizesLoading,   setSizesLoading]   = useState(false);
-  const [savingSize,     setSavingSize]     = useState(false);
 
   // CSV import
   const [importing,     setImporting]     = useState(false);
@@ -95,7 +93,7 @@ export default function AdminProductPage() {
       setPage(1);
       toast.success(tToast('productCreated'));
     } catch (err) {
-      setCreateError(getApiError(err, 'Tạo món thất bại.'));
+      setCreateError(getApiError(err, tToast('productCreateFailed')));
     } finally {
       setCreating(false);
     }
@@ -113,12 +111,15 @@ export default function AdminProductPage() {
       hasSizes: p.hasSizes,
       sizeType: p.sizeType,
     });
+    setMasterSizes([]);
+    setCheckedSizeIds(new Set());
     setEditError(null);
+    loadEditSizes(p);
   };
 
-  /* ── Size Management ── */
-  const openSizeModal = async (p: ProductDto) => {
-    setSizeProduct(p);
+  /* ── Size Management (inline in Edit modal) ── */
+  const loadEditSizes = async (p: ProductDto) => {
+    if (!p.hasSizes) return;
     setSizesLoading(true);
     try {
       const category = p.sizeType as SizeCategory | null;
@@ -143,20 +144,6 @@ export default function AdminProductPage() {
     });
   };
 
-  const handleSaveSizes = async () => {
-    if (!sizeProduct) return;
-    setSavingSize(true);
-    try {
-      await sizeService.setProductSizes(sizeProduct.id, Array.from(checkedSizeIds));
-      toast.success(tToast('sizeSaved'));
-      setSizeProduct(null);
-    } catch (err) {
-      toast.error(getApiError(err, tToast('sizeUpdateFailed')));
-    } finally {
-      setSavingSize(false);
-    }
-  };
-
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editProduct) return;
@@ -168,11 +155,14 @@ export default function AdminProductPage() {
         originalPrice: editForm.originalPrice || null,
         imageUrl: editForm.imageUrl || null,
       });
+      if (editForm.hasSizes && masterSizes.length > 0) {
+        await sizeService.setProductSizes(editProduct.id, Array.from(checkedSizeIds));
+      }
       setEditProduct(null);
       await loadProducts(page);
       toast.success(tToast('productUpdated'));
     } catch (err) {
-      setEditError(getApiError(err, 'Cập nhật món thất bại.'));
+      setEditError(getApiError(err, tToast('productUpdateFailed')));
     } finally {
       setEditing(false);
     }
@@ -180,7 +170,7 @@ export default function AdminProductPage() {
 
   /* ── Delete ── */
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Gỡ món "${name}" khỏi thực đơn?`)) return;
+    if (!confirm(t('confirmDeleteProduct', { name }))) return;
     try {
       await productService.deleteProduct(id);
       await loadProducts(page);
@@ -200,7 +190,7 @@ export default function AdminProductPage() {
       const result = await productService.bulkImportProducts(file);
       setImportResult(result);
       if (result.created > 0) {
-        toast.success(`Import xong: ${result.created} sản phẩm đã tạo.`);
+        toast.success(tToast('productCreated'));
         await loadProducts(1);
         setPage(1);
       }
@@ -222,7 +212,7 @@ export default function AdminProductPage() {
   }) => (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <label className="block text-sm font-medium text-gray-700">Mô tả món</label>
+        <label className="block text-sm font-medium text-gray-700">{t('productDescriptionLabel')}</label>
         <GenerateDescriptionButton
           productName={productName}
           categoryName={categoryName}
@@ -240,7 +230,7 @@ export default function AdminProductPage() {
         <label className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
           importing ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'
         }`}>
-          {importing ? 'Đang import...' : 'Import CSV'}
+          {importing ? t('importingBtn') : t('importCsvBtn')}
           <input
             type="file"
             accept=".csv"
@@ -261,13 +251,13 @@ export default function AdminProductPage() {
       {importResult && (
         <div className="mb-4 p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-700">Kết quả Import</h3>
+            <h3 className="text-sm font-semibold text-gray-700">{t('importResultTitle')}</h3>
             <button onClick={() => setImportResult(null)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
           </div>
           <div className="flex gap-4 mb-3">
-            <span className="text-sm text-green-600 font-medium">✓ Tạo thành công: {importResult.created}</span>
+            <span className="text-sm text-green-600 font-medium">{t('importCreated', { count: importResult.created })}</span>
             {importResult.failed > 0 && (
-              <span className="text-sm text-red-600 font-medium">✗ Thất bại: {importResult.failed}</span>
+              <span className="text-sm text-red-600 font-medium">{t('importFailedCount', { count: importResult.failed })}</span>
             )}
           </div>
           {importResult.errors.length > 0 && (
@@ -275,9 +265,9 @@ export default function AdminProductPage() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="text-gray-500 border-b border-gray-100">
-                    <th className="text-left pb-1 w-12">Dòng</th>
-                    <th className="text-left pb-1 w-24">Trường</th>
-                    <th className="text-left pb-1">Lỗi</th>
+                    <th className="text-left pb-1 w-12">{t('importRowCol')}</th>
+                    <th className="text-left pb-1 w-24">{t('importFieldCol')}</th>
+                    <th className="text-left pb-1">{t('importErrorCol')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -326,16 +316,16 @@ export default function AdminProductPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('originalPrice', { ns: 'product' })} (VND)</label>
-                  <input type="number" min={0} placeholder="Để trống = giá bán" className={INPUT_CLS}
+                  <input type="number" min={0} placeholder={t('originalPricePlaceholderCreate')} className={INPUT_CLS}
                     value={createForm.originalPrice || ''}
                     onChange={(e) => setCreateForm((f) => ({ ...f, originalPrice: Number(e.target.value) || undefined }))} />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nhóm món</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('categoryGroup')}</label>
                 <select required className={INPUT_CLS} value={createForm.categoryId}
                   onChange={(e) => setCreateForm((f) => ({ ...f, categoryId: e.target.value }))}>
-                  <option value="">-- Chọn nhóm món --</option>
+                  <option value="">{t('selectCategory')}</option>
                   {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
@@ -343,18 +333,18 @@ export default function AdminProductPage() {
                 <input type="checkbox" id="create-has-sizes" className="w-4 h-4 rounded border-gray-300"
                   checked={createForm.hasSizes || false}
                   onChange={(e) => setCreateForm((f) => ({ ...f, hasSizes: e.target.checked, sizeType: e.target.checked ? f.sizeType : null }))} />
-                <label htmlFor="create-has-sizes" className="text-sm font-medium text-gray-700">Sản phẩm có kích cỡ</label>
+                <label htmlFor="create-has-sizes" className="text-sm font-medium text-gray-700">{t('hasSizes')}</label>
               </div>
               {createForm.hasSizes && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Loại kích cỡ</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('sizeTypeLabel')}</label>
                   <select className={INPUT_CLS} value={createForm.sizeType || ''}
                     onChange={(e) => setCreateForm((f) => ({ ...f, sizeType: e.target.value || null }))}>
-                    <option value="">-- Chọn loại --</option>
-                    <option value="DrinkSize">Đồ uống</option>
-                    <option value="FoodPortion">Khẩu phần ăn</option>
-                    <option value="MealSize">Suất ăn / Combo</option>
-                    <option value="Custom">Tùy chỉnh</option>
+                    <option value="">{t('selectSizeType')}</option>
+                    <option value="DrinkSize">{t('sizeTypeDrink')}</option>
+                    <option value="FoodPortion">{t('sizeTypeFood')}</option>
+                    <option value="MealSize">{t('sizeTypeMeal')}</option>
+                    <option value="Custom">{t('sizeTypeCustom')}</option>
                   </select>
                 </div>
               )}
@@ -405,7 +395,7 @@ export default function AdminProductPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('originalPrice', { ns: 'product' })} (VND)</label>
-                  <input type="number" min={0} placeholder="Để trống = giữ nguyên" className={INPUT_CLS}
+                  <input type="number" min={0} placeholder={t('originalPricePlaceholderEdit')} className={INPUT_CLS}
                     value={editForm.originalPrice ?? ''}
                     onChange={(e) => setEditForm((f) => ({ ...f, originalPrice: Number(e.target.value) || null }))} />
                 </div>
@@ -414,20 +404,51 @@ export default function AdminProductPage() {
                 <input type="checkbox" id="edit-has-sizes" className="w-4 h-4 rounded border-gray-300"
                   checked={editForm.hasSizes || false}
                   onChange={(e) => setEditForm((f) => ({ ...f, hasSizes: e.target.checked, sizeType: e.target.checked ? f.sizeType : null }))} />
-                <label htmlFor="edit-has-sizes" className="text-sm font-medium text-gray-700">Sản phẩm có kích cỡ</label>
+                <label htmlFor="edit-has-sizes" className="text-sm font-medium text-gray-700">{t('hasSizes')}</label>
               </div>
               {editForm.hasSizes && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Loại kích cỡ</label>
-                  <select className={INPUT_CLS} value={editForm.sizeType || ''}
-                    onChange={(e) => setEditForm((f) => ({ ...f, sizeType: e.target.value || null }))}>
-                    <option value="">-- Chọn loại --</option>
-                    <option value="DrinkSize">Đồ uống</option>
-                    <option value="FoodPortion">Khẩu phần ăn</option>
-                    <option value="MealSize">Suất ăn / Combo</option>
-                    <option value="Custom">Tùy chỉnh</option>
-                  </select>
-                </div>
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('sizeTypeLabel')}</label>
+                    <select className={INPUT_CLS} value={editForm.sizeType || ''}
+                      onChange={(e) => setEditForm((f) => ({ ...f, sizeType: e.target.value || null }))}>
+                      <option value="">{t('selectSizeType')}</option>
+                      <option value="DrinkSize">{t('sizeTypeDrink')}</option>
+                      <option value="FoodPortion">{t('sizeTypeFood')}</option>
+                      <option value="MealSize">{t('sizeTypeMeal')}</option>
+                      <option value="Custom">{t('sizeTypeCustom')}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('appliedSizes')}</label>
+                    {sizesLoading ? (
+                      <p className="text-xs text-gray-400 py-2">{t('loadingSizes')}</p>
+                    ) : masterSizes.length === 0 ? (
+                      <p className="text-xs text-gray-400 py-2">
+                        {t('noSizes')}{' '}
+                        <a href="/admin/sizes" className="text-rose-600 hover:underline">{t('manageSizesLink')}</a>
+                      </p>
+                    ) : (
+                      <ul className="space-y-1.5 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                        {masterSizes.map((s) => (
+                          <li key={s.id}
+                            className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-gray-50 cursor-pointer"
+                            onClick={() => toggleSizeCheck(s.id)}
+                          >
+                            <input
+                              type="checkbox"
+                              readOnly
+                              checked={checkedSizeIds.has(s.id)}
+                              className="w-4 h-4 rounded border-gray-300 text-rose-600 cursor-pointer"
+                            />
+                            <span className="text-sm flex-1">{s.label}</span>
+                            <span className="text-xs text-gray-400">#{s.displayOrder}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </>
               )}
               <ImageUploadField
                 key={editProduct?.id}
@@ -436,6 +457,10 @@ export default function AdminProductPage() {
                 uploadFn={imageService.uploadProductImage}
               />
               {editError && <p className="text-sm text-red-500">{editError}</p>}
+
+              {/* Product Images Manager */}
+              {editProduct && <ProductImagesManager productId={editProduct.id} />}
+
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setEditProduct(null)}
                   className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">{t('cancel', { ns: 'common' })}</button>
@@ -458,12 +483,12 @@ export default function AdminProductPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Ảnh</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Món ăn</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Giá bán</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">Giá niêm yết</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Trạng thái</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">Thao tác</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">{t('colImage')}</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">{t('colFood')}</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">{t('sellingPrice')}</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">{t('colListedPrice')}</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">{t('status')}</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">{t('actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -490,20 +515,16 @@ export default function AdminProductPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${p.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                        {p.isActive ? 'Đang phục vụ' : 'Đã ẩn'}
+                        {p.isActive ? t('statusServing') : t('statusHidden')}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right space-x-3">
                       <button onClick={() => navigate(`/products/${p.slug}`)}
-                        className="text-rose-600 hover:underline text-xs">Xem</button>
+                        className="text-rose-600 hover:underline text-xs">{t('view')}</button>
                       <button onClick={() => openEdit(p)}
-                        className="text-yellow-600 hover:underline text-xs">Sửa</button>
-                      {p.hasSizes && (
-                        <button onClick={() => openSizeModal(p)}
-                          className="text-blue-600 hover:underline text-xs">Kích cỡ</button>
-                      )}
+                        className="text-yellow-600 hover:underline text-xs">{t('edit')}</button>
                       <button onClick={() => handleDelete(p.id, p.name)}
-                        className="text-red-500 hover:underline text-xs">Gỡ</button>
+                        className="text-red-500 hover:underline text-xs">{t('btnRemove')}</button>
                     </td>
                   </tr>
                 ))}
@@ -515,63 +536,6 @@ export default function AdminProductPage() {
         </>
       )}
 
-      {/* Size Management Modal */}
-      {sizeProduct && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-1">
-              <div>
-                <h2 className="text-lg font-semibold">Chọn kích cỡ</h2>
-                <p className="text-xs text-gray-400">{sizeProduct.name}</p>
-              </div>
-              <button onClick={() => setSizeProduct(null)} className="text-gray-400 hover:text-gray-600">✕</button>
-            </div>
-            {sizeProduct.sizeType && (
-              <p className="text-xs text-rose-500 mb-3">
-                Loại: {SIZE_CATEGORY_LABELS[sizeProduct.sizeType as SizeCategory] ?? sizeProduct.sizeType}
-              </p>
-            )}
-
-            {sizesLoading ? (
-              <p className="text-sm text-gray-400 text-center py-6">Đang tải kích cỡ...</p>
-            ) : masterSizes.length === 0 ? (
-              <div className="py-6 text-center">
-                <p className="text-sm text-gray-400">Chưa có kích cỡ nào trong danh mục này.</p>
-                <a href="/admin/sizes" className="text-xs text-rose-600 hover:underline mt-1 block">
-                  Quản lý kích cỡ →
-                </a>
-              </div>
-            ) : (
-              <ul className="space-y-2 mb-5 max-h-64 overflow-y-auto">
-                {masterSizes.map((s) => (
-                  <li key={s.id}
-                    className="flex items-center gap-3 px-3 py-2 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                    onClick={() => toggleSizeCheck(s.id)}
-                  >
-                    <input
-                      type="checkbox"
-                      readOnly
-                      checked={checkedSizeIds.has(s.id)}
-                      className="w-4 h-4 rounded border-gray-300 text-rose-600 cursor-pointer"
-                    />
-                    <span className="text-sm font-medium flex-1">{s.label}</span>
-                    <span className="text-xs text-gray-400">#{s.displayOrder}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <div className="flex justify-end gap-2 pt-2 border-t">
-              <button type="button" onClick={() => setSizeProduct(null)}
-                className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">Hủy</button>
-              <button onClick={handleSaveSizes} disabled={savingSize || masterSizes.length === 0}
-                className="px-4 py-2 text-sm bg-rose-600 text-white rounded-lg hover:bg-rose-700 disabled:opacity-60">
-                {savingSize ? 'Đang lưu...' : `Lưu (${checkedSizeIds.size})`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </AdminLayout>
   );
 }

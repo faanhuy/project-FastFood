@@ -27,6 +27,14 @@ export interface OrderStatusBreakdownDto {
   count: number;
 }
 
+function formatDateForApi(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function formatDateForFilename(date: Date): string {
+  return date.toISOString().slice(0, 10).replace(/-/g, '');
+}
+
 export const analyticsService = {
   getSummary: async (from: string, to: string): Promise<RevenueSummaryDto> => {
     const { data } = await api.get<ApiResponse<RevenueSummaryDto>>('/admin/analytics/summary', {
@@ -54,5 +62,37 @@ export const analyticsService = {
       '/admin/analytics/order-status',
     );
     return data.data;
+  },
+
+  exportCsv: async (from: Date, to: Date): Promise<void> => {
+    const response = await api.get('/admin/analytics/export/csv', {
+      params: {
+        from: formatDateForApi(from),
+        to: formatDateForApi(to),
+      },
+      responseType: 'blob',
+    });
+    const url = URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `revenue_${formatDateForFilename(new Date())}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  },
+
+  exportPdf: async (from: Date, to: Date): Promise<void> => {
+    const response = await api.get('/admin/analytics/export/pdf', {
+      params: {
+        from: formatDateForApi(from),
+        to: formatDateForApi(to),
+      },
+      responseType: 'blob',
+    });
+    const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `revenue_${formatDateForFilename(new Date())}.pdf`;
+    link.click();
+    URL.revokeObjectURL(url);
   },
 };

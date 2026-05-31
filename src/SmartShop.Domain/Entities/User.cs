@@ -14,6 +14,8 @@ public class User : BaseAuditableEntity
     public string? RefreshTokenHash { get; private set; }
     public DateTime? RefreshTokenExpiry { get; private set; }
     public string? AvatarUrl { get; private set; }
+    public bool IsBanned { get; private set; } = false;
+    public DateTime? BannedAt { get; private set; }
 
     private User() { }
 
@@ -71,6 +73,23 @@ public class User : BaseAuditableEntity
     public void SetAvatarUrl(string? avatarUrl)
     {
         AvatarUrl = avatarUrl;
+    }
+
+    public void Ban()
+    {
+        IsBanned = true;
+        BannedAt = DateTime.UtcNow;
+    }
+
+    public void Unban()
+    {
+        IsBanned = false;
+        BannedAt = null;
+    }
+
+    public void UpdateRole(string role)
+    {
+        Role = role;
     }
 
 }

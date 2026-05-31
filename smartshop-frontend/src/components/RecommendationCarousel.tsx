@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { FiChevronLeft, FiChevronRight, FiAlertCircle } from 'react-icons/fi';
 import { aiService } from '../services/aiService';
 import type { ProductDto } from '../types/product';
@@ -11,6 +12,7 @@ interface RecommendationCarouselProps {
 }
 
 export default function RecommendationCarousel({ productId }: RecommendationCarouselProps) {
+  const { t } = useTranslation('product');
   const [recommendations, setRecommendations] = useState<ProductDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export default function RecommendationCarousel({ productId }: RecommendationCaro
       .then(setRecommendations)
       .catch((err) => {
         setRecommendations([]);
-        setErrorMsg(aiService.extractErrorMessage(err, 'Không thể tải gợi ý sản phẩm.'));
+        setErrorMsg(aiService.extractErrorMessage(err, t('recommendationsLoadFailed')));
       })
       .finally(() => setLoading(false));
   }, [productId]);
@@ -37,7 +39,7 @@ export default function RecommendationCarousel({ productId }: RecommendationCaro
   if (loading) {
     return (
       <div className="mt-8">
-        <h2 className="text-base font-semibold text-gray-800 mb-3">Món gợi ý cùng vị</h2>
+        <h2 className="text-base font-semibold text-gray-800 mb-3">{t('recommendedDishes')}</h2>
         <div className="flex gap-4 overflow-hidden">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="w-48 shrink-0 rounded-xl bg-gray-100 animate-pulse h-56" />
@@ -50,7 +52,7 @@ export default function RecommendationCarousel({ productId }: RecommendationCaro
   if (errorMsg) {
     return (
       <div className="mt-8">
-        <h2 className="text-base font-semibold text-gray-800 mb-3">Món gợi ý cùng vị</h2>
+        <h2 className="text-base font-semibold text-gray-800 mb-3">{t('recommendedDishes')}</h2>
         <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
           <FiAlertCircle size={15} className="shrink-0" />
           <span>{errorMsg}</span>
@@ -64,7 +66,7 @@ export default function RecommendationCarousel({ productId }: RecommendationCaro
   return (
     <div className="mt-8">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-semibold text-gray-800">Món gợi ý cùng vị</h2>
+        <h2 className="text-base font-semibold text-gray-800">{t('recommendedDishes')}</h2>
         <div className="flex gap-1">
           <button
             onClick={() => scroll('left')}

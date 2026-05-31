@@ -24,6 +24,9 @@ public class Product : BaseAuditableEntity
     private readonly List<ProductSize> _sizes = new();
     public IReadOnlyCollection<ProductSize> Sizes => _sizes.AsReadOnly();
 
+    private readonly List<ProductImage> _images = [];
+    public IReadOnlyCollection<ProductImage> Images => _images.AsReadOnly();
+
     public static Product Create(string name, string description,
         decimal price, Guid categoryId, string slug,
         string? imageUrl = null, decimal? originalPrice = null,

@@ -17,13 +17,10 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CreateReturnRequestModal from '../components/returns/CreateReturnRequestModal';
 
-const PAYMENT_METHOD_LABELS: Record<string, string> = {
-  COD: 'Thanh toán khi nhận hàng (COD)',
-  VNPay: 'VNPay',
-  BankTransfer: 'Chuyển khoản ngân hàng',
-};
+// Payment method labels are now handled by i18n keys paymentMethodCOD, paymentMethodVNPay, paymentMethodBankTransfer
 
 export default function OrderDetailPage() {
+  const { t } = useTranslation('order');
   const { t: tToast } = useTranslation('toast');
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<OrderDto | null>(null);
@@ -50,7 +47,7 @@ export default function OrderDetailPage() {
           setExistingReturnRequest(existingReturn);
         }
       } catch {
-        setError('Không tìm thấy đơn giao.');
+        setError(t('orderNotFound'));
       } finally {
         setLoading(false);
       }
@@ -74,7 +71,7 @@ export default function OrderDetailPage() {
 
   const handleCancel = async () => {
     if (!order) return;
-    if (!confirm('Bạn có chắc muốn huỷ đơn giao này?')) return;
+    if (!confirm(t('cancelOrderConfirm'))) return;
     setCancelling(true);
     try {
       await orderService.cancelOrder(order.id);
@@ -125,13 +122,13 @@ export default function OrderDetailPage() {
   if (loading) return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="p-8 text-center text-gray-400">Đang tải...</div>
+      <div className="p-8 text-center text-gray-400">{t('loading')}</div>
     </div>
   );
   if (error || !order) return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="p-8 text-center text-red-500">{error || 'Không tìm thấy đơn giao.'}</div>
+      <div className="p-8 text-center text-red-500">{error || t('orderNotFound')}</div>
     </div>
   );
 
@@ -148,13 +145,13 @@ export default function OrderDetailPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="max-w-2xl mx-auto p-6">
-        <button onClick={() => navigate('/orders')} className="text-rose-600 hover:text-rose-800 mb-4 flex items-center gap-1.5 text-sm" title="Quay lại danh sách đơn giao">
-          <FiArrowLeft size={16} /> Lịch sử đơn giao
+        <button onClick={() => navigate('/orders')} className="text-rose-600 hover:text-rose-800 mb-4 flex items-center gap-1.5 text-sm" title={t('orderHistory')}>
+          <FiArrowLeft size={16} /> {t('orderHistory')}
         </button>
 
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">
-            Đơn #{order.id.slice(0, 8).toUpperCase()}
+            {t('orderNumber')}{order.id.slice(0, 8).toUpperCase()}
           </h1>
           <span className={`text-sm px-3 py-1 rounded-full font-medium ${statusInfo?.color ?? 'bg-gray-100 text-gray-700'}`}>
             {statusInfo?.label ?? order.status}
@@ -162,46 +159,46 @@ export default function OrderDetailPage() {
         </div>
 
         <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-1 text-sm text-gray-600">
-          <p><span className="font-medium text-gray-800">Ngày đặt:</span> {formatDateTime(order.createdAt)}</p>
+          <p><span className="font-medium text-gray-800">{t('orderDateLabel')}</span> {formatDateTime(order.createdAt)}</p>
           <p>
-            <span className="font-medium text-gray-800">Địa chỉ giao:</span>{' '}
+            <span className="font-medium text-gray-800">{t('shippingAddressLabel')}</span>{' '}
             {order.shippingWardName
               ? `${order.shippingWardName}, ${order.shippingProvinceName ?? ''}`.replace(/,\s*$/, '')
               : order.shippingAddress}
           </p>
-          {order.notes && <p><span className="font-medium text-gray-800">Ghi chú:</span> {order.notes}</p>}
+          {order.notes && <p><span className="font-medium text-gray-800">{t('notesLabel')}</span> {order.notes}</p>}
         </div>
 
         <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2 text-sm text-gray-600">
-          <p className="font-medium text-gray-800 mb-1">Thông tin thanh toán</p>
+          <p className="font-medium text-gray-800 mb-1">{t('paymentInfoTitle')}</p>
           {order.paymentMethod && (
             <p>
-              <span className="font-medium text-gray-800">Phương thức:</span>{' '}
-              {PAYMENT_METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod}
+              <span className="font-medium text-gray-800">{t('paymentMethodLabel')}</span>{' '}
+              {order.paymentMethod === 'COD' ? t('paymentMethodCOD') : order.paymentMethod === 'VNPay' ? t('paymentMethodVNPay') : order.paymentMethod === 'BankTransfer' ? t('paymentMethodBankTransfer') : order.paymentMethod}
             </p>
           )}
           {order.paymentStatus && (
             <p className="flex items-center gap-2">
-              <span className="font-medium text-gray-800">Trạng thái:</span>
+              <span className="font-medium text-gray-800">{t('paymentStatusLabel')}</span>
               {order.paymentStatus === 'Paid' && (
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-green-100 text-green-700">Đã thanh toán</span>
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-green-100 text-green-700">{t('paymentStatusPaid')}</span>
               )}
               {order.paymentStatus === 'Failed' && (
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-red-100 text-red-700">Thanh toán thất bại</span>
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-red-100 text-red-700">{t('paymentStatusFailed')}</span>
               )}
               {order.paymentStatus === 'Pending' && (order.paymentMethod === 'VNPay' || order.paymentMethod === 'BankTransfer') && (
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-yellow-100 text-yellow-700">Chờ thanh toán</span>
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-yellow-100 text-yellow-700">{t('paymentStatusPending')}</span>
               )}
               {order.paymentStatus === 'Pending' && order.paymentMethod === 'COD' && (
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600">Thanh toán khi nhận</span>
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600">{t('paymentStatusCOD')}</span>
               )}
               {order.paymentStatus === 'Refunded' && (
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-700">Đã hoàn tiền</span>
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-700">{t('paymentStatusRefunded')}</span>
               )}
             </p>
           )}
           {order.paidAt && (
-            <p><span className="font-medium text-gray-800">Ngày thanh toán:</span> {formatDateTime(order.paidAt)}</p>
+            <p><span className="font-medium text-gray-800">{t('paymentDateLabel')}</span> {formatDateTime(order.paidAt)}</p>
           )}
         </div>
 
@@ -241,7 +238,7 @@ export default function OrderDetailPage() {
                         className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 mt-0.5"
                       >
                         <FiPackage size={10} />
-                        {expandedComponents.has(idx) ? 'Ẩn' : 'Xem'} chi tiết
+                        {expandedComponents.has(idx) ? t('hideDetails') : t('viewDetails')} {t('common:details')}
                       </button>
                     )}
                   </div>
@@ -260,7 +257,7 @@ export default function OrderDetailPage() {
                           {' '}× {c.quantityPerCombo}
                         </span>
                         <span className="text-gray-400">
-                          {c.unitPriceSnapshot.toLocaleString('vi-VN')} đ/cái
+                          {c.unitPriceSnapshot.toLocaleString('vi-VN')} {t('pricePerUnit')}
                         </span>
                       </li>
                     ))}
@@ -279,7 +276,7 @@ export default function OrderDetailPage() {
                 disabled={cancelling}
                 className="text-sm text-red-500 border border-red-300 px-4 py-2 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
               >
-                {cancelling ? 'Đang huỷ...' : 'Huỷ đơn'}
+                {cancelling ? t('cancellingButtonText') : t('cancelButtonText')}
               </button>
             )}
             {order.paymentMethod === 'VNPay' &&
@@ -290,7 +287,7 @@ export default function OrderDetailPage() {
                   disabled={retrying}
                   className="text-sm px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-60 transition-colors"
                 >
-                  {retrying ? 'Đang xử lý...' : 'Thanh toán lại'}
+                  {retrying ? t('retryingButtonText') : t('retryPaymentButtonText')}
                 </button>
               )}
             {canRequestReturn() && (
@@ -298,29 +295,29 @@ export default function OrderDetailPage() {
                 onClick={() => setShowReturnModal(true)}
                 className="text-sm px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
               >
-                Yêu cầu trả hàng
+                {t('requestReturnButtonText')}
               </button>
             )}
             {existingReturnRequest && existingReturnRequest.status !== ReturnStatus.Rejected && (
               <span
                 className={`text-sm px-3 py-1.5 rounded-lg font-medium ${RETURN_STATUS_COLORS[existingReturnRequest.status]}`}
               >
-                Yêu cầu hoàn tiền: {RETURN_STATUS_LABELS[existingReturnRequest.status]}
+                {t('refundRequestLabel')} {RETURN_STATUS_LABELS[existingReturnRequest.status]}
               </span>
             )}
           </div>
           <p className="text-xl font-bold text-rose-700">
-            Tổng cộng: {formatPrice(order.totalAmount)}
+            {t('totalLabel')} {formatPrice(order.totalAmount)}
           </p>
         </div>
 
         {existingReturnRequest?.status === ReturnStatus.Rejected && (
           <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4 text-sm">
-            <p className="font-semibold text-red-700 mb-1">Yêu cầu hoàn tiền bị từ chối</p>
+            <p className="font-semibold text-red-700 mb-1">{t('refundRequestRejected')}</p>
             {existingReturnRequest.adminNote && (
-              <p className="text-red-600">Lý do: {existingReturnRequest.adminNote}</p>
+              <p className="text-red-600">{t('refundRejectionReason')} {existingReturnRequest.adminNote}</p>
             )}
-            <p className="text-gray-500 mt-1">Bạn có thể gửi yêu cầu hoàn tiền mới.</p>
+            <p className="text-gray-500 mt-1">{t('refundResubmit')}</p>
           </div>
         )}
 

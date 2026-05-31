@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useLanguageStore } from '../store/useLanguageStore';
 
 const LANGS = [
-  { code: 'vi' as const, label: 'Tiếng Việt', flag: '★', flagBg: '#DA251D', flagColor: '#FFFF00' },
-  { code: 'en' as const, label: 'English',     flag: 'EN', flagBg: '#1A3A8F', flagColor: '#fff' },
+  { code: 'vi' as const, label: 'Vietnamese', flag: '★', flagBg: '#DA251D', flagColor: '#FFFF00' },
+  { code: 'en' as const, label: 'English',    flag: 'EN', flagBg: '#1A3A8F', flagColor: '#fff' },
 ];
 
 export default function LanguageSwitcher() {

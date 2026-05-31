@@ -5,9 +5,10 @@ import toast from 'react-hot-toast';
 import { productService } from '../services/productService';
 import { cartService } from '../services/cartService';
 import { storeService } from '../services/storeService';
+import { productImageService } from '../services/productImageService';
 import { useAuthStore } from '../store/authStore';
 import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
-import type { ProductDetailDto } from '../types/product';
+import type { ProductDetailDto, ProductImageDto } from '../types/product';
 import type { StockInfo } from '../types/store';
 import { FiArrowLeft, FiMapPin } from 'react-icons/fi';
 import RecommendationCarousel from '../components/RecommendationCarousel';
@@ -15,12 +16,14 @@ import ProductReviews from '../components/ProductReviews';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import StoreSelectorModal from '../components/StoreSelectorModal';
+import ImageGallery from '../components/ImageGallery';
 import { getImageUrl } from '../utils/imageUrl';
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
 export default function ProductDetailPage() {
+  const { t } = useTranslation(['product', 'toast', 'common']);
   const { t: tToast } = useTranslation('toast');
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -42,17 +45,29 @@ export default function ProductDetailPage() {
   const [sizeStockById, setSizeStockById] = useState<Record<string, number>>({});
   const [sizeStockLoading, setSizeStockLoading] = useState(false);
 
+  const [images, setImages] = useState<ProductImageDto[]>([]);
+  const [imagesLoading, setImagesLoading] = useState(false);
+
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
     productService
       .getProductBySlug(slug, selectedStore?.id)
-      .then(setProduct)
-      .catch(() => setError('Không tìm thấy sản phẩm.'))
+      .then((prod) => {
+        setProduct(prod);
+        // Load product images
+        setImagesLoading(true);
+        productImageService
+          .getImages(prod.id)
+          .then(setImages)
+          .catch(() => setImages([]))
+          .finally(() => setImagesLoading(false));
+      })
+      .catch(() => setError(t('productNotFound')))
       .finally(() => setLoading(false));
 
     fetchStores().catch(() => {});
-  }, [slug, selectedStore?.id, fetchStores]);
+  }, [slug, selectedStore?.id, fetchStores, t]);
 
   useEffect(() => {
     if (!product || !selectedStore) {
@@ -101,7 +116,7 @@ export default function ProductDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-400">
-        Đang tải...
+        {t('common:loading')}
       </div>
     );
   }
@@ -109,8 +124,8 @@ export default function ProductDetailPage() {
   if (error || !product) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-gray-500">{error ?? 'Không tìm thấy sản phẩm.'}</p>
-        <Link to="/products" className="text-rose-600 hover:text-rose-800" title="Quay lại danh sách">
+        <p className="text-gray-500">{error ?? t('productNotFound')}</p>
+        <Link to="/products" className="text-rose-600 hover:text-rose-800" title={t('backToList')}>
           <FiArrowLeft size={20} />
         </Link>
       </div>
@@ -191,20 +206,28 @@ export default function ProductDetailPage() {
       <Navbar>
         <Link to="/products" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-rose-600">
           <FiArrowLeft size={16} />
-          Quay lại
+          {t('backToList')}
         </Link>
       </Navbar>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col md:flex-row gap-8">
           <div className="md:w-2/5 self-start">
-            <div className="bg-gray-100 rounded-xl h-64 md:h-80 flex items-center justify-center overflow-hidden">
-              {product.imageUrl ? (
+            {imagesLoading ? (
+              <div className="bg-gray-100 rounded-xl aspect-square flex items-center justify-center">
+                <span className="text-gray-400 text-sm">{t('common:loading')}</span>
+              </div>
+            ) : images.length > 0 ? (
+              <ImageGallery images={images} productName={product.name} />
+            ) : product.imageUrl ? (
+              <div className="bg-gray-100 rounded-xl aspect-square flex items-center justify-center overflow-hidden">
                 <img src={getImageUrl(product.imageUrl)} alt={product.name} className="h-full w-full object-contain" />
-              ) : (
-                <span className="text-gray-400 text-sm">Không có ảnh</span>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="bg-gray-100 rounded-xl aspect-square flex items-center justify-center">
+                <span className="text-gray-400 text-sm">{t('noImage')}</span>
+              </div>
+            )}
           </div>
 
           <div className="flex-1 flex flex-col">
@@ -232,20 +255,20 @@ export default function ProductDetailPage() {
                   className="text-amber-600 hover:text-amber-700 flex items-center gap-1"
                 >
                   <FiMapPin size={13} />
-                  Chọn chi nhánh để xem tồn kho
+                  {t('selectBranchForStock')}
                 </button>
               ) : stockLoading ? (
-                <span className="text-gray-400">Đang kiểm tra tồn kho...</span>
+                <span className="text-gray-400">{t('checkingStock')}</span>
               ) : stockInfo ? (
                 stockInfo.quantity === 0 ? (
-                  <span className="text-red-500 font-medium">Hết hàng tại chi nhánh này</span>
+                  <span className="text-red-500 font-medium">{t('outOfStockAtBranch')}</span>
                 ) : (
                   <span className="text-green-600">
-                    Còn hàng tại {selectedStore.name} ({stockInfo.quantity} sản phẩm)
+                    {t('inStockAt', { store: selectedStore.name, count: stockInfo.quantity })}
                   </span>
                 )
               ) : (
-                <span className="text-gray-400">Không có thông tin tồn kho</span>
+                <span className="text-gray-400">{t('noStockInfo')}</span>
               )}
             </div>
 
@@ -254,11 +277,11 @@ export default function ProductDetailPage() {
             {product.hasSizes && (
               <div className="mt-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-gray-400 mb-2">
-                  Chọn size
+                  {t('selectSize')}
                   <span className="text-red-500 ml-1">*</span>
                 </p>
                 {product.sizes.length === 0 ? (
-                  <p className="text-sm text-gray-400">Không có size khả dụng.</p>
+                  <p className="text-sm text-gray-400">{t('noSizesAvailable')}</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {product.sizes.map((sz) => {
@@ -279,7 +302,7 @@ export default function ProductDetailPage() {
                           <span className="block">{sz.label}</span>
                           {selectedStore && (
                             <span className={`block text-[11px] ${selectedSizeId === sz.id ? 'text-white/80' : 'text-gray-400'}`}>
-                              {sizeStockLoading ? '...' : sizeStock > 0 ? `Còn ${sizeStock}` : 'Hết hàng'}
+                              {sizeStockLoading ? '...' : sizeStock > 0 ? t('stockRemaining', { count: sizeStock }) : t('outOfStock')}
                             </span>
                           )}
                         </button>
@@ -288,13 +311,13 @@ export default function ProductDetailPage() {
                   </div>
                 )}
                 {product.hasSizes && !selectedSizeId && (
-                  <p className="mt-1 text-xs text-amber-600">Vui lòng chọn size trước khi thêm vào giỏ</p>
+                  <p className="mt-1 text-xs text-amber-600">{t('selectSizeBeforeAdd')}</p>
                 )}
                 {product.hasSizes && selectedSizeId && (
                   <p className={`mt-1 text-xs ${selectedSizeStock && selectedSizeStock > 0 ? 'text-green-600' : 'text-red-500'}`}>
                     {selectedSizeStock && selectedSizeStock > 0
-                      ? `Size đã chọn còn ${selectedSizeStock} sản phẩm tại ${selectedStore?.name ?? 'chi nhánh này'}`
-                      : 'Size đã chọn đang hết hàng tại chi nhánh này'}
+                      ? t('selectedSizeStock', { count: selectedSizeStock, store: selectedStore?.name ?? t('common:branch') })
+                      : t('selectedSizeOutOfStock')}
                   </p>
                 )}
               </div>
@@ -302,13 +325,13 @@ export default function ProductDetailPage() {
 
             {availableQuantity !== null && availableQuantity > 0 && availableQuantity <= 5 && (
               <span className="inline-block mt-2 bg-orange-100 text-orange-700 text-xs font-medium px-2.5 py-1 rounded-full">
-                Còn ít hàng
+                {t('lowStock')}
               </span>
             )}
 
             {availableQuantity === null || availableQuantity > 0 ? (
               <div className="mt-6 space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-gray-400">Số lượng</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-gray-400">{t('quantity')}</p>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center border rounded-lg overflow-hidden">
                     <button
@@ -330,14 +353,14 @@ export default function ProductDetailPage() {
                     disabled={addingToCart || isOutOfStock}
                     className="flex-1 border border-rose-600 text-rose-600 rounded-lg py-2 text-sm font-medium hover:bg-rose-50 transition-colors disabled:opacity-50"
                   >
-                    {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}
+                    {addingToCart ? t('adding') : t('addToCart')}
                   </button>
                   <button
                     onClick={handleBuyNow}
                     disabled={addingToCart || isOutOfStock}
                     className="flex-1 bg-rose-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-rose-700 transition-colors disabled:opacity-50"
                   >
-                    Mua ngay
+                    {t('buyNow')}
                   </button>
                 </div>
               </div>
@@ -347,7 +370,7 @@ export default function ProductDetailPage() {
                   disabled
                   className="w-full bg-gray-100 text-gray-400 rounded-lg py-2.5 text-sm font-medium cursor-not-allowed"
                 >
-                  Hết hàng tại chi nhánh này
+                  {t('outOfStockAtCurrentBranch')}
                 </button>
               </div>
             )}

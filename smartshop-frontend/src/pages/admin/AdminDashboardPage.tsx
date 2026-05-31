@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import {
   FiPackage,
   FiShoppingBag,
@@ -173,7 +174,7 @@ function RevenueTooltip({
       <p className="text-gray-500 mb-1">{label}</p>
       <p className="font-semibold text-rose-600">{formatVnd(payload[0].value)}</p>
       {payload[1] && (
-        <p className="text-gray-600">{payload[1].value} đơn hàng</p>
+        <p className="text-gray-600">{t('orderCount', { count: payload[1].value })}</p>
       )}
     </div>
   );
@@ -182,7 +183,8 @@ function RevenueTooltip({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminDashboardPage() {
-  const { t } = useTranslation('admin');
+  const { t } = useTranslation(['admin', 'common']);
+  const { t: tToast } = useTranslation('toast');
   const [stats, setStats] = useState<Stats | null>(null);
   const [period, setPeriod] = useState<PeriodDays>(30);
   const [lowStockCount, setLowStockCount] = useState<number | null>(null);
@@ -193,6 +195,7 @@ export default function AdminDashboardPage() {
   const [orderStatus, setOrderStatus] = useState<OrderStatusBreakdownDto[]>([]);
 
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [exporting, setExporting] = useState<'csv' | 'pdf' | null>(null);
 
   // Static stats (products / total orders / pending)
   useEffect(() => {
@@ -250,6 +253,32 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     fetchAnalytics(period);
   }, [period, fetchAnalytics]);
+
+  const handleExportCsv = async () => {
+    setExporting('csv');
+    try {
+      const { from, to } = getDateRange(period);
+      await analyticsService.exportCsv(new Date(from), new Date(to));
+      toast.success(tToast('exportSuccess'));
+    } catch {
+      toast.error(tToast('exportFailed'));
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    setExporting('pdf');
+    try {
+      const { from, to } = getDateRange(period);
+      await analyticsService.exportPdf(new Date(from), new Date(to));
+      toast.success(tToast('exportSuccess'));
+    } catch {
+      toast.error(tToast('exportFailed'));
+    } finally {
+      setExporting(null);
+    }
+  };
 
   // ── Derived data ────────────────────────────────────────────────────────────
 
@@ -327,8 +356,8 @@ export default function AdminDashboardPage() {
         </Link>
       </div>
 
-      {/* ── Period selector ────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 mb-5">
+      {/* ── Period selector + Export buttons ────────────────────────────────── */}
+      <div className="flex items-center gap-2 mb-5 flex-wrap">
         <span className="text-sm text-gray-500 mr-1">{t('periodLabel')}</span>
         {getPeriodOptions(t).map(({ label, days }) => (
           <button
@@ -343,6 +372,21 @@ export default function AdminDashboardPage() {
             {label}
           </button>
         ))}
+        <div className="flex-1" />
+        <button
+          onClick={handleExportCsv}
+          disabled={exporting !== null}
+          className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          {exporting === 'csv' ? t('exportingCsv') : t('exportCsv')}
+        </button>
+        <button
+          onClick={handleExportPdf}
+          disabled={exporting !== null}
+          className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border bg-white text-gray-600 border-gray-200 hover:border-red-400 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          {exporting === 'pdf' ? t('exportingPdf') : t('exportPdf')}
+        </button>
       </div>
 
       {/* ── KPI cards ─────────────────────────────────────────────────────── */}
@@ -512,7 +556,7 @@ export default function AdminDashboardPage() {
             />
           </div>
           <p className="text-sm text-gray-500">
-            Thêm, chỉnh sửa, gỡ món và cập nhật số suất phục vụ trong ngày.
+            {t('dashboardTaskManageFood')}
           </p>
         </Link>
 
@@ -528,7 +572,7 @@ export default function AdminDashboardPage() {
             />
           </div>
           <p className="text-sm text-gray-500">
-            Theo dõi đơn, cập nhật trạng thái bếp và giao hàng theo từng bước.
+            {t('dashboardTaskManageOrders')}
           </p>
         </Link>
 
@@ -544,7 +588,7 @@ export default function AdminDashboardPage() {
             />
           </div>
           <p className="text-sm text-gray-500">
-            Thêm, chỉnh sửa thông tin và trạng thái hoạt động của các chi nhánh.
+            {t('dashboardTaskManageBranches')}
           </p>
         </Link>
       </div>

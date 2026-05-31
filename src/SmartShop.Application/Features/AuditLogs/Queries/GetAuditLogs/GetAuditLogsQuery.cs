@@ -1,5 +1,5 @@
 using MediatR;
-using SmartShop.Application.Products.Queries.GetProducts;
+using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.Application.Features.AuditLogs.Queries.GetAuditLogs;
 

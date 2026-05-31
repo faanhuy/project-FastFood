@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiCpu } from 'react-icons/fi';
 import { aiService } from '../services/aiService';
 
@@ -13,12 +14,13 @@ export default function GenerateDescriptionButton({
   categoryName,
   onGenerated,
 }: GenerateDescriptionButtonProps) {
+  const { t } = useTranslation(['toast']);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     if (!productName.trim() || !categoryName.trim()) {
-      setError('Nhập tên món và chọn nhóm món trước khi tạo mô tả.');
+      setError(t('fillProductAndCategory'));
       return;
     }
     setGenerating(true);
@@ -30,7 +32,7 @@ export default function GenerateDescriptionButton({
       });
       onGenerated(description);
     } catch {
-      setError('Tạo mô tả thất bại. Thử lại sau.');
+      setError(t('descriptionGenerationFailed'));
     } finally {
       setGenerating(false);
     }
@@ -45,7 +47,7 @@ export default function GenerateDescriptionButton({
         className="flex items-center gap-2 text-xs px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-60 transition-colors"
       >
         <FiCpu size={13} />
-        {generating ? 'Đang tạo mô tả...' : 'Tạo mô tả món bằng AI'}
+        {generating ? t('descriptionGenerating') : t('generateDescriptionAI')}
       </button>
       {error && <p className="text-xs text-red-500">{error}</p>}
     </div>

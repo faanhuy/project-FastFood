@@ -18,22 +18,25 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
   BankTransfer: 'ACB',
 };
 
-const PAYMENT_STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
-  Pending:   { label: 'Chờ TT',    cls: 'bg-yellow-100 text-yellow-700' },
-  Paid:      { label: 'Đã TT',     cls: 'bg-green-100 text-green-700'   },
-  Failed:    { label: 'Thất bại',  cls: 'bg-red-100 text-red-700'       },
-  Refunded:  { label: 'Hoàn tiền', cls: 'bg-gray-100 text-gray-600'     },
+// Payment status labels will be dynamically loaded via t() in the component since we need the i18n instance
+const PAYMENT_STATUS_CONFIG: Record<string, { cls: string }> = {
+  Pending:   { cls: 'bg-yellow-100 text-yellow-700' },
+  Paid:      { cls: 'bg-green-100 text-green-700'   },
+  Failed:    { cls: 'bg-red-100 text-red-700'       },
+  Refunded:  { cls: 'bg-gray-100 text-gray-600'     },
 };
 
 function PaymentCell({ method, status }: { method?: PaymentMethod; status?: PaymentStatus }) {
+  const { t } = useTranslation('admin');
   const methodLabel = method ? (PAYMENT_METHOD_LABEL[method] ?? method) : '—';
   const st = status ? PAYMENT_STATUS_CONFIG[status] : null;
+  const statusLabel = status === 'Pending' ? t('paymentStatusPending') : status === 'Paid' ? t('paymentStatusPaid') : status === 'Failed' ? t('paymentStatusFailed') : t('paymentStatusRefunded');
   return (
     <div className="flex flex-col gap-1">
       <span className="text-xs font-medium text-gray-700">{methodLabel}</span>
       {st && (
         <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium w-fit ${st.cls}`}>
-          {st.label}
+          {statusLabel}
         </span>
       )}
     </div>
@@ -52,6 +55,7 @@ function PaymentDetail({
   if (!method) return null;
   const methodLabel = PAYMENT_METHOD_LABEL[method] ?? method;
   const st = status ? PAYMENT_STATUS_CONFIG[status] : null;
+  const statusLabel = status === 'Pending' ? t('paymentStatusPending') : status === 'Paid' ? t('paymentStatusPaid') : status === 'Failed' ? t('paymentStatusFailed') : t('paymentStatusRefunded');
   return (
     <div className="mb-3 inline-flex flex-wrap gap-x-6 gap-y-1 rounded-lg border border-rose-100 bg-white px-4 py-2.5 text-xs">
       <div className="flex items-center gap-1.5 text-gray-500">
@@ -61,7 +65,7 @@ function PaymentDetail({
       {st && (
         <div className="flex items-center gap-1.5 text-gray-500">
           <span className="font-medium text-gray-700">{t('paymentLabel')}</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${st.cls}`}>{st.label}</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${st.cls}`}>{statusLabel}</span>
         </div>
       )}
       {paidAt && (
@@ -189,15 +193,15 @@ export default function AdminOrderPage() {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
           </svg>
-          Đang xử lý {updatingIds.size} đơn hàng. Vui lòng chờ hoàn tất.
+          {t('adminOrderProcessingMsg', { count: updatingIds.size })}
         </div>
       )}
 
-      <p className="text-xs text-gray-400 mb-3">Tổng {totalCount} {t('statOrders')}</p>
+      <p className="text-xs text-gray-400 mb-3">{t('adminOrderTotal')} {totalCount} {t('statOrders')}</p>
 
       {/* Bảng đơn hàng */}
       {loading ? (
-        <div className="flex items-center justify-center h-64 text-gray-400">Đang tải...</div>
+        <div className="flex items-center justify-center h-64 text-gray-400">{t('loading', { ns: 'common' })}</div>
       ) : (
         <>
           <div className="bg-white rounded-xl border shadow-sm overflow-x-auto">
@@ -286,10 +290,10 @@ export default function AdminOrderPage() {
                           <tr className="bg-rose-50/40">
                             <td colSpan={8} className="px-8 py-4">
                               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                                Chi tiết đơn · {order.items.length} món
+                                {t('adminOrderDetails', { count: order.items.length })}
                               </p>
                               {order.notes && (
-                                <p className="text-xs text-gray-500 mb-2 italic">Ghi chú: {order.notes}</p>
+                                <p className="text-xs text-gray-500 mb-2 italic">{t('adminOrderNotes')} {order.notes}</p>
                               )}
                               <PaymentDetail
                                 method={order.paymentMethod}
@@ -300,11 +304,11 @@ export default function AdminOrderPage() {
                               <table className="w-full text-xs">
                                 <thead>
                                   <tr className="text-gray-400 text-left border-b border-rose-100">
-                                    <th className="pb-1.5 font-medium pr-4">Ảnh</th>
-                                    <th className="pb-1.5 font-medium pr-4">Sản phẩm</th>
-                                    <th className="pb-1.5 font-medium text-right pr-4">Đơn giá</th>
-                                    <th className="pb-1.5 font-medium text-center pr-4">SL</th>
-                                    <th className="pb-1.5 font-medium text-right">Thành tiền</th>
+                                    <th className="pb-1.5 font-medium pr-4">{t('adminOrderImage')}</th>
+                                    <th className="pb-1.5 font-medium pr-4">{t('adminOrderProduct')}</th>
+                                    <th className="pb-1.5 font-medium text-right pr-4">{t('adminOrderPrice')}</th>
+                                    <th className="pb-1.5 font-medium text-center pr-4">{t('adminOrderQty')}</th>
+                                    <th className="pb-1.5 font-medium text-right">{t('adminOrderSubtotal')}</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-rose-100/60">

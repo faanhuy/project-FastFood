@@ -39,12 +39,12 @@ const paymentStatusStyles: Record<PaymentStatus, { className: string }> = {
   },
 };
 
-const getDisplayAddress = (order: OrderDto) => {
+const getDisplayAddress = (order: OrderDto, t: (key: string) => string) => {
   if (order.shippingWardName || order.shippingProvinceName) {
     return [order.shippingWardName, order.shippingProvinceName].filter(Boolean).join(', ');
   }
 
-  return order.shippingAddress || 'Chưa có địa chỉ giao hàng';
+  return order.shippingAddress || t('noShippingAddress');
 };
 
 const getPaymentLabel = (t: (key: string) => string, order: OrderDto) => {
@@ -61,6 +61,7 @@ const canRetryPayment = (order: OrderDto) =>
 export default function OrderHistoryPage() {
   const { t } = useTranslation('order');
   const { t: tCommon } = useTranslation('common');
+  const { t: tToast } = useTranslation('toast');
   const [orders, setOrders] = useState<OrderDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -86,7 +87,7 @@ export default function OrderHistoryPage() {
       const url = await paymentService.createVNPayUrl(orderId);
       window.location.href = url;
     } catch (error: any) {
-      toast.error(error.response?.data?.message ?? 'Không thể tạo link thanh toán');
+      toast.error(error.response?.data?.message ?? tToast('paymentLinkFailed'));
     } finally {
       setRetryingOrderId(null);
     }
@@ -117,7 +118,7 @@ export default function OrderHistoryPage() {
                 <p className="mb-1 text-sm font-medium text-rose-600">{t('trackingHeader')}</p>
                 <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">{t('myOrders')}</h1>
                 <p className="mt-2 max-w-2xl text-sm text-gray-600">
-                  Xem trạng thái giao hàng, thanh toán lại đơn VNPay và mở chi tiết từng đơn.
+                  {t('orderTrackingDesc')}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -195,7 +196,7 @@ export default function OrderHistoryPage() {
             </div>
             <h2 className="text-xl font-bold text-gray-900">{t('noOrders')}</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">
-              Khi bạn đặt món, toàn bộ lịch sử đơn hàng và trạng thái giao sẽ xuất hiện tại đây.
+              {t('orderHistoryDesc')}
             </p>
             <button
               onClick={() => navigate('/products')}
@@ -285,7 +286,7 @@ export default function OrderHistoryPage() {
                           </div>
                           <p className="flex items-start gap-2 text-sm text-gray-500">
                             <FiMapPin className="mt-0.5 shrink-0 text-rose-500" size={16} />
-                            <span className="line-clamp-2">{getDisplayAddress(order)}</span>
+                            <span className="line-clamp-2">{getDisplayAddress(order, t)}</span>
                           </p>
                         </div>
 

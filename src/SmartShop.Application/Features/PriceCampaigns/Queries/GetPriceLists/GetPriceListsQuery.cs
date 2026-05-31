@@ -1,6 +1,6 @@
 using MediatR;
 using SmartShop.Application.Common.Models;
-using SmartShop.Application.Products.Queries.GetProducts;
+using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.Application.Features.PriceCampaigns.Queries.GetPriceLists;
 

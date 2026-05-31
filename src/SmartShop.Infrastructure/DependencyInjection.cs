@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -37,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<ILocalizationService, LocalizationService>();
         services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IProductImageRepository, ProductImageRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
@@ -180,6 +182,16 @@ public static class DependencyInjection
                         Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!))
                 };
             });
+
+        // Hangfire background jobs
+        var sqlConnectionString = configuration.GetConnectionString("DefaultConnection")!;
+        services.AddHangfire(config => config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UseSqlServerStorage(sqlConnectionString));
+        services.AddHangfireServer();
+        services.AddScoped<IEmailJobService, HangfireEmailJobService>();
 
         return services;
     }

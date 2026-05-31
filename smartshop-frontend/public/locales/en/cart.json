@@ -67,7 +67,6 @@
   "paymentSuccessDesc": "Your order has been placed and paid successfully.",
   "orderId": "Order ID",
   "paymentStatus": "Status",
-  "paymentMethod": "Method",
   "paymentPaid": "Paid",
   "paymentVNPay": "VNPay",
   "viewOrder": "View order",
@@ -87,5 +86,7 @@
   "selectWard": "-- Select ward --",
   "searchWard": "Search ward...",
   "addressStreet": "Street address",
-  "streetPlaceholder": "e.g.: 123 Main Street"
+  "streetPlaceholder": "e.g.: 123 Main Street",
+  "itemCount": "{{count}} items",
+  "servingCount": "x{{count}} serving(s)"
 }

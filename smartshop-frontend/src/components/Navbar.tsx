@@ -36,7 +36,7 @@ export default function Navbar({ children }: NavbarProps) {
     if (stores.length === 0) fetchStores().catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Đóng dropdown khi click ngoài
+  // Close dropdown when clicking outside
   useEffect(() => {
     if (!storeDropdownOpen) return;
     const handler = (e: MouseEvent) => {
@@ -48,7 +48,7 @@ export default function Navbar({ children }: NavbarProps) {
     return () => document.removeEventListener('mousedown', handler);
   }, [storeDropdownOpen]);
 
-  // Đóng dropdown khi nhấn Escape
+  // Close dropdown when pressing Escape
   useEffect(() => {
     if (!storeDropdownOpen) return;
     const handler = (e: KeyboardEvent) => {
@@ -104,7 +104,7 @@ export default function Navbar({ children }: NavbarProps) {
           </svg>
           <div className="flex flex-col">
             <span className="text-lg font-extrabold text-rose-600 leading-tight tracking-tight">FastFood</span>
-            <span className="hidden sm:block text-[10px] text-gray-400 leading-none">Đồ ăn nhanh — giao tận nơi</span>
+            <span className="hidden sm:block text-[10px] text-gray-400 leading-none">Fast food — Same day delivery</span>
           </div>
         </Link>
 

@@ -6,6 +6,7 @@ using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Enums;
+using SmartShop.Domain.Events;
 using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.Application.Features.Returns.Commands.ApproveReturn;
@@ -16,7 +17,9 @@ public class ApproveReturnCommandHandler(
     IStoreInventoryRepository storeInventoryRepository,
     IStoreSizeInventoryRepository storeSizeInventoryRepository,
     INotificationRepository notificationRepository,
+    IUserRepository userRepository,
     INotificationHubService hubService,
+    IMediator mediator,
     IUnitOfWork unitOfWork,
     ILogger<ApproveReturnCommandHandler> logger) : IRequestHandler<ApproveReturnCommand, ReturnRequestDto>
 {
@@ -57,6 +60,20 @@ public class ApproveReturnCommandHandler(
         await notificationRepository.AddAsync(notification, cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Publish event to send email
+        var user = await userRepository.GetByIdAsync(returnRequest.UserId, cancellationToken);
+        if (user is not null)
+        {
+            await mediator.Publish(new ReturnApprovedEvent(
+                ReturnRequestId: returnRequest.Id,
+                OrderId: order.Id,
+                UserId: user.Id,
+                UserEmail: user.Email,
+                UserName: $"{user.FirstName} {user.LastName}".Trim(),
+                RefundAmount: returnRequest.RefundAmount,
+                AdminNote: returnRequest.AdminNote), cancellationToken);
+        }
 
         try
         {

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   FiGrid, FiPackage, FiShoppingBag, FiTag, FiLogOut, FiMenu,
   FiExternalLink, FiMapPin, FiArchive, FiPercent, FiSliders,
-  FiLayers, FiRotateCcw, FiChevronDown, FiChevronRight,
+  FiLayers, FiRotateCcw, FiChevronDown, FiChevronRight, FiUsers,
 } from 'react-icons/fi';
 import { useAuthStore } from '../store/authStore';
 
@@ -117,6 +117,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         { to: '/admin/coupons',   label: t('navCoupons'),   icon: FiTag      },
       ],
     },
+    { to: '/admin/users', label: t('manageUsers'), icon: FiUsers },
   ];
 
   return (

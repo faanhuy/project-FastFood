@@ -6,32 +6,29 @@ import { notificationService } from '@/services/notificationService';
 import type { Notification } from '@/types/notification';
 import { useNotificationStore } from '@/store/notificationStore';
 
-const STATUS_MAP: Record<string, string> = {
-  Pending: 'Chờ xác nhận',
-  Confirmed: 'Đã xác nhận',
-  Shipped: 'Đang giao hàng',
-  Delivered: 'Đã giao hàng',
-  Cancelled: 'Đã hủy',
-  Processing: 'Đang xử lý',
-  Refunded: 'Đã hoàn tiền'
+const STATUS_MAP_EN_VI: Record<string, string> = {
+  Pending: 'Pending',
+  Confirmed: 'Confirmed',
+  Shipped: 'Shipped',
+  Delivered: 'Delivered',
+  Cancelled: 'Cancelled',
+  Processing: 'Processing',
+  Refunded: 'Refunded'
 };
 
 function localizeMessage(message: string): string {
-  return Object.entries(STATUS_MAP).reduce(
-    (msg, [en, vi]) => msg.replace(new RegExp(en, 'g'), vi),
-    message
-  );
+  return message;
 }
 
-function formatRelativeTime(isoString: string): string {
+function formatRelativeTime(isoString: string, t: (key: string) => string): string {
   const normalized = isoString.endsWith('Z') ? isoString : isoString + 'Z';
   const diff = Date.now() - new Date(normalized).getTime();
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'Vừa xong';
-  if (minutes < 60) return `${minutes} phút trước`;
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes} minutes ago`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} giờ trước`;
-  return `${Math.floor(hours / 24)} ngày trước`;
+  if (hours < 24) return `${hours} hours ago`;
+  return `${Math.floor(hours / 24)} days ago`;
 }
 
 export default function NotificationBell() {
@@ -127,7 +124,7 @@ export default function NotificationBell() {
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <span className="font-semibold text-sm text-gray-800">{t('notifications')}</span>
             {unreadCount > 0 && (
-              <span className="text-xs text-rose-600 font-medium">{unreadCount} chưa đọc</span>
+              <span className="text-xs text-rose-600 font-medium">{unreadCount} {t('unread')}</span>
             )}
           </div>
 
@@ -157,7 +154,7 @@ export default function NotificationBell() {
                         <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">
                           {localizeMessage(n.message)}
                         </p>
-                        <p className="text-[11px] text-gray-400 mt-1">{formatRelativeTime(n.createdAt)}</p>
+                        <p className="text-[11px] text-gray-400 mt-1">{formatRelativeTime(n.createdAt, t)}</p>
                       </div>
                     </div>
                   </button>

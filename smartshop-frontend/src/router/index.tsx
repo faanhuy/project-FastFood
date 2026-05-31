@@ -13,6 +13,7 @@ import AdminPromotionalPricePage from '../pages/admin/AdminPromotionalPricePage'
 import SizeManagementPage from '../pages/admin/SizeManagementPage';
 import AdminComboPage from '../pages/admin/AdminComboPage';
 import AdminReturnRequestsPage from '../pages/admin/AdminReturnRequestsPage';
+import AdminUsersPage from '../pages/admin/AdminUsersPage';
 import ComboDetailPage from '../pages/ComboDetailPage';
 import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
@@ -159,6 +160,14 @@ const router = createBrowserRouter([
     element: (
       <AdminRoute>
         <AdminReturnRequestsPage />
+      </AdminRoute>
+    ),
+  },
+  {
+    path: '/admin/users',
+    element: (
+      <AdminRoute>
+        <AdminUsersPage />
       </AdminRoute>
     ),
   },

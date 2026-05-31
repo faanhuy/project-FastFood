@@ -31,6 +31,12 @@ public class LoginCommandHandler(
             throw new UnauthorizedException("error.auth_invalid_credentials", null);
         }
 
+        if (user.IsBanned)
+        {
+            await auditLogService.LogAsync(user.Id, AuditActions.LoginFailed, "User", user.Id, ipAddress: ipAddress, ct: cancellationToken);
+            throw new ConflictException("Tài khoản của bạn đã bị khóa bởi quản trị viên.");
+        }
+
         var token = jwtTokenService.GenerateToken(user);
         var refreshToken = jwtTokenService.GenerateRefreshToken();
         var refreshTokenExpiry = DateTime.UtcNow.AddDays(1);

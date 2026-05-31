@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Features.AuditLogs;
 using SmartShop.Application.Features.AuditLogs.Queries.GetAuditLogs;
-using SmartShop.Application.Products.Queries.GetProducts;
+using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.WebAPI.Controllers;
 

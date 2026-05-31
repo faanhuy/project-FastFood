@@ -156,7 +156,7 @@ export default function ProductListPage() {
             <form onSubmit={handleSearch} className="flex-1 relative">
               <input
                 className="w-full border border-gray-300 rounded-lg pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
-                placeholder="Tìm burger, pizza, gà rán, trà sữa..."
+                placeholder={t('product:aiSearchPlaceholder')}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
@@ -170,7 +170,7 @@ export default function ProductListPage() {
           )}
           <button
             onClick={() => setAiMode(!aiMode)}
-            title={aiMode ? 'Tìm món thường' : 'Tìm món bằng AI'}
+            title={aiMode ? t('product:aiSearchPlaceholder') : t('product:aiSearching')}
             className={`shrink-0 flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-medium border transition-colors ${
               aiMode
                 ? 'bg-rose-600 text-white border-rose-600'

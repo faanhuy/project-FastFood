@@ -30,7 +30,7 @@ export default function Footer() {
               <span className="text-white text-xl font-bold">FastFood</span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
-              Web đặt đồ ăn nhanh với AI gợi ý món, combo bán chạy và quy trình đặt hàng gọn nhẹ.
+              {t('footerDescription')}
             </p>
           </div>
 
@@ -62,15 +62,15 @@ export default function Footer() {
             <ul className="space-y-2.5 text-sm">
               <li className="flex items-center gap-2">
                 <FiMail size={14} className="text-amber-300 shrink-0" />
-                <span>huyp18062000@gmail.com</span>
+                <span>{t('footerEmail')}</span>
               </li>
               <li className="flex items-center gap-2">
                 <FiPhone size={14} className="text-amber-300 shrink-0" />
-                <span>0355 609 145</span>
+                <span>{t('footerPhone')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <FiMapPin size={14} className="text-amber-300 shrink-0 mt-0.5" />
-                <span>TP. Hồ Chí Minh, giao nội thành mỗi ngày</span>
+                <span>{t('footerAddress')}</span>
               </li>
               <li className="flex items-center gap-2 mt-1">
                 <FiGithub size={14} className="text-amber-300 shrink-0" />
@@ -92,7 +92,7 @@ export default function Footer() {
           <span>© {new Date().getFullYear()} FastFood. {t('footerTagline')}</span>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span>Powered by .NET 8 + React 19 + HuyPD</span>
+            <span>{t('footerBranding')}</span>
           </div>
         </div>
       </div>

@@ -7,9 +7,10 @@ import type { CouponDto, CreateCouponRequest } from '../../services/couponServic
 import { formatPrice, formatDateTime } from '../../utils/formatters';
 import { getApiError } from '../../utils/errorHandler';
 
+// DISCOUNT_TYPES labels are now handled dynamically via getDiscountTypeLabel function since we need i18n
 const DISCOUNT_TYPES = [
-  { value: 1 as const, label: 'Phần trăm (%)' },
-  { value: 2 as const, label: 'Số tiền cố định (VNĐ)' },
+  { value: 1 as const },
+  { value: 2 as const },
 ];
 
 const INPUT_CLS =
@@ -82,7 +83,7 @@ export default function AdminCouponsPage() {
       toast.success(tToast('couponCreated'));
       await load();
     } catch (err) {
-      setFormError(getApiError(err, 'Tạo mã giảm giá thất bại.'));
+      setFormError(getApiError(err, t('adminCouponErrorCreateFailed')));
     } finally {
       setSaving(false);
     }
@@ -138,11 +139,8 @@ export default function AdminCouponsPage() {
                     setForm((f) => ({ ...f, discountType: Number(e.target.value) as 1 | 2 }))
                   }
                 >
-                  {DISCOUNT_TYPES.map((dt) => (
-                    <option key={dt.value} value={dt.value}>
-                      {dt.label}
-                    </option>
-                  ))}
+                  <option value={1}>{t('discountTypePercent')}</option>
+                  <option value={2}>{t('discountTypeFixed')}</option>
                 </select>
               </div>
 
@@ -165,7 +163,7 @@ export default function AdminCouponsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Đơn tối thiểu (VNĐ)
+                    {t('minOrderValue')}
                   </label>
                   <input
                     required
@@ -183,7 +181,7 @@ export default function AdminCouponsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Số lần dùng tối đa
+                    {t('maxUsage')}
                   </label>
                   <input
                     required
@@ -211,11 +209,11 @@ export default function AdminCouponsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mô tả <span className="text-gray-400">(tuỳ chọn)</span>
+                  {t('descriptionLabel')} <span className="text-gray-400">{t('optional')}</span>
                 </label>
                 <input
                   className={INPUT_CLS}
-                  placeholder="Giảm 20% cho đơn từ 200k..."
+                  placeholder={t('descriptionPlaceholder')}
                   value={form.description ?? ''}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 />

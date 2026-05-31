@@ -7,7 +7,7 @@ using SmartShop.Application.Features.Reviews;
 using SmartShop.Application.Features.Reviews.Commands.AddReview;
 using SmartShop.Application.Features.Reviews.Commands.DeleteReview;
 using SmartShop.Application.Features.Reviews.Queries;
-using SmartShop.Application.Products.Queries.GetProducts;
+using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.WebAPI.Controllers;
 

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { FiMessageCircle, FiX, FiSend, FiTrash2 } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store/chatStore';
 
 export default function ChatWidget() {
+  const { t } = useTranslation('common');
   const { isOpen, messages, isLoading, toggleOpen, sendMessage, clearSession } = useChatStore();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -43,20 +45,20 @@ export default function ChatWidget() {
           <div className="flex items-center justify-between px-4 py-3 bg-rose-500 text-white shrink-0">
             <div className="flex items-center gap-2">
               <FiMessageCircle size={18} />
-              <span className="font-semibold text-sm">Trợ lý FastFood</span>
+              <span className="font-semibold text-sm">{t('assistant')}</span>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={clearSession}
                 className="text-rose-200 hover:text-white transition-colors"
-                title="Xóa cuộc trò chuyện"
+                title={t('clearChat')}
               >
                 <FiTrash2 size={15} />
               </button>
               <button
                 onClick={toggleOpen}
                 className="text-rose-200 hover:text-white transition-colors"
-                title="Đóng"
+                title={t('closeAssistant')}
               >
                 <FiX size={18} />
               </button>
@@ -68,8 +70,8 @@ export default function ChatWidget() {
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 gap-2">
                 <FiMessageCircle size={32} className="text-rose-200" />
-                <p className="text-sm">Xin chào! Tôi có thể giúp gì cho bạn?</p>
-                <p className="text-xs text-gray-300">Hỏi về món ăn, giá cả, hoặc đặt hàng</p>
+                <p className="text-sm">{t('hello')}</p>
+                <p className="text-xs text-gray-300">{t('chatPlaceholderWidget')}</p>
               </div>
             )}
 
@@ -115,14 +117,14 @@ export default function ChatWidget() {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={isLoading}
-              placeholder="Nhập tin nhắn..."
+              placeholder={t('chatPlaceholder')}
               className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-200 disabled:bg-gray-50 disabled:text-gray-400 transition"
             />
             <button
               onClick={handleSend}
               disabled={isLoading || !inputValue.trim()}
               className="bg-rose-500 hover:bg-rose-600 disabled:bg-rose-200 text-white rounded-xl p-2 transition-colors shrink-0"
-              title="Gửi"
+              title={t('send', { defaultValue: 'Send' })}
             >
               <FiSend size={16} />
             </button>
@@ -134,7 +136,7 @@ export default function ChatWidget() {
       <button
         onClick={toggleOpen}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-        title={isOpen ? 'Đóng trợ lý' : 'Mở trợ lý FastFood'}
+        title={isOpen ? t('closeAssistant') : t('assistant')}
       >
         {isOpen ? <FiX size={22} /> : <FiMessageCircle size={22} />}
       </button>

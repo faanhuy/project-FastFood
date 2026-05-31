@@ -346,7 +346,7 @@ export default function SizeManagementPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tên kích cỡ <span className="text-red-500">*</span>
+                  {t('sizeNameLabel')} <span className="text-red-500">{t('required')}</span>
                 </label>
                 <input
                   type="text"
@@ -359,7 +359,7 @@ export default function SizeManagementPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Thứ tự hiển thị</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('displayOrderLabel')}</label>
                 <input
                   type="number"
                   min={0}

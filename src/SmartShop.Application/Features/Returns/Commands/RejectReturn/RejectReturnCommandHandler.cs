@@ -6,6 +6,7 @@ using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Enums;
+using SmartShop.Domain.Events;
 using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.Application.Features.Returns.Commands.RejectReturn;
@@ -14,7 +15,9 @@ public class RejectReturnCommandHandler(
     IReturnRequestRepository returnRequestRepository,
     IOrderRepository orderRepository,
     INotificationRepository notificationRepository,
+    IUserRepository userRepository,
     INotificationHubService hubService,
+    IMediator mediator,
     IUnitOfWork unitOfWork,
     ILogger<RejectReturnCommandHandler> logger) : IRequestHandler<RejectReturnCommand, ReturnRequestDto>
 {
@@ -45,6 +48,19 @@ public class RejectReturnCommandHandler(
         await notificationRepository.AddAsync(notification, cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Publish event to send email
+        var user = await userRepository.GetByIdAsync(returnRequest.UserId, cancellationToken);
+        if (user is not null)
+        {
+            await mediator.Publish(new ReturnRejectedEvent(
+                ReturnRequestId: returnRequest.Id,
+                OrderId: order.Id,
+                UserId: user.Id,
+                UserEmail: user.Email,
+                UserName: $"{user.FirstName} {user.LastName}".Trim(),
+                AdminNote: request.AdminNote), cancellationToken);
+        }
 
         try
         {

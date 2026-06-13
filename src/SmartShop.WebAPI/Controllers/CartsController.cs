@@ -7,6 +7,7 @@ using SmartShop.Application.Features.Cart;
 using SmartShop.Application.Features.Cart.Commands.AddComboToCart;
 using SmartShop.Application.Features.Cart.Commands.AddToCart;
 using SmartShop.Application.Features.Cart.Commands.ClearCart;
+using SmartShop.Application.Features.Cart.Commands.AddFromOrder;
 using SmartShop.Application.Features.Cart.Commands.RemoveCartItemById;
 using SmartShop.Application.Features.Cart.Commands.RemoveFromCart;
 using SmartShop.Application.Features.Cart.Commands.UpdateCartItemById;
@@ -83,6 +84,13 @@ public class CartsController(IMediator mediator) : ControllerBase
         Guid productId, [FromQuery] Guid? sizeId, CancellationToken ct)
     {
         var result = await mediator.Send(new RemoveFromCartCommand(CurrentUserId, productId, sizeId), ct);
+        return Ok(ApiResponse<CartDto>.Ok(result));
+    }
+
+    [HttpPost("from-order/{orderId:guid}")]
+    public async Task<ActionResult<ApiResponse<CartDto>>> AddFromOrder(Guid orderId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new AddFromOrderCommand(CurrentUserId, orderId), ct);
         return Ok(ApiResponse<CartDto>.Ok(result));
     }
 

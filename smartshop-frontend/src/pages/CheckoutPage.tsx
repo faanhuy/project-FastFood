@@ -7,23 +7,27 @@ import { cartService } from '../services/cartService';
 import { addressService } from '../services/addressService';
 import { paymentService } from '../services/paymentService';
 import { sizeService } from '../services/sizeService';
+import { loyaltyService } from '../services/loyaltyService';
 import type { CartDto, CartItemDto } from '../types/cart';
 import type { AddressDto, PaymentMethod } from '../types/order';
 import type { EffectivePriceItem } from '../types/size';
+import type { LoyaltyAccountDto } from '../types/loyalty';
 import { FiArrowLeft, FiShoppingBag, FiMapPin, FiRepeat } from 'react-icons/fi';
+import { getApiError } from '../utils/errorHandler';
+import { SkeletonCartSummary, SkeletonAddressList } from '../components/Skeleton';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { couponSession } from '../utils/couponSession';
 import { getImageUrl } from '../utils/imageUrl';
 import StoreSelectorModal from '../components/StoreSelectorModal';
 import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
+import { useFlashSaleMap } from '../hooks/useFlashSaleMap';
 import { formatPrice } from '../utils/formatters';
 
 export default function CheckoutPage() {
   const { t } = useTranslation('cart');
   const { t: tCommon } = useTranslation('common');
   const { t: tToast } = useTranslation('toast');
-  const [shippingAddress, setShippingAddress] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,6 +39,10 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [addrLoading, setAddrLoading] = useState(true);
 
+  // Inline add-address form
+  const [newAddrForm, setNewAddrForm] = useState({ recipientName: '', phone: '', street: '', label: '' });
+  const [savingAddr, setSavingAddr] = useState(false);
+
   // Payment method
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
 
@@ -45,7 +53,12 @@ export default function CheckoutPage() {
   // Effective prices from pricing table
   const [effectivePrices, setEffectivePrices] = useState<Map<string, EffectivePriceItem>>(new Map());
 
+  // Loyalty account
+  const [loyaltyAccount, setLoyaltyAccount] = useState<LoyaltyAccountDto | null>(null);
+  const [usePoints, setUsePoints] = useState(0);
+
   const navigate = useNavigate();
+  const { flashSaleItemMap } = useFlashSaleMap();
 
   const savedCoupon = couponSession.load();
   const couponCode = savedCoupon?.code ?? null;
@@ -65,9 +78,35 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleSaveAddress = async () => {
+    if (!newAddrForm.recipientName.trim() || !newAddrForm.phone.trim() || !newAddrForm.street.trim()) return;
+    setSavingAddr(true);
+    try {
+      const saved = await addressService.add({
+        recipientName: newAddrForm.recipientName.trim(),
+        phone: newAddrForm.phone.trim(),
+        street: newAddrForm.street.trim(),
+        label: newAddrForm.label.trim(),
+      });
+      const updated = [...addresses, saved];
+      setAddresses(updated);
+      setSelectedAddressId(saved.id);
+      setNewAddrForm({ recipientName: '', phone: '', street: '', label: '' });
+      toast.success(t('addressSaved'));
+    } catch {
+      toast.error(tToast('loadFailed'));
+    } finally {
+      setSavingAddr(false);
+    }
+  };
+
   const getEffectiveUnitPrice = (item: CartItemDto): number => {
     if (item.itemType !== 'Product' || !item.productId) return item.unitPrice;
     const key = `${item.productId}:${item.sizeId ?? ''}`;
+    // Flash sale ưu tiên cao nhất
+    const flashSale = flashSaleItemMap[key];
+    if (flashSale) return flashSale.salePrice;
+    // Fallback: giá khuyến mãi từ promo campaign
     return effectivePrices.get(key)?.effectivePrice ?? item.unitPrice;
   };
 
@@ -85,6 +124,10 @@ export default function CheckoutPage() {
       })
       .catch(() => {})
       .finally(() => setAddrLoading(false));
+
+    loyaltyService.getAccount()
+      .then(setLoyaltyAccount)
+      .catch(() => {});
 
     fetchStores().catch(() => {});
   }, [fetchStores]);
@@ -123,6 +166,7 @@ export default function CheckoutPage() {
         couponCode: couponCode ?? '',
         paymentMethod,
         storeId: selectedStore.id,
+        usePoints: usePoints > 0 ? usePoints : undefined,
       });
       couponSession.clear();
 
@@ -136,11 +180,8 @@ export default function CheckoutPage() {
         toast.success(tToast('orderPlacedSuccess'));
         navigate(`/orders/${order.id}`, { replace: true });
       }
-    } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { message?: string; errors?: string[] } } })
-        ?.response?.data?.errors?.[0]
-        ?? (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? tToast('checkoutFailed');
+    } catch (err) {
+      const msg = getApiError(err, tToast('checkoutFailed'));
       setError(msg);
       toast.error(msg);
     } finally {
@@ -226,7 +267,7 @@ export default function CheckoutPage() {
               )}
 
               {addrLoading ? (
-                <p className="text-sm text-gray-400">{t('loadingAddresses')}</p>
+                <SkeletonAddressList />
               ) : hasAddresses ? (
                 <div className="space-y-2">
                   {addresses.map((addr) => (
@@ -269,20 +310,60 @@ export default function CheckoutPage() {
                   ))}
                 </div>
               ) : (
-                <div>
-                  <p className="text-sm text-gray-500 mb-3">
-                    {t('noSavedAddresses')}{' '}
-                    <Link to="/profile" className="text-rose-600 hover:underline">
-                      {tCommon('addAddress')}
-                    </Link>
+                <div className="space-y-3">
+                  <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    {t('addAddressPrompt')}
                   </p>
-                  <textarea
-                    value={shippingAddress}
-                    onChange={(e) => setShippingAddress(e.target.value)}
-                    rows={3}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
-                    placeholder={t('shippingPlaceholder')}
-                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">{tCommon('recipient')} *</label>
+                      <input
+                        type="text"
+                        value={newAddrForm.recipientName}
+                        onChange={(e) => setNewAddrForm((f) => ({ ...f, recipientName: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
+                        placeholder={t('recipientNamePlaceholder')}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">{tCommon('phone')} *</label>
+                      <input
+                        type="tel"
+                        value={newAddrForm.phone}
+                        onChange={(e) => setNewAddrForm((f) => ({ ...f, phone: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
+                        placeholder={t('phonePlaceholder')}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">{t('addressStreet')} *</label>
+                    <input
+                      type="text"
+                      value={newAddrForm.street}
+                      onChange={(e) => setNewAddrForm((f) => ({ ...f, street: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
+                      placeholder={t('streetPlaceholder')}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">{tCommon('labelOptional')}</label>
+                    <input
+                      type="text"
+                      value={newAddrForm.label}
+                      onChange={(e) => setNewAddrForm((f) => ({ ...f, label: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
+                      placeholder={tCommon('labelPlaceholder')}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSaveAddress}
+                    disabled={savingAddr || !newAddrForm.recipientName.trim() || !newAddrForm.phone.trim() || !newAddrForm.street.trim()}
+                    className="w-full bg-rose-600 text-white py-2 rounded-lg hover:bg-rose-700 disabled:opacity-50 text-sm font-medium"
+                  >
+                    {savingAddr ? tCommon('savingAddress') : tCommon('saveAddress')}
+                  </button>
                 </div>
               )}
             </div>
@@ -423,7 +504,7 @@ export default function CheckoutPage() {
               </h2>
 
               {cartLoading ? (
-                <p className="text-sm text-gray-400 text-center py-4">{tCommon('loading')}</p>
+                <SkeletonCartSummary />
               ) : !cart || cart.items.length === 0 ? (
                 <p className="text-sm text-gray-400 text-center py-4">{t('emptyCart')}</p>
               ) : (
@@ -443,10 +524,29 @@ export default function CheckoutPage() {
                           <p className="text-xs text-gray-500">
                             {t('servingCount', { count: item.quantity })}{item.sizeLabel ? ` · ${item.sizeLabel}` : ''}
                           </p>
+                          {(() => {
+                            const key = `${item.productId}:${item.sizeId ?? ''}`;
+                            const fs = item.itemType === 'Product' ? flashSaleItemMap[key] : undefined;
+                            const promo = item.itemType === 'Product'
+                              ? effectivePrices.get(key)
+                              : undefined;
+                            if (fs) return <span className="text-[10px] bg-orange-100 text-orange-600 font-bold px-1.5 py-0.5 rounded-full">⚡ {tCommon('flashSales')}</span>;
+                            if (promo?.hasPromotion) return <span className="text-[10px] bg-green-100 text-green-600 font-bold px-1.5 py-0.5 rounded-full">{tCommon('promotion')}</span>;
+                            return null;
+                          })()}
                         </div>
-                        <p className="text-sm font-semibold text-rose-600 shrink-0">
-                          {formatPrice(getEffectiveUnitPrice(item) * item.quantity)}
-                        </p>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-semibold text-rose-600">
+                            {formatPrice(getEffectiveUnitPrice(item) * item.quantity)}
+                          </p>
+                          {(() => {
+                            const effectiveUnit = getEffectiveUnitPrice(item);
+                            if (item.itemType === 'Product' && effectiveUnit < item.unitPrice) {
+                              return <p className="text-[11px] text-gray-400 line-through">{formatPrice(item.unitPrice * item.quantity)}</p>;
+                            }
+                            return null;
+                          })()}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -466,10 +566,35 @@ export default function CheckoutPage() {
                       <span>{tCommon('shipping')}</span>
                       <span className="text-green-600">{tCommon('freeShipping')}</span>
                     </div>
+
+                    {loyaltyAccount && loyaltyAccount.totalPoints > 0 && (
+                      <div className="border-t pt-2 mt-2">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-700">{tCommon('usePoints')}</span>
+                          <span className="text-xs text-gray-500">{t('availablePoints', { count: loyaltyAccount.totalPoints, defaultValue: `${loyaltyAccount.totalPoints} pts available` })}</span>
+                        </div>
+                        <input
+                          type="number"
+                          min={0}
+                          max={loyaltyAccount.totalPoints}
+                          step={10}
+                          value={usePoints}
+                          onChange={(e) => setUsePoints(Math.min(Number(e.target.value), loyaltyAccount.totalPoints))}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
+                          placeholder="0"
+                        />
+                        {usePoints > 0 && (
+                          <p className="text-xs text-green-600 mt-1">
+                            -{formatPrice(usePoints * 10)}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex justify-between text-base font-bold text-gray-900 pt-1 border-t">
                       <span>{t('grandTotal')}</span>
                       <span className="text-rose-600">
-                        {formatPrice(Math.max(0, effectiveTotal - discountAmount))}
+                        {formatPrice(Math.max(0, effectiveTotal - discountAmount - usePoints * 10))}
                       </span>
                     </div>
                   </div>

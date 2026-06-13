@@ -14,13 +14,13 @@ public class UpdateUserRoleCommandHandler(IUserRepository userRepository, IUnitO
     public async Task<UserDto> Handle(UpdateUserRoleCommand request, CancellationToken cancellationToken)
     {
         if (!ValidRoles.Contains(request.NewRole))
-            throw new ConflictException($"Role không hợp lệ: {request.NewRole}");
+            throw new ConflictException("error.user_role_invalid", new Dictionary<string, string> { ["role"] = $"{request.NewRole}" });
 
         var user = await userRepository.GetByIdAsync(request.TargetUserId, cancellationToken)
             ?? throw new NotFoundException(nameof(User), request.TargetUserId);
 
         if (request.TargetUserId == request.RequestingUserId && request.NewRole != "Admin")
-            throw new ConflictException("Không thể tự hạ cấp quyền của mình.");
+            throw new ConflictException("error.user_cannot_self_demote", null);
 
         user.UpdateRole(request.NewRole);
         await unitOfWork.SaveChangesAsync(cancellationToken);

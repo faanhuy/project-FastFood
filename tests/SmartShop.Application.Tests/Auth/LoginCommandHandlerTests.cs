@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using Xunit;
 using SmartShop.Application.Common.Interfaces;
@@ -16,9 +17,13 @@ public class LoginCommandHandlerTests
     private readonly Mock<IPasswordHasher> _hasher = new();
     private readonly Mock<IJwtTokenService> _jwt = new();
     private readonly Mock<IUnitOfWork> _uow = new();
+    private readonly Mock<ITokenHasher> _tokenHasher = new();
+    private readonly Mock<IAuditLogService> _auditLog = new();
+    private readonly Mock<IHttpContextAccessor> _httpContext = new();
 
     private LoginCommandHandler CreateHandler() =>
-        new(_userRepo.Object, _hasher.Object, _jwt.Object, _uow.Object);
+        new(_userRepo.Object, _hasher.Object, _jwt.Object, _uow.Object,
+            _tokenHasher.Object, _auditLog.Object, _httpContext.Object);
 
     [Fact]
     public async Task Handle_ValidCredentials_ReturnsAuthResponse()
@@ -75,17 +80,20 @@ public class LoginCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ValidCredentials_SetsRefreshTokenOnUser()
+    public async Task Handle_ValidCredentials_SetsHashedRefreshTokenOnUser()
     {
         var user = User.Create("test@test.com", "hashed", "John", "Doe");
         _userRepo.Setup(r => r.GetByEmailAsync("test@test.com", default)).ReturnsAsync(user);
         _hasher.Setup(h => h.Verify("password", "hashed")).Returns(true);
         _jwt.Setup(j => j.GenerateToken(user)).Returns("jwt-token");
         _jwt.Setup(j => j.GenerateRefreshToken()).Returns("refresh-token");
+        _tokenHasher.Setup(h => h.Hash("refresh-token")).Returns("hashed-refresh-token");
         _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         await CreateHandler().Handle(new LoginCommand("test@test.com", "password"), default);
 
-        user.RefreshToken.Should().Be("refresh-token");
+        // Sprint 23: refresh token được hash trước khi lưu — plaintext không persist.
+        user.RefreshTokenHash.Should().Be("hashed-refresh-token");
+        user.RefreshToken.Should().BeNull();
     }
 }

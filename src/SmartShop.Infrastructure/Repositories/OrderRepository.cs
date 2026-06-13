@@ -76,6 +76,71 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
         return (items, totalCount);
     }
 
+    public async Task<(IEnumerable<Order> Items, int TotalCount)> GetAllPagedAsync(
+        int page, int pageSize, OrderStatus? statusFilter,
+        string? search, DateTime? createdAfter, DateTime? createdBefore,
+        string sortBy, string sortDirection,
+        CancellationToken ct = default)
+    {
+        var query = context.Orders
+            .AsNoTracking()
+            .Include(o => o.User)
+            .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+            .Include(o => o.Items)
+                .ThenInclude(i => i.Components)
+            .Include(o => o.ShippingWard)
+            .Include(o => o.ShippingProvince)
+            .AsQueryable();
+
+        if (statusFilter.HasValue)
+            query = query.Where(o => o.Status == statusFilter.Value);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var pattern = $"%{search}%";
+            query = query.Where(o =>
+                EF.Functions.Like(EF.Functions.Collate(o.Id.ToString(), "Latin1_General_CI_AI"), pattern) ||
+                EF.Functions.Like(EF.Functions.Collate(o.User!.Email, "Latin1_General_CI_AI"), pattern));
+        }
+
+        if (createdAfter.HasValue)
+            query = query.Where(o => o.CreatedAt >= createdAfter.Value);
+
+        if (createdBefore.HasValue)
+            query = query.Where(o => o.CreatedAt <= createdBefore.Value);
+
+        // Apply sorting
+        query = (sortBy, sortDirection) switch
+        {
+            ("totalAmount", "asc") => query.OrderBy(o => o.TotalAmount),
+            ("totalAmount", _) => query.OrderByDescending(o => o.TotalAmount),
+            ("createdAt", "asc") => query.OrderBy(o => o.CreatedAt),
+            (_, _) => query.OrderByDescending(o => o.CreatedAt),
+        };
+
+        var totalCount = await query.CountAsync(ct);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return (items, totalCount);
+    }
+
+    public async Task<List<Order>> GetByIdsAsync(List<Guid> ids, CancellationToken ct = default)
+    {
+        return await context.Orders
+            .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+            .Include(o => o.Items)
+                .ThenInclude(i => i.Components)
+            .Include(o => o.ShippingWard)
+            .Include(o => o.ShippingProvince)
+            .Where(o => ids.Contains(o.Id))
+            .ToListAsync(ct);
+    }
+
     public async Task AddAsync(Order order, CancellationToken ct = default)
     {
         await context.Orders.AddAsync(order, ct);
@@ -204,5 +269,16 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
     {
         return await context.Users
             .CountAsync(u => u.CreatedAt.Date >= from.Date && u.CreatedAt.Date <= to.Date, ct);
+    }
+
+    public async Task<(int OrderCount, decimal TotalSpent)> GetUserOrderStatsAsync(Guid userId, CancellationToken ct = default)
+    {
+        var stats = await context.Orders
+            .Where(o => o.UserId == userId && o.Status != OrderStatus.Cancelled)
+            .GroupBy(o => o.UserId)
+            .Select(g => new { OrderCount = g.Count(), TotalSpent = g.Sum(o => o.TotalAmount) })
+            .FirstOrDefaultAsync(ct);
+
+        return stats is null ? (0, 0m) : (stats.OrderCount, stats.TotalSpent);
     }
 }

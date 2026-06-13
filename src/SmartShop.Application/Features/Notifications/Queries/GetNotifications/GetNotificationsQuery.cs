@@ -7,8 +7,11 @@ public record GetNotificationsQuery : IRequest<ApiResponse<List<NotificationDto>
 
 public record NotificationDto(
     Guid Id,
-    string Title,
-    string Message,
+    string TitleKey,
+    string MessageKey,
+    string? Params,
+    string? Title,
+    string? Message,
     bool IsRead,
     Guid? OrderId,
     DateTime CreatedAt);

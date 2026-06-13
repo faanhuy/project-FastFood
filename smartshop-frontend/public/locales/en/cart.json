@@ -88,5 +88,14 @@
   "addressStreet": "Street address",
   "streetPlaceholder": "e.g.: 123 Main Street",
   "itemCount": "{{count}} items",
-  "servingCount": "x{{count}} serving(s)"
+  "servingCount": "x{{count}} serving(s)",
+  "emptyCartHint": "Browse the menu and add your favorites!",
+  "stockRemaining": "{{count}} left",
+  "outOfStock": "Out of stock",
+  "addAddressPrompt": "You have no saved addresses. Add one to continue checkout.",
+  "recipientNamePlaceholder": "John Doe",
+  "phonePlaceholder": "0901 234 567",
+  "addressSaved": "Address saved",
+  "reorder": "Order Again",
+  "reorderSuccess": "Items added to cart"
 }

@@ -1,10 +1,12 @@
 import { useState, useCallback, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/authStore';
 import { authService } from '../services/authService';
-import { getApiErrors } from '../utils/errorHandler';
+import { getApiError, getApiErrors } from '../utils/errorHandler';
 import AuthPageLayout from '../components/AuthPageLayout';
+import { GoogleLoginButton } from '../components/GoogleLoginButton';
 
 type SubmitState = 'idle' | 'loading' | 'success';
 
@@ -50,6 +52,94 @@ const AlertIcon = () => (
   </svg>
 );
 
+/* ── Forgot Password Modal ── */
+function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation(['auth', 'toast']);
+  const [email, setEmail] = useState('');
+  const [sending, setSending] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const handleSubmit = useCallback(async (e: FormEvent) => {
+    e.preventDefault();
+    if (sending || !email.trim()) return;
+    setSending(true);
+    try {
+      await authService.forgotPassword(email.trim());
+      setDone(true);
+    } catch (err) {
+      toast.error(getApiError(err, t('toast:forgotPasswordFailed')));
+    } finally {
+      setSending(false);
+    }
+  }, [email, sending, t]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {done ? (
+          <div className="text-center">
+            <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+              <CheckIcon />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('forgotPasswordDoneTitle')}</h3>
+            <p className="text-sm text-gray-500 mb-6">{t('forgotPasswordDoneDesc')}</p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full bg-rose-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-rose-700 transition-colors"
+            >
+              {t('backToLogin')}
+            </button>
+          </div>
+        ) : (
+          <>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">{t('forgotPasswordTitle')}</h3>
+            <p className="text-sm text-gray-500 mb-5">{t('forgotPasswordDesc')}</p>
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="fp-email">{t('email')}</label>
+                <input
+                  id="fp-email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
+                />
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
+                >
+                  {t('backToLogin')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={sending}
+                  className="flex-1 bg-rose-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-rose-700 disabled:opacity-50 transition-colors"
+                >
+                  {sending ? t('forgotPasswordSending') : t('forgotPasswordSubmit')}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const { t } = useTranslation(['auth', 'toast']);
@@ -61,6 +151,8 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [status, setStatus] = useState<SubmitState>('idle');
+  const [showForgot, setShowForgot] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleSubmit = useCallback(async (e: FormEvent) => {
     e.preventDefault();
@@ -77,6 +169,20 @@ export default function LoginPage() {
       setStatus('idle');
     }
   }, [email, password, status, setAuth, navigate, t]);
+
+  const handleGoogleSuccess = useCallback(async (idToken: string) => {
+    setGoogleLoading(true);
+    try {
+      const auth = await authService.googleLogin(idToken);
+      setAuth(auth);
+      toast.success(t('toast:googleLoginSuccess'));
+      setTimeout(() => navigate('/'), 600);
+    } catch (err) {
+      toast.error(getApiError(err, t('toast:googleLoginFailed')));
+    } finally {
+      setGoogleLoading(false);
+    }
+  }, [setAuth, navigate, t]);
 
   const btnLabel =
     status === 'loading' ? t('loggingIn') :
@@ -132,7 +238,11 @@ export default function LoginPage() {
               <span className="lp-check"><CheckIcon /></span>
               <span className="lp-remember-txt">{t('rememberMe')}</span>
             </label>
-            <a className="lp-forgot" href="#" onClick={(e) => e.preventDefault()}>
+            <a
+              className="lp-forgot"
+              href="#"
+              onClick={(e) => { e.preventDefault(); setShowForgot(true); }}
+            >
               {t('forgotPassword')}
             </a>
           </div>
@@ -147,12 +257,33 @@ export default function LoginPage() {
             </span>
           </button>
 
+          <div className="lp-reveal lp-d8 my-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-400">{t('orDivider')}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="lp-reveal lp-d8">
+            <GoogleLoginButton
+              onSuccess={handleGoogleSuccess}
+              onError={() => toast.error(t('toast:googleLoginFailed'))}
+              disabled={googleLoading}
+            />
+          </div>
+
           <p className="lp-signup lp-reveal lp-d8">
             {t('noAccount')}{' '}
             <Link to="/register">{t('register')}</Link>
           </p>
         </form>
       </div>
+
+      {showForgot && <ForgotPasswordModal onClose={() => setShowForgot(false)} />}
     </AuthPageLayout>
   );
 }

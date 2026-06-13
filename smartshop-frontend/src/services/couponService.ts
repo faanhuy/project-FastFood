@@ -30,6 +30,20 @@ export interface CreateCouponRequest {
   description?: string;
 }
 
+export interface CouponPagedResult {
+  items: CouponDto[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface BulkActionResult {
+  succeeded: number;
+  failed: number;
+  errors: { itemId: string; message: string }[];
+}
+
 export const couponService = {
   async validate(code: string, orderTotal: number): Promise<ValidateCouponResult> {
     const response = await api.post<ApiResponse<ValidateCouponResult>>('/coupons/validate', {
@@ -39,8 +53,8 @@ export const couponService = {
     return response.data.data!;
   },
 
-  async getAll(): Promise<CouponDto[]> {
-    const response = await api.get<ApiResponse<CouponDto[]>>('/coupons');
+  async getAll(params?: { page?: number; pageSize?: number; search?: string; isExpired?: boolean }): Promise<CouponPagedResult> {
+    const response = await api.get<ApiResponse<CouponPagedResult>>('/coupons', { params });
     return response.data.data!;
   },
 
@@ -51,5 +65,10 @@ export const couponService = {
 
   async remove(code: string): Promise<void> {
     await api.delete(`/coupons/${code}`);
+  },
+
+  async bulkDelete(couponIds: string[]): Promise<BulkActionResult> {
+    const response = await api.post<ApiResponse<BulkActionResult>>('/coupons/bulk-actions', { couponIds });
+    return response.data.data!;
   },
 };

@@ -6,6 +6,8 @@ import { aiService } from '../services/aiService';
 import type { ProductDto } from '../types/product';
 import { formatPrice } from '../utils/formatters';
 import { getImageUrl } from '../utils/imageUrl';
+import { useFlashSaleMap } from '../hooks/useFlashSaleMap';
+import { FlashSaleBadge } from './FlashSaleBadge';
 
 interface RecommendationCarouselProps {
   productId: string;
@@ -17,6 +19,7 @@ export default function RecommendationCarousel({ productId }: RecommendationCaro
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { flashSaleMap, expireItem } = useFlashSaleMap();
 
   useEffect(() => {
     setLoading(true);
@@ -88,29 +91,56 @@ export default function RecommendationCarousel({ productId }: RecommendationCaro
         className="flex gap-4 overflow-x-auto pb-2"
         style={{ scrollbarWidth: 'none' }}
       >
-        {recommendations.map((product) => (
-          <Link
-            key={product.id}
-            to={`/products/${product.slug}`}
-            className="w-48 shrink-0 bg-white rounded-xl shadow-sm border border-gray-100 p-3 hover:shadow-md transition-shadow"
-          >
-            <div className="h-28 bg-gray-100 rounded-lg flex items-center justify-center mb-2 overflow-hidden">
-              {product.imageUrl ? (
-                <img
-                  src={getImageUrl(product.imageUrl)}
-                  alt={product.name}
-                  className="h-full w-full object-contain"
-                />
-              ) : (
-                <span className="text-4xl">🍔</span>
-              )}
-            </div>
-            <p className="text-xs font-medium text-gray-800 line-clamp-2 leading-snug">
-              {product.name}
-            </p>
-            <p className="mt-1 text-sm font-bold text-rose-600">{formatPrice(product.price)}</p>
-          </Link>
-        ))}
+        {recommendations.map((product) => {
+          const flashSale = flashSaleMap[product.id];
+          const displayPrice = flashSale
+            ? flashSale.salePrice
+            : (product.effectivePrice ?? product.price);
+          const hasDiscount = displayPrice < product.price;
+
+          return (
+            <Link
+              key={product.id}
+              to={`/products/${product.slug}`}
+              className={`w-48 shrink-0 bg-white rounded-xl shadow-sm border p-3 hover:shadow-md transition-shadow ${
+                flashSale ? 'border-orange-200 ring-1 ring-orange-200' : 'border-gray-100'
+              }`}
+            >
+              <div className="h-28 bg-gray-100 rounded-lg flex items-center justify-center mb-2 overflow-hidden">
+                {product.imageUrl ? (
+                  <img
+                    src={getImageUrl(product.imageUrl)}
+                    alt={product.name}
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <span className="text-4xl">🍔</span>
+                )}
+              </div>
+              <p className="text-xs font-medium text-gray-800 line-clamp-2 leading-snug">
+                {product.name}
+              </p>
+              <div className="mt-1">
+                {flashSale && (
+                  <div className="mb-1">
+                    <FlashSaleBadge item={flashSale} onExpire={() => expireItem(product.id)} />
+                  </div>
+                )}
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <p className="text-sm font-bold text-rose-600">{formatPrice(displayPrice)}</p>
+                  {hasDiscount && (
+                    <span className="rounded-full bg-red-100 text-red-600 px-1 py-0.5 text-[10px] font-bold">
+                      -{Math.round((1 - displayPrice / product.price) * 100)}%
+                    </span>
+                  )}
+                </div>
+                {hasDiscount && (
+                  <p className="text-[11px] text-gray-400 line-through">{formatPrice(product.price)}</p>
+                )}
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

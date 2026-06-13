@@ -16,6 +16,9 @@ public class GetNotificationsQueryHandler(
 
         var dtos = notifications.Select(n => new NotificationDto(
             Id: n.Id,
+            TitleKey: n.TitleKey,
+            MessageKey: n.MessageKey,
+            Params: n.Params,
             Title: n.Title,
             Message: n.Message,
             IsRead: n.IsRead,

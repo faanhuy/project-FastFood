@@ -5,6 +5,8 @@ import toast from 'react-hot-toast';
 import { cartService } from '../services/cartService';
 import { productService } from '../services/productService';
 import { sizeService } from '../services/sizeService';
+import { useFlashSaleMap } from '../hooks/useFlashSaleMap';
+import { FlashSaleBadge } from '../components/FlashSaleBadge';
 import { getApiError } from '../utils/errorHandler';
 import { formatPrice } from '../utils/formatters';
 import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
@@ -14,6 +16,7 @@ import type { EffectivePriceItem } from '../types/size';
 import { FiMinus, FiPlus, FiShoppingCart } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { SkeletonProductCard } from '../components/Skeleton';
 import CouponInput from '../components/CouponInput';
 import type { ValidateCouponResult } from '../services/couponService';
 import { couponSession } from '../utils/couponSession';
@@ -34,8 +37,10 @@ export default function CartPage() {
   const [addingId, setAddingId] = useState<string | null>(null);
   const [expandedComponents, setExpandedComponents] = useState<Set<string>>(new Set());
   const [effectivePrices, setEffectivePrices] = useState<Map<string, EffectivePriceItem>>(new Map());
+  const [confirmModal, setConfirmModal] = useState<{ message: string; onConfirm: () => void } | null>(null);
   const navigate = useNavigate();
   const { selectedStore } = useStoreSelectionStore();
+  const { flashSaleMap, flashSaleItemMap, expireItem } = useFlashSaleMap();
 
   useEffect(() => {
     const saved = couponSession.load();
@@ -65,6 +70,10 @@ export default function CartPage() {
   const getEffectiveUnitPrice = (item: CartItemDto): number => {
     if (item.itemType !== 'Product' || !item.productId) return item.unitPrice;
     const key = `${item.productId}:${item.sizeId ?? ''}`;
+    // Flash sale ưu tiên cao nhất
+    const flashSale = flashSaleItemMap[key];
+    if (flashSale) return flashSale.salePrice;
+    // Fallback: giá khuyến mãi từ promo campaign
     return effectivePrices.get(key)?.effectivePrice ?? item.unitPrice;
   };
 
@@ -95,6 +104,15 @@ export default function CartPage() {
     }
   };
 
+  // Chỉ tính lại giá khi tập hợp sản phẩm/size thay đổi (thêm/xóa item), không phải khi đổi số lượng
+  const cartItemsSignature = cart
+    ? cart.items
+        .filter((i) => i.itemType === 'Product' && i.productId)
+        .map((i) => `${i.productId}:${i.sizeId ?? ''}`)
+        .sort()
+        .join(',')
+    : '';
+
   useEffect(() => {
     if (!cart || !selectedStore) {
       setEffectivePrices(new Map());
@@ -102,7 +120,7 @@ export default function CartPage() {
     }
     loadEffectivePrices(cart, selectedStore.id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cart, selectedStore]);
+  }, [cartItemsSignature, selectedStore?.id]);
 
   const loadSuggestions = async (cartData: CartDto | null) => {
     if (!cartData || cartData.items.length === 0) return;
@@ -131,49 +149,64 @@ export default function CartPage() {
     loadCart().then((data) => loadSuggestions(data));
   }, []);
 
-  const handleUpdateQuantity = async (item: CartItemDto, quantity: number) => {
+  const handleUpdateQuantity = (item: CartItemDto, quantity: number) => {
     if (quantity <= 0) {
-      if (!confirm(t('confirmZeroQuantity', { name: item.displayName }))) return;
-      try {
-        const updated = await cartService.removeItemByLineId(item.id);
-        setCart(updated);
-        if (appliedCode) await revalidateCoupon(updated, appliedCode);
-      } catch {
-        toast.error(tToast('removeItemFailed'));
-      }
+      setConfirmModal({
+        message: t('confirmZeroQuantity', { name: item.displayName }),
+        onConfirm: async () => {
+          try {
+            const updated = await cartService.removeItemByLineId(item.id);
+            setCart(updated);
+            if (appliedCode) await revalidateCoupon(updated, appliedCode);
+          } catch {
+            toast.error(tToast('removeItemFailed'));
+          }
+        },
+      });
       return;
     }
-    try {
-      const updated = await cartService.updateItemByLineId(item.id, quantity);
-      setCart(updated);
-      if (appliedCode) await revalidateCoupon(updated, appliedCode);
-    } catch (err) {
-      toast.error(getApiError(err, tToast('updateFailed')));
-    }
+    const doUpdate = async () => {
+      try {
+        const updated = await cartService.updateItemByLineId(item.id, quantity);
+        setCart(updated);
+        if (appliedCode) await revalidateCoupon(updated, appliedCode);
+      } catch (err) {
+        toast.error(getApiError(err, tToast('updateFailed')));
+      }
+    };
+    doUpdate();
   };
 
-  const handleRemove = async (item: CartItemDto) => {
-    if (!confirm(t('confirmRemoveItem', { name: item.displayName }))) return;
-    try {
-      const updated = await cartService.removeItemByLineId(item.id);
-      setCart(updated);
-      if (appliedCode) await revalidateCoupon(updated, appliedCode);
-    } catch {
-      toast.error(tToast('removeItemFailed'));
-    }
+  const handleRemove = (item: CartItemDto) => {
+    setConfirmModal({
+      message: t('confirmRemoveItem', { name: item.displayName }),
+      onConfirm: async () => {
+        try {
+          const updated = await cartService.removeItemByLineId(item.id);
+          setCart(updated);
+          if (appliedCode) await revalidateCoupon(updated, appliedCode);
+        } catch {
+          toast.error(tToast('removeItemFailed'));
+        }
+      },
+    });
   };
 
-  const handleClear = async () => {
-    if (!confirm(t('confirmClearCart'))) return;
-    try {
-      await cartService.clearCart();
-      setCart(null);
-      setAppliedCoupon(null);
-      setAppliedCode('');
-      couponSession.clear();
-    } catch {
-      toast.error(tToast('clearCartFailed'));
-    }
+  const handleClear = () => {
+    setConfirmModal({
+      message: t('confirmClearCart'),
+      onConfirm: async () => {
+        try {
+          await cartService.clearCart();
+          setCart(null);
+          setAppliedCoupon(null);
+          setAppliedCode('');
+          couponSession.clear();
+        } catch {
+          toast.error(tToast('clearCartFailed'));
+        }
+      },
+    });
   };
 
   const toggleComponents = (itemId: string) => {
@@ -221,7 +254,13 @@ export default function CartPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="p-8 text-center text-gray-400">{tCommon('loading')}</div>
+        <div className="max-w-7xl mx-auto p-6 flex flex-col md:flex-row gap-8 justify-center items-start">
+          <div className="flex-1 min-w-[350px] max-w-xl">
+            <div className="grid grid-cols-2 gap-4">
+              {[1, 2, 3, 4].map((i) => <SkeletonProductCard key={i} />)}
+            </div>
+          </div>
+        </div>
       </div>
     );
 
@@ -249,14 +288,19 @@ export default function CartPage() {
           </div>
           {error && <p className="text-red-500 mb-4">{error}</p>}
           {!cart || cart.items.length === 0 ? (
-            <div className="text-center py-16 text-gray-500">
-              <p className="text-lg mb-4">{t('emptyCart')}</p>
+            <div className="text-center py-20 flex flex-col items-center gap-4">
+              <div className="w-24 h-24 rounded-full bg-rose-50 flex items-center justify-center">
+                <FiShoppingCart size={40} className="text-rose-300" />
+              </div>
+              <div>
+                <p className="text-lg font-semibold text-gray-700">{t('emptyCart')}</p>
+                <p className="text-sm text-gray-400 mt-1">{t('emptyCartHint')}</p>
+              </div>
               <button
                 onClick={() => navigate('/products')}
-                className="bg-rose-600 text-white px-6 py-2 rounded hover:bg-rose-700 flex items-center gap-2 mx-auto"
-                title={t('continueShopping')}
+                className="bg-rose-600 text-white px-6 py-2.5 rounded-full hover:bg-rose-700 flex items-center gap-2 text-sm font-semibold"
               >
-                <FiPlus size={18} />
+                <FiShoppingCart size={16} />
                 {t('continueShopping')}
               </button>
             </div>
@@ -297,14 +341,29 @@ export default function CartPage() {
                             Size: <span className="font-medium text-gray-700">{item.sizeLabel}</span>
                           </div>
                         )}
-                        <div className="flex gap-2 text-amber-600 font-bold items-center mb-1">
-                          <span className="text-xl">{(getEffectiveUnitPrice(item) * item.quantity).toLocaleString('vi-VN')} {tCommon('currency')}</span>
-                          {item.itemType === 'Product' && effectivePrices.get(`${item.productId}:${item.sizeId ?? ''}`)?.hasPromotion && (
-                            <span className="text-gray-400 line-through text-sm font-normal">
-                              {item.subTotal.toLocaleString('vi-VN')} {tCommon('currency')}
-                            </span>
-                          )}
-                        </div>
+                        {(() => {
+                          const effectiveUnit = getEffectiveUnitPrice(item);
+                          const hasDiscount = item.itemType === 'Product' && effectiveUnit < item.unitPrice;
+                          const flashKey = `${item.productId}:${item.sizeId ?? ''}`;
+                          const flashSale = item.itemType === 'Product' ? flashSaleItemMap[flashKey] : undefined;
+                          return (
+                            <div className="flex gap-2 text-amber-600 font-bold items-center mb-1 flex-wrap">
+                              <span className="text-xl">
+                                {(effectiveUnit * item.quantity).toLocaleString('vi-VN')} {tCommon('currency')}
+                              </span>
+                              {hasDiscount && (
+                                <span className="text-gray-400 line-through text-sm font-normal">
+                                  {item.subTotal.toLocaleString('vi-VN')} {tCommon('currency')}
+                                </span>
+                              )}
+                              {flashSale && (
+                                <span className="bg-orange-100 text-orange-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+                                  ⚡ {tCommon('flashSales')}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
                         <div className="flex gap-4 text-sm mt-1">
                           <button
                             className="text-amber-600 hover:underline"
@@ -322,22 +381,42 @@ export default function CartPage() {
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
-                          <button
-                            className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-200"
-                            onClick={() => handleUpdateQuantity(item, item.quantity - 1)}
-                          >
-                            <FiMinus size={14} />
-                          </button>
-                          <span className="w-6 text-center">{item.quantity}</span>
-                          <button
-                            className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-200"
-                            onClick={() => handleUpdateQuantity(item, item.quantity + 1)}
-                          >
-                            <FiPlus size={14} />
-                          </button>
-                        </div>
+                      <div className="flex flex-col items-center gap-1">
+                        {(() => {
+                          const stockKey = `${item.productId}:${item.sizeId ?? ''}`;
+                          const stock = item.itemType === 'Product'
+                            ? (effectivePrices.get(stockKey)?.availableStock ?? Infinity)
+                            : Infinity;
+                          const atLimit = item.quantity >= stock;
+                          return (
+                            <>
+                              <div className="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
+                                <button
+                                  className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-200"
+                                  onClick={() => handleUpdateQuantity(item, item.quantity - 1)}
+                                >
+                                  <FiMinus size={14} />
+                                </button>
+                                <span className="w-6 text-center">{item.quantity}</span>
+                                <button
+                                  disabled={atLimit}
+                                  className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                                  onClick={() => handleUpdateQuantity(item, item.quantity + 1)}
+                                >
+                                  <FiPlus size={14} />
+                                </button>
+                              </div>
+                              {stock !== Infinity && stock > 0 && stock <= 10 && (
+                                <span className="text-[10px] text-amber-600">
+                                  {t('stockRemaining', { count: stock })}
+                                </span>
+                              )}
+                              {stock === 0 && (
+                                <span className="text-[10px] text-red-500">{t('outOfStock')}</span>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -429,8 +508,15 @@ export default function CartPage() {
               id="suggestion-list"
               className="divide-y max-h-[calc(100vh-240px)] overflow-y-auto"
             >
-              {suggestions.map((p) => (
-                <div key={p.id} className="flex gap-3 py-4 items-center">
+              {suggestions.map((p) => {
+                const flashSale = flashSaleMap[p.id];
+                const displayPrice = flashSale
+                  ? flashSale.salePrice
+                  : (p.effectivePrice ?? p.price);
+                const hasDiscount = displayPrice < p.price;
+
+                return (
+                <div key={p.id} className={`flex gap-3 py-4 items-center ${flashSale ? 'rounded-lg border border-orange-200 bg-orange-50/30 px-2 -mx-2' : ''}`}>
                   <button
                     onClick={() => navigate(`/products/${p.slug}`)}
                     className="w-16 h-16 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden hover:opacity-80 transition-opacity"
@@ -454,11 +540,18 @@ export default function CartPage() {
                     >
                       {p.name}
                     </button>
+                    {flashSale && (
+                      <div className="mt-0.5">
+                        <FlashSaleBadge item={flashSale} onExpire={() => expireItem(p.id)} />
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-rose-600 font-bold text-sm">{formatPrice(p.price)}</span>
-                      {p.originalPrice > p.price && (
+                      <span className="text-rose-600 font-bold text-sm">
+                        {formatPrice(displayPrice)}
+                      </span>
+                      {hasDiscount && (
                         <span className="text-gray-400 text-xs line-through">
-                          {formatPrice(p.originalPrice)}
+                          {formatPrice(p.price)}
                         </span>
                       )}
                     </div>
@@ -472,12 +565,38 @@ export default function CartPage() {
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
       </div>
       <Footer />
+
+      {confirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full space-y-4">
+            <p className="text-sm text-gray-700">{confirmModal.message}</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="px-4 py-2 text-sm rounded-lg border text-gray-600 hover:bg-gray-50"
+              >
+                {tCommon('cancel')}
+              </button>
+              <button
+                onClick={() => {
+                  confirmModal.onConfirm();
+                  setConfirmModal(null);
+                }}
+                className="px-4 py-2 text-sm rounded-lg bg-rose-600 text-white hover:bg-rose-700"
+              >
+                {tCommon('confirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

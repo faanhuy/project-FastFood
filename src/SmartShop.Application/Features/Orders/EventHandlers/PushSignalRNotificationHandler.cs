@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using SmartShop.Application.Common.Interfaces;
@@ -18,25 +19,16 @@ public class PushSignalRNotificationHandler(
     {
         try
         {
-            var statusVi = notification.NewStatus switch
-            {
-                "Pending"   => "Chờ xác nhận",
-                "Confirmed" => "Đã xác nhận",
-                "Shipped"   => "Đang giao hàng",
-                "Delivered" => "Đã giao hàng",
-                "Cancelled" => "Đã hủy",
-                "Processing" => "Đang xử lý",
-                "Refunded" => "Đã hoàn tiền",
-                _           => notification.NewStatus
-            };
             var orderCode = notification.OrderId.ToString()[..8].ToUpper();
-            var title = "Cập nhật đơn hàng";
-            var message = $"Đơn hàng #{orderCode} đã được cập nhật sang trạng thái: {statusVi}.";
+            const string titleKey = "notification.orderStatusChangedTitle";
+            const string messageKey = "notification.orderStatusChangedBody";
+            var paramsJson = JsonSerializer.Serialize(new { orderCode, status = notification.NewStatus });
 
             var dbNotification = Notification.Create(
                 userId: notification.UserId,
-                title: title,
-                message: message,
+                titleKey: titleKey,
+                messageKey: messageKey,
+                paramsJson: paramsJson,
                 orderId: notification.OrderId);
 
             await notificationRepository.AddAsync(dbNotification, cancellationToken);
@@ -45,8 +37,9 @@ public class PushSignalRNotificationHandler(
             var payload = new
             {
                 NotificationId = dbNotification.Id,
-                Title = title,
-                Message = message,
+                TitleKey = titleKey,
+                MessageKey = messageKey,
+                Params = paramsJson,
                 OrderId = notification.OrderId
             };
 

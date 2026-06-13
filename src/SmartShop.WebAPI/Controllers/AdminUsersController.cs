@@ -4,10 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Features.Admin.Users;
 using SmartShop.Application.Features.Admin.Users.Commands.BanUser;
+using SmartShop.Application.Features.Admin.Users.Commands.BulkUpdateUsers;
+using SmartShop.Application.Features.Admin.Users.Commands.ForceLogout;
+using SmartShop.Application.Features.Admin.Users.Commands.ResetPassword;
 using SmartShop.Application.Features.Admin.Users.Commands.UnbanUser;
 using SmartShop.Application.Features.Admin.Users.Commands.UpdateUserRole;
 using SmartShop.Application.Features.Admin.Users.Queries.GetUserDetail;
 using SmartShop.Application.Features.Admin.Users.Queries.GetUsers;
+using SmartShop.Application.Features.Common;
 using SmartShop.Domain.Interfaces;
 using System.Security.Claims;
 
@@ -25,10 +29,12 @@ public class AdminUsersController(IMediator mediator) : ControllerBase
         [FromQuery] string? roleFilter = null,
         [FromQuery] bool? bannedFilter = null,
         [FromQuery] string? searchEmail = null,
+        [FromQuery] string sortBy = "createdAt",
+        [FromQuery] string sortDirection = "desc",
         CancellationToken cancellationToken = default)
     {
         var result = await mediator.Send(
-            new GetUsersQuery(page, pageSize, roleFilter, bannedFilter, searchEmail),
+            new GetUsersQuery(page, pageSize, roleFilter, bannedFilter, searchEmail, sortBy, sortDirection),
             cancellationToken);
         return Ok(ApiResponse<PagedResult<UserDto>>.Ok(result));
     }
@@ -67,6 +73,38 @@ public class AdminUsersController(IMediator mediator) : ControllerBase
             cancellationToken);
         return Ok(ApiResponse<UserDto>.Ok(result));
     }
+
+    [HttpPost("bulk-actions")]
+    public async Task<IActionResult> BulkUpdateUsers(
+        [FromBody] BulkUpdateUsersRequest request,
+        CancellationToken cancellationToken)
+    {
+        var adminUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var result = await mediator.Send(
+            new BulkUpdateUsersCommand(request.UserIds, request.Action, adminUserId, request.RoleValue),
+            cancellationToken);
+        return Ok(ApiResponse<BulkActionResult>.Ok(result));
+    }
+
+    [HttpPost("{userId:guid}/force-logout")]
+    public async Task<IActionResult> ForceLogout(Guid userId, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new ForceLogoutCommand(userId), cancellationToken);
+        return Ok(ApiResponse<ForceLogoutResult>.Ok(result));
+    }
+
+    [HttpPost("{userId:guid}/reset-password")]
+    public async Task<IActionResult> ResetPassword(Guid userId, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new ResetPasswordCommand(userId), cancellationToken);
+        return Ok(ApiResponse<ResetPasswordResult>.Ok(result));
+    }
 }
 
 public record UpdateRoleRequest(string NewRole);
+
+public record BulkUpdateUsersRequest(
+    List<Guid> UserIds,
+    string Action,
+    string? RoleValue = null
+);

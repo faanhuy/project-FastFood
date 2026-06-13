@@ -104,5 +104,12 @@
   "primaryBadge": "Ảnh chính",
   "noImages": "Chưa có ảnh nào",
   "deleteImage": "Xóa ảnh",
-  "imageGallery": "Thư viện ảnh"
+  "imageGallery": "Thư viện ảnh",
+  "flashSale": "Flash Sale",
+  "flashSaleEnds": "Kết thúc sau",
+  "flashSaleOff": "Giảm {{percent}}%",
+  "flashSaleRemaining": "Còn {{count}} sản phẩm",
+  "flashSaleSoldOut": "Hết hàng",
+  "viewAllFlashSales": "Xem tất cả Flash Sale",
+  "noFlashSales": "Không có Flash Sale nào đang diễn ra"
 }

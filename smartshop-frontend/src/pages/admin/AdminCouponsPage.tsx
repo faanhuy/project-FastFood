@@ -6,12 +6,9 @@ import { couponService } from '../../services/couponService';
 import type { CouponDto, CreateCouponRequest } from '../../services/couponService';
 import { formatPrice, formatDateTime } from '../../utils/formatters';
 import { getApiError } from '../../utils/errorHandler';
+import Pagination from '../../components/common/Pagination';
+import { BulkActionToolbar, AdminFilterPanel, AdminTableCheckbox } from '../../components/admin';
 
-// DISCOUNT_TYPES labels are now handled dynamically via getDiscountTypeLabel function since we need i18n
-const DISCOUNT_TYPES = [
-  { value: 1 as const },
-  { value: 2 as const },
-];
 
 const INPUT_CLS =
   'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-rose-400 focus:outline-none';
@@ -44,16 +41,30 @@ export default function AdminCouponsPage() {
   const { t: tToast } = useTranslation('toast');
   const [coupons, setCoupons] = useState<CouponDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<CreateCouponRequest>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const load = async () => {
+  // Bulk actions state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+
+  const load = async (p: number = 1) => {
     setLoading(true);
     try {
-      setCoupons(await couponService.getAll());
+      const result = await couponService.getAll({
+        page: p,
+        pageSize: 20,
+        search: filterValues.search || undefined,
+        isExpired: filterValues.isExpired ? filterValues.isExpired === 'true' : undefined,
+      });
+      setCoupons(result.items);
+      setTotalPages(result.totalPages);
     } catch {
       toast.error(t('error', { ns: 'common' }));
     } finally {
@@ -61,13 +72,62 @@ export default function AdminCouponsPage() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(page); }, [page, filterValues]);
 
   const openCreate = () => {
     setForm(EMPTY_FORM);
     setFormError(null);
     setShowCreate(true);
   };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(coupons.map((c) => c.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const handleBulkAction = async (_actionId: string) => {
+    const ids = Array.from(selectedIds);
+    if (!confirm(t('bulkConfirmMessage', { count: ids.length }))) return;
+
+    setBulkLoading(true);
+    try {
+      const result = await couponService.bulkDelete(ids);
+      toast.success(t('bulkResultSuccess', { count: result.succeeded }));
+      if (result.failed > 0) {
+        toast.error(t('bulkResultFailed', { count: result.failed }));
+      }
+      setSelectedIds(new Set());
+      await load(page);
+    } catch (err) {
+      toast.error(getApiError(err, tToast('loadFailed')));
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const bulkActions = [
+    { id: 'delete', label: t('bulkDelete'), variant: 'danger' as const },
+  ];
+
+  const filterFields = [
+    { key: 'search', type: 'text' as const, label: t('filterSearch'), placeholder: t('filterSearch') },
+    { key: 'isExpired', type: 'select' as const, label: t('filterStatus'), options: [
+      { value: 'false', label: t('filterNotExpired') },
+      { value: 'true', label: t('filterExpired') },
+    ]},
+  ];
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +141,8 @@ export default function AdminCouponsPage() {
       });
       setShowCreate(false);
       toast.success(tToast('couponCreated'));
-      await load();
+      setPage(1);
+      await load(1);
     } catch (err) {
       setFormError(getApiError(err, t('adminCouponErrorCreateFailed')));
     } finally {
@@ -94,7 +155,7 @@ export default function AdminCouponsPage() {
     try {
       await couponService.remove(code);
       toast.success(tToast('couponDeleted'));
-      await load();
+      await load(page);
     } catch {
       toast.error(t('error', { ns: 'common' }));
     }
@@ -111,6 +172,24 @@ export default function AdminCouponsPage() {
         >
           + {t('createCoupon')}
         </button>
+      </div>
+
+      {/* Filter Panel */}
+      <div className="mb-4">
+        <AdminFilterPanel
+          fields={filterFields}
+          values={filterValues}
+          onChange={(key, value) => {
+            setFilterValues((prev) => ({ ...prev, [key]: value }));
+            setPage(1);
+          }}
+          onApply={() => load(1)}
+          onReset={() => {
+            setFilterValues({});
+            setPage(1);
+          }}
+          isLoading={loading}
+        />
       </div>
 
       {/* Create Modal */}
@@ -250,10 +329,18 @@ export default function AdminCouponsPage() {
           {t('noData', { ns: 'common' })}
         </div>
       ) : (
+        <>
         <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
+                <th className="text-left px-4 py-3 font-medium text-gray-600 w-12">
+                  <AdminTableCheckbox
+                    checked={selectedIds.size > 0 && selectedIds.size === coupons.length}
+                    indeterminate={selectedIds.size > 0 && selectedIds.size < coupons.length}
+                    onChange={(checked) => handleSelectAll(checked)}
+                  />
+                </th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">{t('code')}</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">{t('type')}</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">{t('value')}</th>
@@ -275,6 +362,12 @@ export default function AdminCouponsPage() {
                 const active = !expired && !exhausted;
                 return (
                   <tr key={c.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <AdminTableCheckbox
+                        checked={selectedIds.has(c.id)}
+                        onChange={(checked) => handleSelectOne(c.id, checked)}
+                      />
+                    </td>
                     <td className="px-4 py-3">
                       <span className="font-mono font-semibold text-gray-800">{c.code}</span>
                       {c.description && (
@@ -325,6 +418,19 @@ export default function AdminCouponsPage() {
             </tbody>
           </table>
         </div>
+
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+
+        {/* Bulk Action Toolbar */}
+        {selectedIds.size > 0 && (
+          <BulkActionToolbar
+            selectedCount={selectedIds.size}
+            actions={bulkActions}
+            onAction={handleBulkAction}
+            isLoading={bulkLoading}
+          />
+        )}
+        </>
       )}
     </AdminLayout>
   );

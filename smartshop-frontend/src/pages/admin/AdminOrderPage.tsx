@@ -3,19 +3,23 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { FiChevronDown, FiChevronRight } from 'react-icons/fi';
 import AdminLayout from '../../components/AdminLayout';
+import { AdminRefundModal } from '../../components/admin/AdminRefundModal';
+import { OrderTimeline } from '../../components/OrderTimeline';
 import { orderService } from '../../services/orderService';
 import type { OrderDto, OrderStatusValue, PaymentMethod, PaymentStatus } from '../../types/order';
 import { ORDER_STATUSES, resolveOrderStatus } from '../../types/order';
 import { formatPrice, formatDateTime } from '../../utils/formatters';
 import { getImageUrl } from '../../utils/imageUrl';
+import { getApiError } from '../../utils/errorHandler';
 import Pagination from '../../components/common/Pagination';
+import { BulkActionToolbar, AdminFilterPanel, AdminTableCheckbox } from '../../components/admin';
 
 const PAGE_SIZE = 20;
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   COD: 'COD',
   VNPay: 'VNPay',
-  BankTransfer: 'ACB',
+  BankTransfer: 'Bank Transfer',
 };
 
 // Payment status labels will be dynamically loaded via t() in the component since we need the i18n instance
@@ -93,12 +97,36 @@ export default function AdminOrderPage() {
   const [statusFilter, setStatusFilter] = useState<number>(0);
   const [updatingIds,  setUpdatingIds]  = useState<Set<string>>(new Set());
   const [expandedId,   setExpandedId]   = useState<string | null>(null);
+
+  // Bulk actions state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
+  // Filter state
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [sortBy] = useState('createdAt');
+  const [sortDirection] = useState<'asc' | 'desc'>('desc');
+  // Refund modal state
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [selectedOrderForRefund, setSelectedOrderForRefund] = useState<OrderDto | null>(null);
+  // Timeline modal state
+  const [showTimelineModal, setShowTimelineModal] = useState(false);
+  const [selectedOrderForTimeline, setSelectedOrderForTimeline] = useState<OrderDto | null>(null);
+
   const isBusy = updatingIds.size > 0;
 
   const loadOrders = async (p: number, sf: number, showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      const result = await orderService.getAllOrders(p, PAGE_SIZE, sf || undefined);
+      const result = await orderService.getAllOrders({
+        page: p,
+        pageSize: PAGE_SIZE,
+        statusFilter: sf || undefined,
+        search: filterValues.search || undefined,
+        createdAfter: filterValues.createdAfter || undefined,
+        createdBefore: filterValues.createdBefore || undefined,
+        sortBy,
+        sortDirection,
+      });
       setAllOrders(result.items);
       setTotalCount(result.totalCount);
     } catch {
@@ -108,13 +136,61 @@ export default function AdminOrderPage() {
     }
   };
 
-  useEffect(() => { loadOrders(page, statusFilter); }, [page, statusFilter]);
+  useEffect(() => { loadOrders(page, statusFilter); }, [page, statusFilter, filterValues, sortBy, sortDirection]);
 
   const handleFilterChange = (value: number) => {
     setStatusFilter(value);
     setPage(1);
     setExpandedId(null);
   };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(allOrders.map((o) => o.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const handleBulkAction = async (actionId: string) => {
+    const ids = Array.from(selectedIds);
+    if (!confirm(t('bulkConfirmMessage', { count: ids.length }))) return;
+
+    setBulkLoading(true);
+    try {
+      const result = await orderService.bulkUpdateOrders(ids, actionId as any);
+      toast.success(t('bulkResultSuccess', { count: result.succeeded }));
+      if (result.failed > 0) {
+        toast.error(t('bulkResultFailed', { count: result.failed }));
+      }
+      setSelectedIds(new Set());
+      await loadOrders(page, statusFilter);
+    } catch (err) {
+      toast.error(getApiError(err, t('error', { ns: 'common' })));
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const bulkActions = [
+    { id: 'confirm', label: t('bulkConfirm'), variant: 'default' as const },
+    { id: 'cancel', label: t('bulkCancel'), variant: 'danger' as const },
+  ];
+
+  const filterFields = [
+    { key: 'search', type: 'text' as const, label: t('filterSearch'), placeholder: t('filterSearch') },
+    { key: 'createdAfter', type: 'date' as const, label: t('filterDateFrom') },
+    { key: 'createdBefore', type: 'date' as const, label: t('filterDateTo') },
+  ];
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatusValue) => {
     if (updatingIds.has(orderId)) return;
@@ -128,7 +204,7 @@ export default function AdminOrderPage() {
       return next;
     });
 
-    // Optimistic update để admin thấy thay đổi ngay trên đúng dòng đang thao tác.
+    // Optimistic update so admin sees change immediately.
     setAllOrders((prev) =>
       prev.map((order) =>
         order.id === orderId ? { ...order, status: optimisticStatus } : order
@@ -155,7 +231,25 @@ export default function AdminOrderPage() {
 
   return (
     <AdminLayout title={t('ordersTitle')}>
-      {/* Bộ lọc trạng thái */}
+      {/* Filter Panel */}
+      <div className="mb-4">
+        <AdminFilterPanel
+          fields={filterFields}
+          values={filterValues}
+          onChange={(key, value) => {
+            setFilterValues((prev) => ({ ...prev, [key]: value }));
+            setPage(1);
+          }}
+          onApply={() => loadOrders(1, statusFilter)}
+          onReset={() => {
+            setFilterValues({});
+            setPage(1);
+          }}
+          isLoading={loading}
+        />
+      </div>
+
+      {/* Status filter buttons */}
       <div className="flex gap-1.5 flex-wrap mb-4">
         <button
           onClick={() => handleFilterChange(0)}
@@ -199,7 +293,7 @@ export default function AdminOrderPage() {
 
       <p className="text-xs text-gray-400 mb-3">{t('adminOrderTotal')} {totalCount} {t('statOrders')}</p>
 
-      {/* Bảng đơn hàng */}
+      {/* Orders table */}
       {loading ? (
         <div className="flex items-center justify-center h-64 text-gray-400">{t('loading', { ns: 'common' })}</div>
       ) : (
@@ -211,6 +305,13 @@ export default function AdminOrderPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 text-gray-500 text-xs uppercase border-b">
                   <tr>
+                    <th className="w-8 px-3 py-3">
+                      <AdminTableCheckbox
+                        checked={selectedIds.size > 0 && selectedIds.size === allOrders.length}
+                        indeterminate={selectedIds.size > 0 && selectedIds.size < allOrders.length}
+                        onChange={(checked) => handleSelectAll(checked)}
+                      />
+                    </th>
                     <th className="w-8 px-3 py-3" />
                     <th className="px-4 py-3 text-left">{t('orderCode')}</th>
                     <th className="px-4 py-3 text-left">{t('customer')}</th>
@@ -233,6 +334,12 @@ export default function AdminOrderPage() {
                           className="hover:bg-gray-50 cursor-pointer transition-colors"
                           onClick={() => setExpandedId(isExpanded ? null : order.id)}
                         >
+                          <td className="px-3 py-3 text-gray-400" onClick={(e) => e.stopPropagation()}>
+                            <AdminTableCheckbox
+                              checked={selectedIds.has(order.id)}
+                              onChange={(checked) => handleSelectOne(order.id, checked)}
+                            />
+                          </td>
                           <td className="px-3 py-3 text-gray-400">
                             {isExpanded ? <FiChevronDown size={14} /> : <FiChevronRight size={14} />}
                           </td>
@@ -288,13 +395,33 @@ export default function AdminOrderPage() {
 
                         {isExpanded && (
                           <tr className="bg-rose-50/40">
-                            <td colSpan={8} className="px-8 py-4">
+                            <td colSpan={9} className="px-8 py-4">
                               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                                 {t('adminOrderDetails', { count: order.items.length })}
                               </p>
                               {order.notes && (
                                 <p className="text-xs text-gray-500 mb-2 italic">{t('adminOrderNotes')} {order.notes}</p>
                               )}
+                              <div className="mb-4 flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    setSelectedOrderForRefund(order);
+                                    setShowRefundModal(true);
+                                  }}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors"
+                                >
+                                  {t('refundOrderBtn')}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedOrderForTimeline(order);
+                                    setShowTimelineModal(true);
+                                  }}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                                >
+                                  {t('viewTimeline')}
+                                </button>
+                              </div>
                               <PaymentDetail
                                 method={order.paymentMethod}
                                 status={order.paymentStatus}
@@ -347,7 +474,56 @@ export default function AdminOrderPage() {
           </div>
 
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={loading || isBusy} />
+
+          {/* Bulk Action Toolbar */}
+          {selectedIds.size > 0 && (
+            <BulkActionToolbar
+              selectedCount={selectedIds.size}
+              actions={bulkActions}
+              onAction={handleBulkAction}
+              isLoading={bulkLoading}
+            />
+          )}
         </>
+      )}
+
+      {/* Refund Modal */}
+      {showRefundModal && selectedOrderForRefund && (
+        <AdminRefundModal
+          orderId={selectedOrderForRefund.id}
+          orderItems={selectedOrderForRefund.items}
+          totalAmount={selectedOrderForRefund.totalAmount}
+          onSuccess={() => loadOrders(page, statusFilter, false)}
+          onClose={() => {
+            setShowRefundModal(false);
+            setSelectedOrderForRefund(null);
+          }}
+        />
+      )}
+
+      {/* Timeline Modal */}
+      {showTimelineModal && selectedOrderForTimeline && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center bg-black bg-opacity-50 p-4">
+            <div className="relative w-full max-w-2xl rounded-lg bg-white shadow-xl">
+              <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                <h3 className="text-lg font-semibold text-gray-900">{t('viewTimeline')}</h3>
+                <button
+                  onClick={() => {
+                    setShowTimelineModal(false);
+                    setSelectedOrderForTimeline(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <span className="text-2xl leading-none">&times;</span>
+                </button>
+              </div>
+              <div className="px-6 py-4">
+                <OrderTimeline orderId={selectedOrderForTimeline.id} />
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </AdminLayout>
   );

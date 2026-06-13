@@ -4,6 +4,7 @@ export interface SemanticSearchResultDto {
   description: string;
   price: number;
   originalPrice: number;
+  effectivePrice: number | null;
   slug: string;
   imageUrl: string | null;
   categoryId: string;
@@ -13,6 +14,7 @@ export interface SemanticSearchResultDto {
 export interface SemanticSearchRequest {
   query: string;
   topN?: number;
+  storeId?: string;
 }
 
 export interface GenerateDescriptionRequest {

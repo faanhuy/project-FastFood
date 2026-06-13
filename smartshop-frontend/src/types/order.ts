@@ -58,6 +58,7 @@ export interface PlaceOrderRequest {
   couponCode?: string;
   paymentMethod?: PaymentMethod;
   storeId?: string;
+  usePoints?: number;
 }
 
 export interface AddressDto {
@@ -95,4 +96,29 @@ export function resolveOrderStatus(status: string | number): OrderStatusValue {
     (!Number.isNaN(n) ? ORDER_STATUSES.find((s) => s.value === n)?.value : undefined) ??
     1
   ) as OrderStatusValue;
+}
+
+export interface BulkActionResult {
+  succeeded: number;
+  failed: number;
+  errors: { itemId: string; message: string }[];
+}
+
+export interface OrderTimelineEventDto {
+  id: string;
+  occurredAt: string;
+  eventType: 'Created' | 'StatusChanged' | 'Refunded' | 'ReturnRequested' | 'ReturnApproved' | 'ReturnRejected';
+  title: string;
+  description?: string;
+  actorName?: string;
+  amount?: number;
+}
+
+export interface AdminRefundOrderRequest {
+  refundNote?: string;
+}
+
+export interface AdminPartialRefundOrderRequest {
+  selectedItemIds: string[];
+  refundNote?: string;
 }

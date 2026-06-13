@@ -10,7 +10,8 @@ public record BulkEffectivePriceResult(
     Guid? SizeId,
     decimal BasePrice,
     decimal EffectivePrice,
-    bool HasPromotion
+    bool HasPromotion,
+    int AvailableStock = 0
 );
 
 public record GetBulkEffectivePricesQuery(

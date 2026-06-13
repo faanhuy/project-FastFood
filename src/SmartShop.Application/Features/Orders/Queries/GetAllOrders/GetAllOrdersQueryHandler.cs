@@ -10,7 +10,9 @@ public class GetCouponsQueryHandler(IOrderRepository orderRepository)
         GetAllOrdersQuery request, CancellationToken cancellationToken)
     {
         var (items, totalCount) = await orderRepository.GetAllPagedAsync(
-            request.Page, request.PageSize, request.StatusFilter, cancellationToken);
+            request.Page, request.PageSize, request.StatusFilter,
+            request.Search, request.CreatedAfter, request.CreatedBefore,
+            request.SortBy, request.SortDirection, cancellationToken);
 
         var dtos = items.Select(o => new OrderDto
         {

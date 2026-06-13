@@ -19,7 +19,10 @@ public record GetProductsQuery(
     Guid? CategoryId = null,
     string? Search = null,
     ProductSortBy SortBy = ProductSortBy.Newest,
-    Guid? StoreId = null
+    Guid? StoreId = null,
+    bool? IsActiveFilter = null,
+    decimal? PriceMin = null,
+    decimal? PriceMax = null
 ) : IRequest<PagedResult<ProductDto>>;
 
 public record PagedResult<T>(

@@ -9,14 +9,16 @@ using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Interfaces;
 using SmartShop.Application.Services;
 using SmartShop.Domain.Interfaces;
+using SmartShop.Infrastructure.Services;
+using SmartShop.Infrastructure.BackgroundJobs;
 using SmartShop.Infrastructure.Caching;
 using SmartShop.Infrastructure.Data;
 using SmartShop.Infrastructure.Data.Seeders;
 using SmartShop.Infrastructure.Email;
+using SmartShop.Infrastructure.HealthChecks;
 using SmartShop.Infrastructure.Payment;
 using SmartShop.Infrastructure.RateLimit;
 using SmartShop.Infrastructure.Repositories;
-using SmartShop.Infrastructure.Services;
 using SmartShop.Infrastructure.UnitOfWork;
 using StackExchange.Redis;
 using System.Text;
@@ -43,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IOrderArchiveRepository, OrderArchiveRepository>();
         services.AddScoped<ICouponRepository, CouponRepository>();
         services.AddScoped<ICouponUsageRepository, CouponUsageRepository>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -70,8 +73,13 @@ public static class DependencyInjection
         services.AddScoped<IComboPromotionRepository, ComboPromotionRepository>();
         services.AddScoped<IComboPromotionService, ComboPromotionService>();
         services.AddScoped<IReturnRequestRepository, ReturnRequestRepository>();
+        services.AddScoped<IOrderStatusHistoryRepository, OrderStatusHistoryRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IAuditLogService, AuditLogService>();
+        services.AddScoped<IFlashSaleRepository, FlashSaleRepository>();
+        services.AddScoped<IOrderFlashSaleUsageRepository, OrderFlashSaleUsageRepository>();
+        services.AddScoped<ILoyaltyRepository, LoyaltyRepository>();
+        services.AddScoped<ILoyaltyService, LoyaltyService>();
 
         services.AddScoped<IDataSeeder, LocalizationSeeder>();
         services.AddScoped<IDataSeeder, AppSettingsSeeder>();
@@ -79,6 +87,9 @@ public static class DependencyInjection
         services.AddScoped<IDataSeeder, FaqDocumentSeeder>();
         services.AddScoped<IDataSeeder, CatalogSeeder>();
         services.AddScoped<IDataSeeder, GeographySeeder>();
+
+        // Background jobs
+        services.AddScoped<OrderArchiveJob>();
 
         // AI — chọn provider qua config "AI:Provider" (Groq | Gemini), mặc định Groq
         // Groq: free 500K tokens/day, llama-3.3-70b, nhanh, hiểu tiếng Việt tốt
@@ -192,6 +203,13 @@ public static class DependencyInjection
             .UseSqlServerStorage(sqlConnectionString));
         services.AddHangfireServer();
         services.AddScoped<IEmailJobService, HangfireEmailJobService>();
+        services.AddScoped<FlashSaleExpiryJob>();
+
+        // Health checks (Sprint 34)
+        services.AddHealthChecks()
+            .AddCheck<DatabaseHealthCheck>("database")
+            .AddCheck<RedisHealthCheck>("redis")
+            .AddCheck<HangfireHealthCheck>("hangfire");
 
         return services;
     }

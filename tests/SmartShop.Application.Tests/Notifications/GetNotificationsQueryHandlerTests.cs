@@ -62,9 +62,9 @@ public class GetNotificationsQueryHandlerTests
     [Fact]
     public async Task Handle_WithNotifications_MapsDtoFieldsCorrectly()
     {
-        var notification = CreateNotification(UserId);
         var orderId = Guid.NewGuid();
-        var notificationWithOrder = Notification.Create(UserId, "Don hang moi", "Don hang cua ban da duoc dat", orderId);
+        var notificationWithOrder = Notification.Create(
+            UserId, "notification.orderStatusChangedTitle", "notification.orderStatusChangedBody", orderId: orderId);
 
         _notificationRepo.Setup(r => r.GetByUserIdAsync(UserId, default))
                          .ReturnsAsync(new List<Notification> { notificationWithOrder });
@@ -72,8 +72,8 @@ public class GetNotificationsQueryHandlerTests
         var result = await CreateHandler().Handle(new GetNotificationsQuery(), default);
 
         var dto = result.Data!.Single();
-        dto.Title.Should().Be("Don hang moi");
-        dto.Message.Should().Be("Don hang cua ban da duoc dat");
+        dto.TitleKey.Should().Be("notification.orderStatusChangedTitle");
+        dto.MessageKey.Should().Be("notification.orderStatusChangedBody");
         dto.IsRead.Should().BeFalse();
         dto.OrderId.Should().Be(orderId);
     }

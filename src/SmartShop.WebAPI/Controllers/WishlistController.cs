@@ -15,9 +15,11 @@ public class WishlistController(IMediator mediator) : ControllerBase
 {
     /// <summary>Lấy danh sách yêu thích của user hiện tại</summary>
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<List<WishlistItemDto>>>> GetWishlist(CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<List<WishlistItemDto>>>> GetWishlist(
+        [FromQuery] Guid? storeId = null,
+        CancellationToken ct = default)
     {
-        var result = await mediator.Send(new GetWishlistQuery(), ct);
+        var result = await mediator.Send(new GetWishlistQuery(storeId), ct);
         return Ok(result);
     }
 

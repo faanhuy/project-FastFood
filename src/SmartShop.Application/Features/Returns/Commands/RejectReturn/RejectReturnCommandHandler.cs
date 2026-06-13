@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using SmartShop.Application.Common.Interfaces;
@@ -41,10 +42,11 @@ public class RejectReturnCommandHandler(
 
         var userIdString = returnRequest.UserId.ToString();
         var orderCode = order.Id.ToString()[..8].ToUpper();
-        var title = "Yêu cầu trả hàng bị từ chối";
-        var message = $"Đơn hàng #{orderCode}: Yêu cầu trả hàng bị từ chối. Lý do: {request.AdminNote}";
+        const string titleKey = "notification.returnRejectedTitle";
+        const string messageKey = "notification.returnRejectedBody";
+        var paramsJson = JsonSerializer.Serialize(new { orderCode, reason = request.AdminNote });
 
-        var notification = Notification.Create(returnRequest.UserId, title, message, order.Id);
+        var notification = Notification.Create(returnRequest.UserId, titleKey, messageKey, paramsJson, order.Id);
         await notificationRepository.AddAsync(notification, cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -67,8 +69,9 @@ public class RejectReturnCommandHandler(
             await hubService.SendToUserAsync(userIdString, "ReturnRequestUpdated", new
             {
                 NotificationId = notification.Id,
-                Title = title,
-                Message = message,
+                TitleKey = titleKey,
+                MessageKey = messageKey,
+                Params = paramsJson,
                 OrderId = order.Id,
                 Status = "Rejected"
             }, cancellationToken);

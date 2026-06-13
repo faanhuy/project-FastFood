@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { aiService } from '../services/aiService';
 import type { SemanticSearchResultDto } from '../types/ai';
 import { formatPrice } from '../utils/formatters';
+import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
 
 interface AISearchBarProps {
   onClose?: () => void;
@@ -12,6 +13,7 @@ interface AISearchBarProps {
 
 export default function AISearchBar({ onClose }: AISearchBarProps) {
   const { t } = useTranslation('product');
+  const { selectedStore } = useStoreSelectionStore();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SemanticSearchResultDto[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,7 +34,11 @@ export default function AISearchBar({ onClose }: AISearchBarProps) {
       setLoading(true);
       setErrorMsg(null);
       try {
-        const res = await aiService.semanticSearch({ query: value.trim(), topN: 8 });
+        const res = await aiService.semanticSearch({
+          query: value.trim(),
+          topN: 8,
+          storeId: selectedStore?.id,
+        });
         setResults(res);
         setSearched(true);
       } catch (err) {
@@ -81,24 +87,31 @@ export default function AISearchBar({ onClose }: AISearchBarProps) {
             <p className="px-4 py-3 text-sm text-gray-500">{t('aiNoResults')}</p>
           ) : (
             <ul>
-              {results.map((item) => (
-                <li key={item.id}>
-                  <Link
-                    to={`/products/${item.slug}`}
-                    onClick={onClose}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-rose-50 transition-colors"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{item.name}</p>
-                      <p className="text-xs text-gray-500 truncate">{item.description}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-semibold text-rose-600">{formatPrice(item.price)}</p>
-                      <p className="text-xs text-gray-400">{t('aiMatchScore', { score: Math.round(item.score * 100) })}</p>
-                    </div>
-                  </Link>
-                </li>
-              ))}
+              {results.map((item) => {
+                const displayPrice = item.effectivePrice ?? item.price;
+                const hasDiscount = displayPrice < item.price;
+                return (
+                  <li key={item.id}>
+                    <Link
+                      to={`/products/${item.slug}`}
+                      onClick={onClose}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-rose-50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{item.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-semibold text-rose-600">{formatPrice(displayPrice)}</p>
+                        {hasDiscount && (
+                          <p className="text-xs text-gray-400 line-through">{formatPrice(item.price)}</p>
+                        )}
+                        <p className="text-xs text-gray-400">{t('aiMatchScore', { score: Math.round(item.score * 100) })}</p>
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

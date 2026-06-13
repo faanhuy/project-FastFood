@@ -22,6 +22,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Product> Products { get; set; }
     public DbSet<ProductImage> ProductImages { get; set; }
     public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderArchive> OrderArchives { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<OrderItemComponent> OrderItemComponents { get; set; }
     public DbSet<Cart> Carts { get; set; }
@@ -57,10 +58,17 @@ public class ApplicationDbContext : DbContext
     public DbSet<ComboItem> ComboItems { get; set; }
     public DbSet<ComboPromotion> ComboPromotions { get; set; }
     public DbSet<ReturnRequest> ReturnRequests { get; set; }
+    public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
 
     public DbSet<LocalizedMessage> LocalizedMessages { get; set; }
     public DbSet<LocalizedFieldName> LocalizedFieldNames { get; set; }
+    public DbSet<FlashSale> FlashSales { get; set; }
+    public DbSet<FlashSaleItem> FlashSaleItems { get; set; }
+    public DbSet<OrderFlashSaleUsage> OrderFlashSaleUsages { get; set; }
+
+    public DbSet<LoyaltyAccount> LoyaltyAccounts { get; set; }
+    public DbSet<PointTransaction> PointTransactions { get; set; }
 
     private static readonly TimeZoneInfo _vnTz =
         TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");

@@ -148,6 +148,35 @@ public class SmtpEmailService(
         await SendAsync(toEmail, toName, subject, body);
     }
 
+    public async Task SendPasswordResetAsync(
+        string toEmail,
+        string toName,
+        string tempPassword)
+    {
+        var subject = "SmartShop — Đặt lại mật khẩu";
+
+        var body = $"""
+            <html><body style="font-family:Arial,sans-serif;color:#333;">
+            <h2 style="color:#e53935;">SmartShop — Đặt lại mật khẩu</h2>
+            <p>Xin chào <strong>{toName}</strong>,</p>
+            <p>Quản trị viên đã yêu cầu đặt lại mật khẩu của tài khoản bạn.</p>
+            <p>Dưới đây là mật khẩu tạm thời của bạn:</p>
+            <p style="font-size:18px;font-weight:bold;background:#f5f5f5;padding:12px;border-left:4px solid #e53935;font-family:monospace;">
+                {tempPassword}
+            </p>
+            <p style="color:#d32f2f;font-weight:bold;">Lưu ý:</p>
+            <ul>
+                <li>Mật khẩu tạm thời này chỉ có hiệu lực một lần.</li>
+                <li>Vui lòng đăng nhập với mật khẩu này và thay đổi thành mật khẩu của riêng bạn.</li>
+                <li>Nếu bạn không yêu cầu điều này, vui lòng liên hệ với đội hỗ trợ ngay lập tức.</li>
+            </ul>
+            <p>Cảm ơn bạn đã sử dụng dịch vụ của SmartShop!</p>
+            </body></html>
+            """;
+
+        await SendAsync(toEmail, toName, subject, body);
+    }
+
     private async Task SendAsync(string toEmail, string toName, string subject, string htmlBody)
     {
         // Graceful skip if email is disabled or SmtpHost not configured

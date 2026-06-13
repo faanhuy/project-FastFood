@@ -5,13 +5,15 @@ using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.Application.Features.Admin.Users.Queries.GetUserDetail;
 
-public class GetUserDetailQueryHandler(IUserRepository userRepository)
+public class GetUserDetailQueryHandler(IUserRepository userRepository, IOrderRepository orderRepository)
     : IRequestHandler<GetUserDetailQuery, UserDto>
 {
     public async Task<UserDto> Handle(GetUserDetailQuery request, CancellationToken cancellationToken)
     {
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken)
             ?? throw new NotFoundException(nameof(User), request.UserId);
+
+        var (orderCount, totalSpent) = await orderRepository.GetUserOrderStatsAsync(user.Id, cancellationToken);
 
         return new UserDto
         {
@@ -23,7 +25,8 @@ public class GetUserDetailQueryHandler(IUserRepository userRepository)
             IsBanned = user.IsBanned,
             BannedAt = user.BannedAt,
             CreatedAt = user.CreatedAt,
-            OrderCount = 0
+            OrderCount = orderCount,
+            TotalSpent = totalSpent
         };
     }
 }

@@ -23,7 +23,7 @@ public class AIController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<ApiResponse<IReadOnlyList<SemanticSearchResultDto>>>> SemanticSearch(
         [FromBody] SemanticSearchRequest request, CancellationToken ct)
     {
-        var result = await mediator.Send(new SemanticSearchQuery(request.Query, request.TopN), ct);
+        var result = await mediator.Send(new SemanticSearchQuery(request.Query, request.TopN, request.StoreId), ct);
         return Ok(ApiResponse<IReadOnlyList<SemanticSearchResultDto>>.Ok(result));
     }
 
@@ -73,4 +73,4 @@ public class AIController(IMediator mediator) : ControllerBase
     }
 }
 
-public record SemanticSearchRequest(string Query, int TopN = 10);
+public record SemanticSearchRequest(string Query, int TopN = 10, Guid? StoreId = null);

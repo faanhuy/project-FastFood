@@ -24,6 +24,8 @@ public class PlaceOrderCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<IUserAddressRepository> _userAddressRepo = new();
     private readonly Mock<IPriceCampaignRepository> _priceCampaignRepo = new();
+    private readonly Mock<IFlashSaleRepository> _flashSaleRepo = new();
+    private readonly Mock<ILoyaltyRepository> _loyaltyRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
     private readonly Mock<IMediator> _mediator = new();
     private readonly Guid _storeId = Guid.NewGuid();
@@ -38,6 +40,13 @@ public class PlaceOrderCommandHandlerTests
                 It.IsAny<DateTime>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(Guid, Guid?), (int, decimal)>());
+
+        _flashSaleRepo
+            .Setup(r => r.GetActiveByProductIdAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<DateTime>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((FlashSale?)null);
     }
 
     private PlaceOrderCommandHandler CreateHandler() =>
@@ -46,6 +55,8 @@ public class PlaceOrderCommandHandlerTests
             _couponRepo.Object, _couponUsageRepo.Object,
             _userRepo.Object, _userAddressRepo.Object,
             _priceCampaignRepo.Object,
+            _flashSaleRepo.Object,
+            _loyaltyRepo.Object,
             _uow.Object, _mediator.Object);
 
     private PlaceOrderCommand ValidCommand(Guid userId, string? couponCode = null) =>

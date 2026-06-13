@@ -88,5 +88,14 @@
   "addressStreet": "Số nhà, tên đường",
   "streetPlaceholder": "Vd: 123 Duong Lang",
   "itemCount": "{{count}} món",
-  "servingCount": "x{{count}} phần"
+  "servingCount": "x{{count}} phần",
+  "emptyCartHint": "Khám phá thực đơn và thêm món yêu thích vào giỏ nhé!",
+  "stockRemaining": "Còn {{count}}",
+  "outOfStock": "Hết hàng",
+  "addAddressPrompt": "Bạn chưa có địa chỉ nào. Thêm địa chỉ để tiếp tục đặt hàng.",
+  "recipientNamePlaceholder": "Nguyễn Văn A",
+  "phonePlaceholder": "0901 234 567",
+  "addressSaved": "Đã lưu địa chỉ mới",
+  "reorder": "Mua lại",
+  "reorderSuccess": "Đã thêm món vào giỏ hàng"
 }

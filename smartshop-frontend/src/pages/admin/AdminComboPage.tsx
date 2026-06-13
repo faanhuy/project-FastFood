@@ -65,6 +65,7 @@ export default function AdminComboPage() {
   const [itemSearches, setItemSearches] = useState<ItemSearchState>({});
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
   const dropdownRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const sizesCache = useRef<Record<string, ProductSize[]>>({});
 
   const loadCombos = async () => {
     setLoading(true);
@@ -86,8 +87,10 @@ export default function AdminComboPage() {
   const loadSizesForItem = async (index: number, productId: string) => {
     if (!productId) return;
     try {
-      const sizes = await sizeService.getProductSizes(productId);
-      setItemSizes((prev) => ({ ...prev, [index]: sizes }));
+      if (!sizesCache.current[productId]) {
+        sizesCache.current[productId] = await sizeService.getProductSizes(productId);
+      }
+      setItemSizes((prev) => ({ ...prev, [index]: sizesCache.current[productId] }));
     } catch {
       /* ignore */
     }
@@ -124,8 +127,10 @@ export default function AdminComboPage() {
       const sizesMap: Record<number, ProductSize[]> = {};
       await Promise.all(
         dto.items.map(async (it, i) => {
-          const sizes = await sizeService.getProductSizes(it.productId);
-          sizesMap[i] = sizes;
+          if (!sizesCache.current[it.productId]) {
+            sizesCache.current[it.productId] = await sizeService.getProductSizes(it.productId);
+          }
+          sizesMap[i] = sizesCache.current[it.productId];
         }),
       );
       setItemSizes(sizesMap);

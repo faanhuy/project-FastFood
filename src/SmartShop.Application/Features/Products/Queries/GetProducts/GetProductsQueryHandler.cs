@@ -17,8 +17,14 @@ public class GetProductsQueryHandler(
         var sortByKey = request.SortBy.ToString().ToLower();
         var cacheKey = $"products:list:p{request.Page}:ps{request.PageSize}:cat{request.CategoryId}:q{request.Search}:s{sortByKey}:store{request.StoreId ?? Guid.Empty}";
 
-        var cached = await cache.GetAsync<PagedResult<ProductDto>>(cacheKey, cancellationToken);
-        if (cached is not null) return cached;
+        // Skip cache for admin filters (isActiveFilter, priceMin, priceMax)
+        var isAdminQuery = request.IsActiveFilter.HasValue || request.PriceMin.HasValue || request.PriceMax.HasValue;
+
+        if (!isAdminQuery)
+        {
+            var cached = await cache.GetAsync<PagedResult<ProductDto>>(cacheKey, cancellationToken);
+            if (cached is not null) return cached;
+        }
 
         var sortByStr = request.SortBy switch
         {
@@ -30,8 +36,12 @@ public class GetProductsQueryHandler(
             _                         => "newest",
         };
 
-        var (items, totalCount) = await repository.GetPagedAsync(
-            request.Page, request.PageSize, request.CategoryId, request.Search, sortByStr, cancellationToken);
+        var (items, totalCount) = isAdminQuery
+            ? await repository.GetPagedAsync(
+                request.Page, request.PageSize, request.CategoryId, request.Search,
+                sortByStr, request.IsActiveFilter, request.PriceMin, request.PriceMax, cancellationToken)
+            : await repository.GetPagedAsync(
+                request.Page, request.PageSize, request.CategoryId, request.Search, sortByStr, cancellationToken);
 
         List<ProductDto> dtos;
 
@@ -66,7 +76,8 @@ public class GetProductsQueryHandler(
 
         var result = new PagedResult<ProductDto>(dtos, totalCount, request.Page, request.PageSize);
 
-        await cache.SetAsync(cacheKey, result, TimeSpan.FromMinutes(5), cancellationToken);
+        if (!isAdminQuery)
+            await cache.SetAsync(cacheKey, result, TimeSpan.FromMinutes(5), cancellationToken);
 
         return result;
     }

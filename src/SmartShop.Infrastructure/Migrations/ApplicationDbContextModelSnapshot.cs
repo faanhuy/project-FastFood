@@ -662,6 +662,115 @@ namespace SmartShop.Infrastructure.Migrations
                     b.ToTable("FaqDocuments");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.FlashSale", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EndAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("RejectedReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("StartAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("IsActive", "EndAt");
+
+                    b.ToTable("FlashSales");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.FlashSaleItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("FlashSaleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("OriginalPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("SalePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("SizeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("SoldCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StockLimit")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FlashSaleId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("SizeId");
+
+                    b.ToTable("FlashSaleItems");
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.LocalizedFieldName", b =>
                 {
                     b.Property<Guid>("Id")
@@ -751,6 +860,46 @@ namespace SmartShop.Infrastructure.Migrations
                     b.ToTable("LocalizedMessages");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.LoyaltyAccount", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("LifetimePoints")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Tier")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalPoints")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("LoyaltyAccounts");
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -767,14 +916,26 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Message")
-                        .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("MessageKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<Guid?>("OrderId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Params")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
                     b.Property<string>("Title")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TitleKey")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -814,6 +975,14 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<decimal>("LoyaltyPointsUsed")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Notes")
@@ -868,6 +1037,10 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IsArchived");
+
                     b.HasIndex("ShippingProvinceId");
 
                     b.HasIndex("ShippingWardId");
@@ -882,7 +1055,101 @@ namespace SmartShop.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[VnpayTransactionId] IS NOT NULL");
 
+                    b.HasIndex("UserId", "Status");
+
                     b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.OrderArchive", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ArchivedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("OriginalOrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OriginalOrderId");
+
+                    b.HasIndex("CreatedAt", "ArchivedAt");
+
+                    b.ToTable("OrderArchives");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.OrderFlashSaleUsage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("FlashSaleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("FlashSaleItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("OriginalPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("SalePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("SizeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FlashSaleId");
+
+                    b.HasIndex("FlashSaleItemId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderFlashSaleUsages");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.OrderItem", b =>
@@ -999,6 +1266,97 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasDatabaseName("IX_OrderItemComponents_OrderItemId");
 
                     b.ToTable("OrderItemComponents");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.OrderStatusHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ChangedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("FromStatus")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ToStatus")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .HasDatabaseName("IX_OrderStatusHistories_OrderId");
+
+                    b.ToTable("OrderStatusHistories");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.PointTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Points")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("IX_PointTransactions_AccountId");
+
+                    b.HasIndex("AccountId", "CreatedAt")
+                        .HasDatabaseName("IX_PointTransactions_Account_CreatedAt");
+
+                    b.ToTable("PointTransactions");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.PriceCampaign", b =>
@@ -1179,6 +1537,47 @@ namespace SmartShop.Infrastructure.Migrations
                     b.ToTable("ProductEmbeddings");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.ProductImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductImages", (string)null);
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.ProductSize", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1278,6 +1677,13 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("RefundNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("RefundedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -1290,14 +1696,20 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("VnpayRefundTxnRef")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("IX_ReturnRequests_OrderId");
 
                     b.HasIndex("Status");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_ReturnRequests_UserId");
 
                     b.ToTable("ReturnRequests");
                 });
@@ -1696,6 +2108,10 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("GoogleId")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<bool>("IsBanned")
                         .HasColumnType("bit");
 
@@ -1735,6 +2151,10 @@ namespace SmartShop.Infrastructure.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("GoogleId")
+                        .IsUnique()
+                        .HasFilter("[GoogleId] IS NOT NULL");
 
                     b.ToTable("Users");
                 });
@@ -1970,6 +2390,43 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.FlashSaleItem", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.FlashSale", "FlashSale")
+                        .WithMany("Items")
+                        .HasForeignKey("FlashSaleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SmartShop.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartShop.Domain.Entities.ProductSize", "ProductSize")
+                        .WithMany()
+                        .HasForeignKey("SizeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("FlashSale");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ProductSize");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.LoyaltyAccount", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.Notification", b =>
                 {
                     b.HasOne("SmartShop.Domain.Entities.User", null)
@@ -2009,6 +2466,33 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.OrderFlashSaleUsage", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.FlashSale", "FlashSale")
+                        .WithMany()
+                        .HasForeignKey("FlashSaleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartShop.Domain.Entities.FlashSaleItem", "FlashSaleItem")
+                        .WithMany()
+                        .HasForeignKey("FlashSaleItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartShop.Domain.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FlashSale");
+
+                    b.Navigation("FlashSaleItem");
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.OrderItem", b =>
                 {
                     b.HasOne("SmartShop.Domain.Entities.Order", "Order")
@@ -2036,6 +2520,26 @@ namespace SmartShop.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("OrderItem");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.OrderStatusHistory", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.Order", null)
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.PointTransaction", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.LoyaltyAccount", "Account")
+                        .WithMany("Transactions")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.PriceCampaignItem", b =>
@@ -2067,6 +2571,15 @@ namespace SmartShop.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.ProductImage", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.Product", null)
+                        .WithMany("Images")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.ProductSize", b =>
@@ -2315,6 +2828,16 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Navigation("Usages");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.FlashSale", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.LoyaltyAccount", b =>
+                {
+                    b.Navigation("Transactions");
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.Order", b =>
                 {
                     b.Navigation("Items");
@@ -2332,6 +2855,8 @@ namespace SmartShop.Infrastructure.Migrations
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Product", b =>
                 {
+                    b.Navigation("Images");
+
                     b.Navigation("Reviews");
 
                     b.Navigation("Sizes");

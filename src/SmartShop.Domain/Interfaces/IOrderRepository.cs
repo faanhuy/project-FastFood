@@ -11,6 +11,12 @@ public interface IOrderRepository
         Guid userId, int page, int pageSize, CancellationToken ct = default);
     Task<(IEnumerable<Order> Items, int TotalCount)> GetAllPagedAsync(
         int page, int pageSize, OrderStatus? statusFilter = null, CancellationToken ct = default);
+    Task<(IEnumerable<Order> Items, int TotalCount)> GetAllPagedAsync(
+        int page, int pageSize, OrderStatus? statusFilter,
+        string? search, DateTime? createdAfter, DateTime? createdBefore,
+        string sortBy, string sortDirection,
+        CancellationToken ct = default);
+    Task<List<Order>> GetByIdsAsync(List<Guid> ids, CancellationToken ct = default);
     Task AddAsync(Order order, CancellationToken ct = default);
 
     // Analytics
@@ -25,4 +31,5 @@ public interface IOrderRepository
     Task<IEnumerable<(string Status, int Count)>> GetOrderStatusBreakdownAsync(
         CancellationToken ct = default);
     Task<int> GetNewCustomersCountAsync(DateTime from, DateTime to, CancellationToken ct = default);
+    Task<(int OrderCount, decimal TotalSpent)> GetUserOrderStatsAsync(Guid userId, CancellationToken ct = default);
 }

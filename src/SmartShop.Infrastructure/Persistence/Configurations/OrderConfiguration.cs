@@ -21,9 +21,16 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(e => e.Notes)
             .HasMaxLength(1000);
 
+        builder.Property(e => e.IsArchived)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         // Performance indexes
         builder.HasIndex(e => e.UserId);
         builder.HasIndex(e => e.Status);
+        builder.HasIndex(e => e.CreatedAt);
+        builder.HasIndex(e => new { e.UserId, e.Status });
+        builder.HasIndex(e => e.IsArchived);
 
         // Unique filtered index for VnpayTransactionId
         builder.HasIndex(e => e.VnpayTransactionId)

@@ -33,4 +33,9 @@ public interface IEmailService
         Guid orderId,
         string orderNumber,
         string adminNote);
+
+    Task SendPasswordResetAsync(
+        string toEmail,
+        string toName,
+        string tempPassword);
 }

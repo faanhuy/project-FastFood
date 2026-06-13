@@ -16,6 +16,7 @@ public class User : BaseAuditableEntity
     public string? AvatarUrl { get; private set; }
     public bool IsBanned { get; private set; } = false;
     public DateTime? BannedAt { get; private set; }
+    public string? GoogleId { get; private set; }
 
     private User() { }
 
@@ -27,6 +28,24 @@ public class User : BaseAuditableEntity
             PasswordHash = passwordHash,
             FirstName = firstName,
             LastName = lastName
+        };
+    }
+
+    public static User CreateFromGoogle(string googleId, string email, string firstName, string lastName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(googleId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        ArgumentException.ThrowIfNullOrWhiteSpace(firstName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(lastName);
+
+        return new User
+        {
+            GoogleId = googleId,
+            Email = email.ToLowerInvariant(),
+            PasswordHash = "GOOGLE_OAUTH",
+            FirstName = firstName,
+            LastName = lastName,
+            Role = "Customer"
         };
     }
 
@@ -90,6 +109,20 @@ public class User : BaseAuditableEntity
     public void UpdateRole(string role)
     {
         Role = role;
+    }
+
+    public void UpdatePassword(string newPasswordHash)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(newPasswordHash);
+        PasswordHash = newPasswordHash;
+        // Revoke all refresh tokens on password reset
+        RevokeRefreshToken();
+    }
+
+    public void SetGoogleId(string googleId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(googleId);
+        GoogleId = googleId;
     }
 
 }

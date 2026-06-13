@@ -20,6 +20,9 @@ public class PlaceOrderCommandHandler(
     IUserRepository userRepository,
     IUserAddressRepository userAddressRepository,
     IPriceCampaignRepository priceCampaignRepository,
+    IFlashSaleRepository flashSaleRepository,
+    IOrderFlashSaleUsageRepository orderFlashSaleUsageRepository,
+    ILoyaltyRepository loyaltyRepository,
     IUnitOfWork unitOfWork,
     IMediator mediator) : IRequestHandler<PlaceOrderCommand, OrderDto>
 {
@@ -102,10 +105,20 @@ public class PlaceOrderCommandHandler(
         order.SetStoreId(request.StoreId);
         order.SetPaymentMethod(request.PaymentMethod);
 
-        // ── Add product items with price campaign ─────────────────────────────
+        // ── Add product items with price campaign and flash sales ─────────────
         var priceKeys = productItems.Select(i => (i.ProductId!.Value, i.SizeId)).ToList();
         var effectivePriceRules = await priceCampaignRepository.GetEffectivePriceItemsAsync(
             request.StoreId, priceKeys, DateTime.UtcNow, cancellationToken);
+
+        var now = DateTime.UtcNow;
+        var productIds = productItems.Select(i => i.ProductId!.Value).Distinct().ToList();
+        var activeFlashSalesByProduct = new Dictionary<Guid, FlashSale>();
+        foreach (var productId in productIds)
+        {
+            var flashSale = await flashSaleRepository.GetActiveByProductIdAsync(productId, now, cancellationToken);
+            if (flashSale != null)
+                activeFlashSalesByProduct[productId] = flashSale;
+        }
 
         foreach (var item in productItems)
         {
@@ -116,7 +129,36 @@ public class PlaceOrderCommandHandler(
             decimal unitPrice = basePrice;
             decimal? originalUnitPrice = null;
 
-            if (effectivePriceRules.TryGetValue(key, out var rule))
+            // Check flash sale first (highest priority) - find matching item
+            if (activeFlashSalesByProduct.TryGetValue(item.ProductId!.Value, out var flashSale))
+            {
+                var matchingFlashSaleItem = flashSale.Items.FirstOrDefault(
+                    fsi => fsi.ProductId == item.ProductId && fsi.SizeId == item.SizeId);
+
+                if (matchingFlashSaleItem != null)
+                {
+                    if (!matchingFlashSaleItem.HasStock(item.Quantity))
+                        throw new ConflictException("error.order_flash_sale_insufficient_stock",
+                            new Dictionary<string, string>
+                            {
+                                ["name"] = products[item.ProductId!.Value].Name,
+                                ["remaining"] = matchingFlashSaleItem.GetRemainingStock().ToString()
+                            });
+
+                    unitPrice = matchingFlashSaleItem.SalePrice;
+                    originalUnitPrice = basePrice;
+                    matchingFlashSaleItem.IncrementSoldCount(item.Quantity);
+                    flashSaleRepository.Update(flashSale);
+
+                    var usage = OrderFlashSaleUsage.Create(
+                        order.Id, flashSale.Id, matchingFlashSaleItem.Id,
+                        item.ProductId!.Value, item.SizeId,
+                        item.Quantity, matchingFlashSaleItem.SalePrice, basePrice);
+                    await orderFlashSaleUsageRepository.AddAsync(usage, cancellationToken);
+                }
+            }
+            // Then check price campaign
+            if (unitPrice == basePrice && effectivePriceRules.TryGetValue(key, out var rule))
             {
                 var promoPrice = (PriceRuleType)rule.ruleType switch
                 {
@@ -188,6 +230,36 @@ public class PlaceOrderCommandHandler(
             couponRepository.Update(coupon);
         }
 
+        // ── Loyalty Points ────────────────────────────────────────────────
+        decimal loyaltyDiscount = 0;
+        decimal loyaltyPointsUsed = 0;
+        if (request.UsePoints > 0)
+        {
+            var loyaltyAccount = await loyaltyRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+            if (loyaltyAccount != null)
+            {
+                // Validate: points available
+                if (request.UsePoints > loyaltyAccount.TotalPoints)
+                    throw new ConflictException("error.order_insufficient_loyalty_points", null);
+
+                // Validate: max 30% of current order value
+                var maxRedeemVnd = order.TotalAmount * 0.30m;
+                var pointValueVnd = request.UsePoints * 10m;  // 1 point = 10 VND
+                if (pointValueVnd > maxRedeemVnd)
+                    throw new ConflictException("error.order_loyalty_exceed_max_redeem",
+                        new Dictionary<string, string> { ["max"] = maxRedeemVnd.ToString("C0") });
+
+                loyaltyDiscount = pointValueVnd;
+                loyaltyPointsUsed = request.UsePoints;
+            }
+        }
+
+        // Apply loyalty discount to order
+        if (loyaltyDiscount > 0)
+        {
+            order.ApplyLoyaltyDiscount(loyaltyDiscount, loyaltyPointsUsed);
+        }
+
         await orderRepository.AddAsync(order, cancellationToken);
         cart.Clear();
 
@@ -217,6 +289,17 @@ public class PlaceOrderCommandHandler(
 
             try { await unitOfWork.SaveChangesAsync(cancellationToken); }
             catch (ConcurrencyException) { throw new ConflictException("error.order_out_of_stock_race", null); }
+        }
+
+        // ── Deduct loyalty points if redeemed ──────────────────────────────
+        if (loyaltyPointsUsed > 0)
+        {
+            var loyaltyAccount = await loyaltyRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+            if (loyaltyAccount != null)
+            {
+                loyaltyAccount.RedeemPoints(loyaltyPointsUsed, order.Id, $"Order {order.Id:N}");
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+            }
         }
 
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);

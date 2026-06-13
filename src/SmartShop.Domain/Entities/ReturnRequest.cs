@@ -13,6 +13,9 @@ public class ReturnRequest : BaseAuditableEntity
     public ReturnStatus Status { get; private set; }
     public string? AdminNote { get; private set; }
     public decimal RefundAmount { get; private set; }
+    public DateTime? RefundedAt { get; private set; }
+    public string? VnpayRefundTxnRef { get; private set; }
+    public string? RefundNote { get; private set; }
 
     public Order Order { get; private set; } = null!;
     public User User { get; private set; } = null!;
@@ -59,5 +62,13 @@ public class ReturnRequest : BaseAuditableEntity
         RefundAmount = refundAmount;
         Status = ReturnStatus.Pending;
         AdminNote = null;
+    }
+
+    public void MarkAsRefunded(string? vnpayRefundTxnRef = null, string? refundNote = null)
+    {
+        Status = ReturnStatus.Refunded;
+        RefundedAt = DateTime.UtcNow;
+        VnpayRefundTxnRef = vnpayRefundTxnRef;
+        RefundNote = refundNote;
     }
 }

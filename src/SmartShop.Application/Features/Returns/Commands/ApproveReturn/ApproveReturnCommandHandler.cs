@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using SmartShop.Application.Common.Interfaces;
@@ -53,10 +54,11 @@ public class ApproveReturnCommandHandler(
         var userIdString = returnRequest.UserId.ToString();
         var orderCode = order.Id.ToString()[..8].ToUpper();
         var refundFormatted = returnRequest.RefundAmount.ToString("N0");
-        var title = "Yêu cầu trả hàng được duyệt";
-        var message = $"Đơn hàng #{orderCode}: Yêu cầu trả hàng đã được duyệt. Bạn sẽ nhận hoàn tiền {refundFormatted}đ.";
+        const string titleKey = "notification.returnApprovedTitle";
+        const string messageKey = "notification.returnApprovedBody";
+        var paramsJson = JsonSerializer.Serialize(new { orderCode, refund = refundFormatted });
 
-        var notification = Notification.Create(returnRequest.UserId, title, message, order.Id);
+        var notification = Notification.Create(returnRequest.UserId, titleKey, messageKey, paramsJson, order.Id);
         await notificationRepository.AddAsync(notification, cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -80,8 +82,9 @@ public class ApproveReturnCommandHandler(
             await hubService.SendToUserAsync(userIdString, "ReturnRequestUpdated", new
             {
                 NotificationId = notification.Id,
-                Title = title,
-                Message = message,
+                TitleKey = titleKey,
+                MessageKey = messageKey,
+                Params = paramsJson,
                 OrderId = order.Id,
                 Status = "Approved",
                 RefundAmount = returnRequest.RefundAmount

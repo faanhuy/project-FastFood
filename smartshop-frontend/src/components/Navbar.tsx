@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   FiShoppingCart, FiPackage, FiLogOut, FiGrid,
-  FiUser, FiHeart, FiMapPin, FiChevronDown, FiCheck,
+  FiUser, FiHeart, FiMapPin, FiChevronDown, FiCheck, FiZap,
 } from 'react-icons/fi';
 import { useAuthStore } from '../store/authStore';
 import { cartService } from '../services/cartService';
@@ -106,6 +106,15 @@ export default function Navbar({ children }: NavbarProps) {
             <span className="text-lg font-extrabold text-rose-600 leading-tight tracking-tight">FastFood</span>
             <span className="hidden sm:block text-[10px] text-gray-400 leading-none">Fast food — Same day delivery</span>
           </div>
+        </Link>
+
+        {/* Flash Sales link */}
+        <Link
+          to="/flash-sales"
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-50 border border-orange-200 text-orange-600 hover:bg-orange-100 text-sm font-semibold transition-colors shrink-0"
+        >
+          <FiZap size={13} />
+          {t('flashSales', { ns: 'common' })}
         </Link>
 
         {/* Store picker */}

@@ -6,16 +6,20 @@ import { categoryService, productService } from '../services/productService';
 import { catalogService } from '../services/catalogService';
 import { cartService } from '../services/cartService';
 import { storeService } from '../services/storeService';
+import { flashSaleService } from '../services/flashSaleService';
 import { useAuthStore } from '../store/authStore';
 import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
 import type { CategoryDto, PagedResult, ProductDto } from '../types/product';
 import type { CatalogItemDto } from '../types/catalog';
+import type { FlashSaleItemDto } from '../types/flashSale';
 import { FiSearch, FiCpu } from 'react-icons/fi';
 import AISearchBar from '../components/AISearchBar';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { SkeletonProductCard } from '../components/Skeleton';
 import WishlistButton from '../components/WishlistButton';
 import ComboCard from '../components/ComboCard';
+import { FlashSaleBadge } from '../components/FlashSaleBadge';
 
 import { formatPrice } from '../utils/formatters';
 import { getImageUrl } from '../utils/imageUrl';
@@ -44,6 +48,27 @@ export default function ProductListPage() {
   const [addingId, setAddingId] = useState<string | null>(null);
   const [showComboView, setShowComboView] = useState(false);
   const [comboSearch, setComboSearch] = useState('');
+  const [flashSaleMap, setFlashSaleMap] = useState<Record<string, FlashSaleItemDto & { flashSaleName: string; remainingSeconds: number }>>(
+    {}
+  );
+
+  useEffect(() => {
+    flashSaleService
+      .getActive(1, 100)
+      .then((result) => {
+        const map: Record<string, FlashSaleItemDto & { flashSaleName: string; remainingSeconds: number }> = {};
+        for (const fs of result.items) {
+          for (const item of fs.items) {
+            const existing = map[item.productId];
+            if (!existing || item.salePrice < existing.salePrice) {
+              map[item.productId] = { ...item, flashSaleName: fs.name, remainingSeconds: fs.remainingSeconds };
+            }
+          }
+        }
+        setFlashSaleMap(map);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     categoryService.getCategories().then(setCategories).catch(console.error);
@@ -365,7 +390,9 @@ export default function ProductListPage() {
               )}
 
               {loading ? (
-                <div className="flex items-center justify-center h-64 text-gray-400">{tCommon('loading')}</div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => <SkeletonProductCard key={i} />)}
+                </div>
               ) : (
                 <>
                   <h2 className="text-xl font-bold text-gray-900 mb-4">{t('allProducts')}</h2>
@@ -374,6 +401,9 @@ export default function ProductListPage() {
                   const stock = selectedStore ? stockByProductId[product.id] : null;
                   const outOfStock = stock === 0;
                   const quickAddDisabled = addingId === product.id || outOfStock || stockLoading;
+                  const flashSale = flashSaleMap[product.id];
+                  const displayPrice = flashSale ? flashSale.salePrice : (product.effectivePrice ?? product.price);
+                  const hasDiscount = displayPrice < product.price;
 
                   return (
                   <Link
@@ -381,7 +411,7 @@ export default function ProductListPage() {
                     to={`/products/${product.slug}`}
                     className={`relative bg-white rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-rose-200 border border-transparent transition-all duration-200 p-3 flex flex-col group cursor-pointer ${
                       outOfStock ? 'opacity-75' : ''
-                    }`}
+                    } ${flashSale ? 'border-orange-200 ring-1 ring-orange-200' : ''}`}
                   >
                     <div className="absolute top-2 right-2">
                       <WishlistButton productId={product.id} />
@@ -400,15 +430,23 @@ export default function ProductListPage() {
                     </div>
                     <p className="text-sm font-medium text-gray-800 line-clamp-2 flex-1">{product.name}</p>
                     <div className="mt-2">
+                      {flashSale ? (
+                        <div className="mb-1.5">
+                          <FlashSaleBadge
+                            item={flashSale}
+                            onExpire={() => setFlashSaleMap((prev) => { const n = { ...prev }; delete n[product.id]; return n; })}
+                          />
+                        </div>
+                      ) : null}
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-rose-600 font-bold text-sm">{formatPrice(product.effectivePrice ?? product.price)}</span>
-                        {(product.effectivePrice ?? product.price) < product.price && (
+                        <span className="text-rose-600 font-bold text-sm">{formatPrice(displayPrice)}</span>
+                        {hasDiscount && (
                           <span className="rounded-full bg-red-100 text-red-600 px-1.5 py-0.5 text-[10px] font-bold">
-                            -{Math.round((1 - (product.effectivePrice ?? product.price) / product.price) * 100)}%
+                            -{Math.round((1 - displayPrice / product.price) * 100)}%
                           </span>
                         )}
                       </div>
-                      {(product.effectivePrice ?? product.price) < product.price && (
+                      {hasDiscount && (
                         <p className="text-gray-400 text-xs line-through">{formatPrice(product.price)}</p>
                       )}
                       {selectedStore && (

@@ -16,6 +16,7 @@ import ImageUploadField from '../../components/common/ImageUploadField';
 import Pagination from '../../components/common/Pagination';
 import ProductImagesManager from '../../components/admin/ProductImagesManager';
 import { getImageUrl } from '../../utils/imageUrl';
+import { BulkActionToolbar, AdminFilterPanel, SortableColumnHeader, AdminTableCheckbox } from '../../components/admin';
 
 const EMPTY_CREATE: CreateProductRequest = {
   name: '', description: '', price: 0, originalPrice: undefined,
@@ -33,6 +34,14 @@ export default function AdminProductPage() {
   const [loading,     setLoading]     = useState(true);
   const [page,        setPage]        = useState(1);
   const [totalPages,  setTotalPages]  = useState(1);
+
+  // Bulk actions state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
+  // Filter state
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [sortBy, setSortBy] = useState('newest');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // Create modal
   const [showCreate,  setShowCreate]  = useState(false);
@@ -59,7 +68,17 @@ export default function AdminProductPage() {
   const loadProducts = async (p: number) => {
     setLoading(true);
     try {
-      const result = await productService.getProducts({ page: p, pageSize: 15 });
+      const isActiveFilter = filterValues.isActiveFilter ? filterValues.isActiveFilter === 'true' : undefined;
+      const result = await productService.getAdminProducts({
+        page: p,
+        pageSize: 15,
+        categoryId: filterValues.categoryId || undefined,
+        search: filterValues.search || undefined,
+        isActiveFilter,
+        priceMin: filterValues.priceMin ? Number(filterValues.priceMin) : undefined,
+        priceMax: filterValues.priceMax ? Number(filterValues.priceMax) : undefined,
+        sortBy: sortBy || undefined,
+      });
       setProducts(result.items);
       setTotalPages(result.totalPages);
     } catch { /* ignore */ } finally {
@@ -69,8 +88,11 @@ export default function AdminProductPage() {
 
   useEffect(() => {
     categoryService.getCategories().then(setCategories).catch(console.error);
+  }, []);
+
+  useEffect(() => {
     loadProducts(page);
-  }, [page]);
+  }, [page, filterValues, sortBy, sortDirection]);
 
   /* ── Create ── */
   const handleCreateNameChange = (name: string) =>
@@ -168,6 +190,61 @@ export default function AdminProductPage() {
     }
   };
 
+  /* ── Bulk Actions ── */
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(products.map((p) => p.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const handleBulkAction = async (actionId: string) => {
+    const ids = Array.from(selectedIds);
+    if (!confirm(t('bulkConfirmMessage', { count: ids.length }))) return;
+
+    setBulkLoading(true);
+    try {
+      const result = await productService.bulkUpdateProducts(ids, actionId as any);
+      toast.success(t('bulkResultSuccess', { count: result.succeeded }));
+      if (result.failed > 0) {
+        toast.error(t('bulkResultFailed', { count: result.failed }));
+      }
+      setSelectedIds(new Set());
+      await loadProducts(page);
+    } catch (err) {
+      toast.error(getApiError(err, tToast('loadFailed')));
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const bulkActions = [
+    { id: 'activate', label: t('bulkActivate'), variant: 'default' as const },
+    { id: 'deactivate', label: t('bulkDeactivate'), variant: 'warning' as const },
+    { id: 'delete', label: t('bulkDelete'), variant: 'danger' as const },
+  ];
+
+  const filterFields = [
+    { key: 'search', type: 'text' as const, label: t('filterSearch'), placeholder: t('filterSearch') },
+    { key: 'categoryId', type: 'select' as const, label: t('filterCategory'), options: categories.map((c) => ({ value: c.id, label: c.name })) },
+    { key: 'isActiveFilter', type: 'select' as const, label: t('filterStatus'), options: [
+      { value: 'true', label: t('filterActive') },
+      { value: 'false', label: t('filterInactive') },
+    ]},
+    { key: 'priceMin', type: 'number' as const, label: t('filterPriceMin') },
+    { key: 'priceMax', type: 'number' as const, label: t('filterPriceMax') },
+  ];
+
   /* ── Delete ── */
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(t('confirmDeleteProduct', { name }))) return;
@@ -247,6 +324,24 @@ export default function AdminProductPage() {
         </button>
       </div>
 
+      {/* Filter Panel */}
+      <div className="mb-4">
+        <AdminFilterPanel
+          fields={filterFields}
+          values={filterValues}
+          onChange={(key, value) => {
+            setFilterValues((prev) => ({ ...prev, [key]: value }));
+            setPage(1);
+          }}
+          onApply={() => loadProducts(1)}
+          onReset={() => {
+            setFilterValues({});
+            setPage(1);
+          }}
+          isLoading={loading}
+        />
+      </div>
+
       {/* Import Result Panel */}
       {importResult && (
         <div className="mb-4 p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -288,7 +383,7 @@ export default function AdminProductPage() {
       {/* Create Modal */}
       {showCreate && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 my-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 my-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold mb-4">{t('createProduct')}</h2>
             <form onSubmit={handleCreate} className="space-y-3">
               <div>
@@ -371,7 +466,7 @@ export default function AdminProductPage() {
       {/* Edit Modal */}
       {editProduct && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 my-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 my-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold mb-1">{t('edit', { ns: 'common' })}</h2>
             <p className="text-xs text-gray-400 mb-4 font-mono">{editProduct.slug}</p>
             <form onSubmit={handleEdit} className="space-y-3">
@@ -483,9 +578,30 @@ export default function AdminProductPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600 w-12">
+                    <AdminTableCheckbox
+                      checked={selectedIds.size > 0 && selectedIds.size === products.length}
+                      indeterminate={selectedIds.size > 0 && selectedIds.size < products.length}
+                      onChange={(checked) => handleSelectAll(checked)}
+                    />
+                  </th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">{t('colImage')}</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">{t('colFood')}</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">{t('sellingPrice')}</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                    <SortableColumnHeader label={t('colFood')} field="name" currentSortBy={sortBy} currentSortDirection={sortDirection}
+                      onSort={(field, dir) => {
+                        setSortBy(field);
+                        setSortDirection(dir);
+                        setPage(1);
+                      }} />
+                  </th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                    <SortableColumnHeader label={t('sellingPrice')} field="price" currentSortBy={sortBy} currentSortDirection={sortDirection}
+                      onSort={(field, dir) => {
+                        setSortBy(field);
+                        setSortDirection(dir);
+                        setPage(1);
+                      }} />
+                  </th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">{t('colListedPrice')}</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">{t('status')}</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">{t('actions')}</th>
@@ -494,6 +610,12 @@ export default function AdminProductPage() {
               <tbody className="divide-y divide-gray-100">
                 {products.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <AdminTableCheckbox
+                        checked={selectedIds.has(p.id)}
+                        onChange={(checked) => handleSelectOne(p.id, checked)}
+                      />
+                    </td>
                     <td className="px-4 py-3">
                       <div className="h-14 w-14 overflow-hidden rounded-xl bg-gray-100">
                         {p.imageUrl ? (
@@ -533,6 +655,16 @@ export default function AdminProductPage() {
           </div>
 
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+
+          {/* Bulk Action Toolbar */}
+          {selectedIds.size > 0 && (
+            <BulkActionToolbar
+              selectedCount={selectedIds.size}
+              actions={bulkActions}
+              onAction={handleBulkAction}
+              isLoading={bulkLoading}
+            />
+          )}
         </>
       )}
 

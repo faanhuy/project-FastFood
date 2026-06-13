@@ -4,6 +4,7 @@ public interface IPaymentGateway
 {
     string CreatePaymentUrl(CreatePaymentRequest request);
     VNPayCallbackResult ProcessCallback(IDictionary<string, string> queryParams);
+    Task<VNPayRefundResult> RefundAsync(string originalTransactionId, long refundAmountVnd, string transactionRef, CancellationToken ct = default);
 }
 
 public record CreatePaymentRequest(
@@ -19,3 +20,9 @@ public record VNPayCallbackResult(
     string TransactionId,
     string OrderId,
     string ResponseCode);
+
+public record VNPayRefundResult(
+    bool IsSuccess,
+    string RefundTransactionId,
+    string ResponseCode,
+    string? ErrorMessage);

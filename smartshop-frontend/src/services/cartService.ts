@@ -50,4 +50,9 @@ export const cartService = {
   clearCart: async (): Promise<void> => {
     await api.delete('/cart');
   },
+
+  addFromOrder: async (orderId: string): Promise<CartDto> => {
+    const { data } = await api.post<ApiResponse<CartDto>>(`/cart/from-order/${orderId}`);
+    return data.data;
+  },
 };

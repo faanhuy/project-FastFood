@@ -1,29 +1,52 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import LoginPage from '../pages/LoginPage';
-import RegisterPage from '../pages/RegisterPage';
-import ProductListPage from '../pages/ProductListPage';
-import ProductDetailPage from '../pages/ProductDetailPage';
-import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
-import AdminProductPage from '../pages/admin/AdminProductPage';
-import AdminOrderPage from '../pages/admin/AdminOrderPage';
-import AdminCouponsPage from '../pages/admin/AdminCouponsPage';
-import InventoryManagementPage from '../pages/admin/InventoryManagementPage';
-import AdminStoresPage from '../pages/admin/AdminStoresPage';
-import AdminPromotionalPricePage from '../pages/admin/AdminPromotionalPricePage';
-import SizeManagementPage from '../pages/admin/SizeManagementPage';
-import AdminComboPage from '../pages/admin/AdminComboPage';
-import AdminReturnRequestsPage from '../pages/admin/AdminReturnRequestsPage';
-import AdminUsersPage from '../pages/admin/AdminUsersPage';
-import ComboDetailPage from '../pages/ComboDetailPage';
-import CartPage from '../pages/CartPage';
-import CheckoutPage from '../pages/CheckoutPage';
-import OrderHistoryPage from '../pages/OrderHistoryPage';
-import OrderDetailPage from '../pages/OrderDetailPage';
-import ReturnRequestsPage from '../pages/ReturnRequestsPage';
-import ProfilePage from '../pages/ProfilePage';
-import WishlistPage from '../pages/WishlistPage';
-import PaymentResultPage from '../pages/PaymentResultPage';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
+
+// User-facing pages
+const LoginPage           = lazy(() => import('../pages/LoginPage'));
+const RegisterPage        = lazy(() => import('../pages/RegisterPage'));
+const ProductListPage     = lazy(() => import('../pages/ProductListPage'));
+const ProductDetailPage   = lazy(() => import('../pages/ProductDetailPage'));
+const ComboDetailPage     = lazy(() => import('../pages/ComboDetailPage'));
+const FlashSalePage       = lazy(() => import('../pages/FlashSalePage'));
+const CartPage            = lazy(() => import('../pages/CartPage'));
+const CheckoutPage        = lazy(() => import('../pages/CheckoutPage'));
+const OrderHistoryPage    = lazy(() => import('../pages/OrderHistoryPage'));
+const OrderDetailPage     = lazy(() => import('../pages/OrderDetailPage'));
+const ReturnRequestsPage  = lazy(() => import('../pages/ReturnRequestsPage'));
+const ProfilePage         = lazy(() => import('../pages/ProfilePage'));
+const WishlistPage        = lazy(() => import('../pages/WishlistPage'));
+const PaymentResultPage   = lazy(() => import('../pages/PaymentResultPage'));
+
+// Admin pages (separate chunk — never loaded by regular users)
+const AdminDashboardPage       = lazy(() => import('../pages/admin/AdminDashboardPage'));
+const AdminProductPage         = lazy(() => import('../pages/admin/AdminProductPage'));
+const AdminOrderPage           = lazy(() => import('../pages/admin/AdminOrderPage'));
+const AdminCouponsPage         = lazy(() => import('../pages/admin/AdminCouponsPage'));
+const AdminFlashSalesPage      = lazy(() => import('../pages/admin/AdminFlashSalesPage'));
+const InventoryManagementPage  = lazy(() => import('../pages/admin/InventoryManagementPage'));
+const AdminStoresPage          = lazy(() => import('../pages/admin/AdminStoresPage'));
+const AdminPromotionalPricePage = lazy(() => import('../pages/admin/AdminPromotionalPricePage'));
+const SizeManagementPage       = lazy(() => import('../pages/admin/SizeManagementPage'));
+const AdminComboPage           = lazy(() => import('../pages/admin/AdminComboPage'));
+const AdminReturnRequestsPage  = lazy(() => import('../pages/admin/AdminReturnRequestsPage'));
+const AdminUsersPage           = lazy(() => import('../pages/admin/AdminUsersPage'));
+const AdminCsvImportPage       = lazy(() => import('../pages/admin/AdminCsvImportPage'));
+const AdminHealthPage          = lazy(() => import('../pages/admin/AdminHealthPage'));
+
+function PageLoader() {
+  const { t } = useTranslation('common');
+  return (
+    <div className="min-h-screen flex items-center justify-center text-gray-400 text-sm">
+      {t('loading')}
+    </div>
+  );
+}
+
+function withSuspense(element: React.ReactElement) {
+  return <Suspense fallback={<PageLoader />}>{element}</Suspense>;
+}
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -38,156 +61,139 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 }
 
 const router = createBrowserRouter([
-  { path: '/login', element: <LoginPage /> },
-  { path: '/register', element: <RegisterPage /> },
-  { path: '/products', element: <ProductListPage /> },
-  { path: '/products/:slug', element: <ProductDetailPage /> },
-  { path: '/combos/:id', element: <ComboDetailPage /> },
+  { path: '/login',    element: withSuspense(<LoginPage />) },
+  { path: '/register', element: withSuspense(<RegisterPage />) },
+  { path: '/products', element: withSuspense(<ProductListPage />) },
+  { path: '/products/:slug', element: withSuspense(<ProductDetailPage />) },
+  { path: '/combos/:id',     element: withSuspense(<ComboDetailPage />) },
+  { path: '/flash-sales',    element: withSuspense(<FlashSalePage />) },
   {
     path: '/cart',
-    element: (
-      <PrivateRoute>
-        <CartPage />
-      </PrivateRoute>
+    element: withSuspense(
+      <PrivateRoute><CartPage /></PrivateRoute>
     ),
   },
   {
     path: '/checkout',
-    element: (
-      <PrivateRoute>
-        <CheckoutPage />
-      </PrivateRoute>
+    element: withSuspense(
+      <PrivateRoute><CheckoutPage /></PrivateRoute>
     ),
   },
   {
     path: '/orders',
-    element: (
-      <PrivateRoute>
-        <OrderHistoryPage />
-      </PrivateRoute>
+    element: withSuspense(
+      <PrivateRoute><OrderHistoryPage /></PrivateRoute>
     ),
   },
   {
     path: '/orders/return-requests',
-    element: (
-      <PrivateRoute>
-        <ReturnRequestsPage />
-      </PrivateRoute>
+    element: withSuspense(
+      <PrivateRoute><ReturnRequestsPage /></PrivateRoute>
     ),
   },
   {
     path: '/orders/:id',
-    element: (
-      <PrivateRoute>
-        <OrderDetailPage />
-      </PrivateRoute>
+    element: withSuspense(
+      <PrivateRoute><OrderDetailPage /></PrivateRoute>
     ),
   },
   {
     path: '/admin',
-    element: (
-      <AdminRoute>
-        <AdminDashboardPage />
-      </AdminRoute>
+    element: withSuspense(
+      <AdminRoute><AdminDashboardPage /></AdminRoute>
     ),
   },
   {
     path: '/admin/products',
-    element: (
-      <AdminRoute>
-        <AdminProductPage />
-      </AdminRoute>
+    element: withSuspense(
+      <AdminRoute><AdminProductPage /></AdminRoute>
     ),
   },
   {
     path: '/admin/orders',
-    element: (
-      <AdminRoute>
-        <AdminOrderPage />
-      </AdminRoute>
+    element: withSuspense(
+      <AdminRoute><AdminOrderPage /></AdminRoute>
     ),
   },
   {
     path: '/admin/coupons',
-    element: (
-      <AdminRoute>
-        <AdminCouponsPage />
-      </AdminRoute>
+    element: withSuspense(
+      <AdminRoute><AdminCouponsPage /></AdminRoute>
+    ),
+  },
+  {
+    path: '/admin/flash-sales',
+    element: withSuspense(
+      <AdminRoute><AdminFlashSalesPage /></AdminRoute>
     ),
   },
   {
     path: '/admin/inventory',
-    element: (
-      <AdminRoute>
-        <InventoryManagementPage />
-      </AdminRoute>
+    element: withSuspense(
+      <AdminRoute><InventoryManagementPage /></AdminRoute>
     ),
   },
   {
     path: '/admin/stores',
-    element: (
-      <AdminRoute>
-        <AdminStoresPage />
-      </AdminRoute>
+    element: withSuspense(
+      <AdminRoute><AdminStoresPage /></AdminRoute>
     ),
   },
   {
     path: '/admin/promotional-prices',
-    element: (
-      <AdminRoute>
-        <AdminPromotionalPricePage />
-      </AdminRoute>
+    element: withSuspense(
+      <AdminRoute><AdminPromotionalPricePage /></AdminRoute>
     ),
   },
   {
     path: '/admin/sizes',
-    element: (
-      <AdminRoute>
-        <SizeManagementPage />
-      </AdminRoute>
+    element: withSuspense(
+      <AdminRoute><SizeManagementPage /></AdminRoute>
     ),
   },
   {
     path: '/admin/combos',
-    element: (
-      <AdminRoute>
-        <AdminComboPage />
-      </AdminRoute>
+    element: withSuspense(
+      <AdminRoute><AdminComboPage /></AdminRoute>
     ),
   },
   {
     path: '/admin/return-requests',
-    element: (
-      <AdminRoute>
-        <AdminReturnRequestsPage />
-      </AdminRoute>
+    element: withSuspense(
+      <AdminRoute><AdminReturnRequestsPage /></AdminRoute>
     ),
   },
   {
     path: '/admin/users',
-    element: (
-      <AdminRoute>
-        <AdminUsersPage />
-      </AdminRoute>
+    element: withSuspense(
+      <AdminRoute><AdminUsersPage /></AdminRoute>
+    ),
+  },
+  {
+    path: '/admin/products/import',
+    element: withSuspense(
+      <AdminRoute><AdminCsvImportPage /></AdminRoute>
+    ),
+  },
+  {
+    path: '/admin/health',
+    element: withSuspense(
+      <AdminRoute><AdminHealthPage /></AdminRoute>
     ),
   },
   {
     path: '/profile',
-    element: (
-      <PrivateRoute>
-        <ProfilePage />
-      </PrivateRoute>
+    element: withSuspense(
+      <PrivateRoute><ProfilePage /></PrivateRoute>
     ),
   },
   {
     path: '/wishlist',
-    element: (
-      <PrivateRoute>
-        <WishlistPage />
-      </PrivateRoute>
+    element: withSuspense(
+      <PrivateRoute><WishlistPage /></PrivateRoute>
     ),
   },
-  { path: '/payment/result', element: <PaymentResultPage /> },
+  { path: '/payment/result', element: withSuspense(<PaymentResultPage />) },
   { path: '/', element: <Navigate to="/products" replace /> },
   { path: '*', element: <Navigate to="/products" replace /> },
 ]);

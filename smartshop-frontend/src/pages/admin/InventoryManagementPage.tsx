@@ -119,26 +119,22 @@ export default function InventoryManagementPage() {
     }
   }, [tab, selectedStoreId, loadReceipts]);
 
-  // Preload all products when on stockReceipt tab (for receipt item dropdown)
+  // Load all products once on mount — used by both stockReceipt and bySize tabs
   useEffect(() => {
-    if (tab !== 'stockReceipt') return;
-    if (allProducts.length > 0) return;
     productService.getProducts({ pageSize: 200 })
       .then((r) => setAllProducts(r?.items ?? []))
       .catch(() => {});
-  }, [tab]);
+  }, []);
 
-  // Load products with sizes whenever entering bySize tab
+  // Derive sizeProducts from allProducts when entering bySize tab
   useEffect(() => {
-    if (tab !== 'bySize') return;
-    productService.getProducts({ pageSize: 200 }).then((r) => {
-      const withSizes = (r?.items ?? []).filter((p) => p.hasSizes);
-      setSizeProducts(withSizes);
-      if (withSizes.length > 0 && !selectedSizeProductId) {
-        setSelectedSizeProductId(withSizes[0].id);
-      }
-    }).catch(() => {});
-  }, [tab]);
+    if (tab !== 'bySize' || allProducts.length === 0) return;
+    const withSizes = allProducts.filter((p) => p.hasSizes);
+    setSizeProducts(withSizes);
+    if (withSizes.length > 0 && !selectedSizeProductId) {
+      setSelectedSizeProductId(withSizes[0].id);
+    }
+  }, [tab, allProducts, selectedSizeProductId]);
 
   // Load sizes for selected product in bySize tab
   useEffect(() => {

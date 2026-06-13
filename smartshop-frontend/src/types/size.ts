@@ -12,6 +12,7 @@ export interface EffectivePriceItem {
   basePrice: number;
   effectivePrice: number;
   hasPromotion: boolean;
+  availableStock: number;
 }
 
 // Size Master Management types

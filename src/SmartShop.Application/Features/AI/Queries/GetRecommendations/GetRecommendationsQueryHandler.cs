@@ -20,15 +20,10 @@ public class GetRecommendationsQueryHandler(
     {
         var cacheKey = $"ai:rec:{request.ProductId}:n{request.Count}";
 
-        // Bước 1: Cache (Redis) + DB products song song
-        var cacheTask = cache.GetAsync<List<ProductDto>>(cacheKey, cancellationToken);
-        var dbTask    = productRepository.GetPagedAsync(1, int.MaxValue, ct: cancellationToken);
-        await Task.WhenAll(cacheTask, dbTask);
-
-        var cached = await cacheTask;
+        var cached = await cache.GetAsync<List<ProductDto>>(cacheKey, cancellationToken);
         if (cached is not null) return cached;
 
-        var (allProducts, _) = await dbTask;
+        var (allProducts, _) = await productRepository.GetPagedAsync(1, int.MaxValue, ct: cancellationToken);
 
         // Bước 2: Settings tuần tự sau khi DB xong
         var minScore = await settings.GetDoubleAsync("AI:Recommendations:MinScore", defaultValue: 0.4, cancellationToken);

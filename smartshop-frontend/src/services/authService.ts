@@ -11,4 +11,17 @@ export const authService = {
     const { data: res } = await api.post<ApiResponse<AuthResponse>>('/auth/register', data);
     return res.data;
   },
+
+  changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
+    await api.post('/auth/change-password', { currentPassword, newPassword });
+  },
+
+  forgotPassword: async (email: string): Promise<void> => {
+    await api.post('/auth/forgot-password', { email });
+  },
+
+  googleLogin: async (idToken: string): Promise<AuthResponse> => {
+    const { data: res } = await api.post<ApiResponse<AuthResponse>>('/auth/google', { idToken });
+    return res.data;
+  },
 };

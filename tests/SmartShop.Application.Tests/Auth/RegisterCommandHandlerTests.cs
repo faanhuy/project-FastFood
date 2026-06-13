@@ -16,9 +16,10 @@ public class RegisterCommandHandlerTests
     private readonly Mock<IPasswordHasher> _hasher = new();
     private readonly Mock<IJwtTokenService> _jwt = new();
     private readonly Mock<IUnitOfWork> _uow = new();
+    private readonly Mock<ITokenHasher> _tokenHasher = new();
 
     private RegisterCommandHandler CreateHandler() =>
-        new(_userRepo.Object, _hasher.Object, _jwt.Object, _uow.Object);
+        new(_userRepo.Object, _hasher.Object, _jwt.Object, _uow.Object, _tokenHasher.Object);
 
     [Fact]
     public async Task Handle_NewEmail_CreatesUserAndReturnsAuthResponse()

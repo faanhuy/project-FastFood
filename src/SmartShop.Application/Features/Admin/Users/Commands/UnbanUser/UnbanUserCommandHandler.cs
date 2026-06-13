@@ -15,7 +15,7 @@ public class UnbanUserCommandHandler(IUserRepository userRepository, IUnitOfWork
             ?? throw new NotFoundException(nameof(User), request.TargetUserId);
 
         if (!user.IsBanned)
-            throw new ConflictException("Tài khoản này hiện không bị khóa.");
+            throw new ConflictException("error.user_not_banned", null);
 
         user.Unban();
         await unitOfWork.SaveChangesAsync(cancellationToken);

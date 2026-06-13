@@ -11,7 +11,7 @@ public class GetUsersQueryHandler(IUserRepository userRepository)
         var paged = await userRepository.GetPagedAsync(
             request.Page, request.PageSize,
             request.RoleFilter, request.BannedFilter, request.SearchEmail,
-            cancellationToken);
+            request.SortBy, request.SortDirection, cancellationToken);
 
         var dtos = paged.Items.Select(u => new UserDto
         {

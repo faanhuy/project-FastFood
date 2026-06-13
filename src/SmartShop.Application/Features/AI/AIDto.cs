@@ -6,6 +6,7 @@ public record SemanticSearchResultDto(
     string Description,
     decimal Price,
     decimal OriginalPrice,
+    decimal? EffectivePrice,
     string Slug,
     string? ImageUrl,
     Guid CategoryId,

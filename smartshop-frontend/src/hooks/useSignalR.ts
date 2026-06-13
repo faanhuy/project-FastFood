@@ -4,8 +4,11 @@ import { useAuthStore } from '@/store/authStore';
 
 export interface SignalRNotification {
   notificationId: string;
-  title: string;
-  message: string;
+  titleKey?: string;
+  messageKey?: string;
+  params?: string;          // JSON string
+  title?: string;           // legacy fallback
+  message?: string;         // legacy fallback
   orderId?: string;
 }
 
@@ -15,8 +18,11 @@ const HUB_URL = `${API_BASE_URL.replace(/\/?api\/?$/, '')}/hubs/orders`;
 function normalizeNotificationPayload(data: any): SignalRNotification {
   return {
     notificationId: data?.notificationId ?? data?.NotificationId ?? '',
-    title: data?.title ?? data?.Title ?? '',
-    message: data?.message ?? data?.Message ?? 'Đơn hàng đã được cập nhật trạng thái.',
+    titleKey: data?.titleKey ?? data?.TitleKey,
+    messageKey: data?.messageKey ?? data?.MessageKey,
+    params: data?.params ?? data?.Params,
+    title: data?.title ?? data?.Title,
+    message: data?.message ?? data?.Message,
     orderId: data?.orderId ?? data?.OrderId,
   };
 }

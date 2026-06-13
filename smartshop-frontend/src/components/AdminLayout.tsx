@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   FiGrid, FiPackage, FiShoppingBag, FiTag, FiLogOut, FiMenu,
   FiExternalLink, FiMapPin, FiArchive, FiPercent, FiSliders,
-  FiLayers, FiRotateCcw, FiChevronDown, FiChevronRight, FiUsers,
+  FiLayers, FiRotateCcw, FiChevronDown, FiChevronRight, FiUsers, FiActivity,
 } from 'react-icons/fi';
 import { useAuthStore } from '../store/authStore';
 
@@ -95,6 +95,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       icon: FiPackage,
       children: [
         { to: '/admin/products',          label: t('navFoods'),       icon: FiPackage  },
+        { to: '/admin/products/import',   label: t('navCsvImport'),   icon: FiPackage  },
         { to: '/admin/sizes',             label: t('navSizes'),       icon: FiSliders  },
         { to: '/admin/combos',            label: t('navCombos'),      icon: FiLayers   },
         { to: '/admin/promotional-prices',label: t('navPromoPrice'),  icon: FiPercent  },
@@ -112,12 +113,14 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       label: t('navBusiness'),
       icon: FiMapPin,
       children: [
-        { to: '/admin/stores',    label: t('navBranches'),  icon: FiMapPin   },
-        { to: '/admin/inventory', label: t('navInventory'), icon: FiArchive  },
-        { to: '/admin/coupons',   label: t('navCoupons'),   icon: FiTag      },
+        { to: '/admin/stores',       label: t('navBranches'),   icon: FiMapPin   },
+        { to: '/admin/inventory',    label: t('navInventory'),  icon: FiArchive  },
+        { to: '/admin/coupons',      label: t('navCoupons'),    icon: FiTag      },
+        { to: '/admin/flash-sales',  label: t('navFlashSales'), icon: FiPercent  },
       ],
     },
     { to: '/admin/users', label: t('manageUsers'), icon: FiUsers },
+    { to: '/admin/health', label: t('healthNavItem'), icon: FiActivity },
   ];
 
   return (

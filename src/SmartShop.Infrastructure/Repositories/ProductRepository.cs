@@ -102,6 +102,83 @@ public class ProductRepository : IProductRepository
         return (items, totalCount);
     }
 
+    public async Task<(IEnumerable<Product> Items, int TotalCount)> GetPagedAsync(
+        int page, int pageSize, Guid? categoryId, string? search,
+        string sortBy, bool? isActiveFilter, decimal? priceMin, decimal? priceMax,
+        CancellationToken ct = default)
+    {
+        var query = _context.Products.AsNoTracking().AsQueryable();
+
+        // Only filter active if isActiveFilter is explicitly set
+        if (isActiveFilter.HasValue)
+            query = query.Where(p => p.IsActive == isActiveFilter.Value);
+
+        if (categoryId.HasValue)
+            query = query.Where(p => p.CategoryId == categoryId.Value);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var pattern = $"%{search}%";
+            query = query.Where(p =>
+                EF.Functions.Like(EF.Functions.Collate(p.Name, "Latin1_General_CI_AI"), pattern) ||
+                EF.Functions.Like(EF.Functions.Collate(p.Description, "Latin1_General_CI_AI"), pattern));
+        }
+
+        if (priceMin.HasValue)
+            query = query.Where(p => p.Price >= priceMin.Value);
+
+        if (priceMax.HasValue)
+            query = query.Where(p => p.Price <= priceMax.Value);
+
+        var totalCount = await query.CountAsync(ct);
+
+        List<Product> items;
+
+        if (sortBy == "best_selling")
+        {
+            items = await query
+                .Select(p => new
+                {
+                    Product = p,
+                    TotalSold = _context.OrderItems
+                        .Where(oi => oi.ProductId == p.Id)
+                        .Sum(oi => (int?)oi.Quantity) ?? 0
+                })
+                .OrderByDescending(x => x.TotalSold)
+                .ThenByDescending(x => x.Product.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => x.Product)
+                .ToListAsync(ct);
+        }
+        else
+        {
+            var sorted = sortBy switch
+            {
+                "price_asc"  => query.OrderBy(p => p.Price),
+                "price_desc" => query.OrderByDescending(p => p.Price),
+                "name_asc"   => query.OrderBy(p => p.Name),
+                "name_desc"  => query.OrderByDescending(p => p.Name),
+                _            => query.OrderByDescending(p => p.CreatedAt),
+            };
+
+            items = await sorted
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(ct);
+        }
+
+        return (items, totalCount);
+    }
+
+    public async Task<List<Product>> GetByIdsAsync(List<Guid> ids, CancellationToken ct = default)
+    {
+        return await _context.Products
+            .Include(p => p.Sizes)
+            .Where(p => ids.Contains(p.Id))
+            .ToListAsync(ct);
+    }
+
     public void Update(Product product)
     {
         _context.Products.Update(product);

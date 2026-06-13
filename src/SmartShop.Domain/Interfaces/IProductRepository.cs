@@ -11,6 +11,11 @@ public interface IProductRepository
     Task<(IEnumerable<Product> Items, int TotalCount)> GetPagedAsync(
         int page, int pageSize, Guid? categoryId = null, string? search = null,
         string sortBy = "newest", CancellationToken ct = default);
+    Task<(IEnumerable<Product> Items, int TotalCount)> GetPagedAsync(
+        int page, int pageSize, Guid? categoryId, string? search,
+        string sortBy, bool? isActiveFilter, decimal? priceMin, decimal? priceMax,
+        CancellationToken ct = default);
+    Task<List<Product>> GetByIdsAsync(List<Guid> ids, CancellationToken ct = default);
     Task AddAsync(Product product, CancellationToken ct = default);
     void Update(Product product);
     void Delete(Product product);

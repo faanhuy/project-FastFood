@@ -11,4 +11,5 @@ public class UserDto
     public DateTime? BannedAt { get; init; }
     public DateTime CreatedAt { get; init; }
     public int OrderCount { get; init; }
+    public decimal TotalSpent { get; init; }
 }

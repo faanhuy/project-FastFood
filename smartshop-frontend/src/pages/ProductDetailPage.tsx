@@ -6,9 +6,11 @@ import { productService } from '../services/productService';
 import { cartService } from '../services/cartService';
 import { storeService } from '../services/storeService';
 import { productImageService } from '../services/productImageService';
+import { flashSaleService } from '../services/flashSaleService';
 import { useAuthStore } from '../store/authStore';
 import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
 import type { ProductDetailDto, ProductImageDto } from '../types/product';
+import type { FlashSaleItemDto } from '../types/flashSale';
 import type { StockInfo } from '../types/store';
 import { FiArrowLeft, FiMapPin } from 'react-icons/fi';
 import RecommendationCarousel from '../components/RecommendationCarousel';
@@ -17,6 +19,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import StoreSelectorModal from '../components/StoreSelectorModal';
 import ImageGallery from '../components/ImageGallery';
+import { CountdownTimer } from '../components/CountdownTimer';
 import { getImageUrl } from '../utils/imageUrl';
 
 const formatPrice = (price: number) =>
@@ -48,22 +51,45 @@ export default function ProductDetailPage() {
   const [images, setImages] = useState<ProductImageDto[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
 
+  // flashSaleMap: key = sizeId (ProductSize.Id) for sized products, '' for non-sized
+  const [flashSaleMap, setFlashSaleMap] = useState<Record<string, FlashSaleItemDto & { remainingSeconds: number }>>({});
+
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
+    setImagesLoading(true);
+
+    // Start flash sale fetch immediately — doesn't need product.id, filter client-side later
+    const flashSalePromise = flashSaleService.getActive(1, 100).catch(() => null);
+
     productService
       .getProductBySlug(slug, selectedStore?.id)
-      .then((prod) => {
+      .then(async (prod) => {
         setProduct(prod);
-        // Load product images
-        setImagesLoading(true);
-        productImageService
-          .getImages(prod.id)
-          .then(setImages)
-          .catch(() => setImages([]))
-          .finally(() => setImagesLoading(false));
+
+        const [imgs, fsResult] = await Promise.all([
+          productImageService.getImages(prod.id).catch(() => []),
+          flashSalePromise,
+        ]);
+
+        setImages(imgs);
+        setImagesLoading(false);
+
+        if (fsResult) {
+          const map: Record<string, FlashSaleItemDto & { remainingSeconds: number }> = {};
+          for (const fs of fsResult.items) {
+            for (const item of fs.items) {
+              if (item.productId !== prod.id) continue;
+              const key = item.sizeId ?? '';
+              if (!map[key] || item.salePrice < map[key].salePrice) {
+                map[key] = { ...item, remainingSeconds: fs.remainingSeconds };
+              }
+            }
+          }
+          setFlashSaleMap(map);
+        }
       })
-      .catch(() => setError(t('productNotFound')))
+      .catch(() => { setError(t('productNotFound')); setImagesLoading(false); })
       .finally(() => setLoading(false));
 
     fetchStores().catch(() => {});
@@ -187,9 +213,17 @@ export default function ProductDetailPage() {
     ? product.sizes.find((sz) => sz.id === selectedSizeId)
     : null;
 
-  const displayPrice = product?.hasSizes && selectedSize
-    ? selectedSize.effectivePrice ?? product.price
-    : product?.effectivePrice ?? product?.price ?? 0;
+  const activeFlashSaleItem = product?.hasSizes && selectedSizeId
+    ? flashSaleMap[selectedSizeId]
+    : !product?.hasSizes
+      ? flashSaleMap['']
+      : undefined;
+
+  const displayPrice = (() => {
+    if (activeFlashSaleItem) return activeFlashSaleItem.salePrice;
+    if (product?.hasSizes && selectedSize) return selectedSize.effectivePrice ?? product.price;
+    return product?.effectivePrice ?? product?.price ?? 0;
+  })();
 
   const originalDisplayPrice = displayPrice < product!.price ? product!.price : null;
   const hasDiscount = originalDisplayPrice !== null;
@@ -233,19 +267,32 @@ export default function ProductDetailPage() {
           <div className="flex-1 flex flex-col">
             <h1 className="text-xl font-bold text-gray-900">{product.name}</h1>
 
-            <div className="mt-3 flex items-center gap-3">
+            <div className="mt-3 flex items-center gap-3 flex-wrap">
               <span className="text-2xl font-bold text-rose-600">{formatPrice(displayPrice)}</span>
               {hasDiscount && originalDisplayPrice && (
                 <>
                   <span className="text-gray-400 line-through text-sm">{formatPrice(originalDisplayPrice)}</span>
                   {discountPercent > 0 && (
-                    <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-medium">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${activeFlashSaleItem ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600'}`}>
                       -{discountPercent}%
                     </span>
                   )}
                 </>
               )}
             </div>
+            {activeFlashSaleItem && (
+              <div className="mt-1.5 inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200 text-orange-700 text-xs px-2.5 py-1 rounded-full">
+                <span>{'⚡'}</span>
+                <span>{t('flashSale')}</span>
+                <span className="text-gray-400">{'·'}</span>
+                <span>{t('flashSaleEnds')}</span>
+                <CountdownTimer
+                  remainingSeconds={activeFlashSaleItem.remainingSeconds}
+                  onExpire={() => setFlashSaleMap((m) => { const n = { ...m }; delete n[activeFlashSaleItem.sizeId ?? '']; return n; })}
+                  className="text-orange-600"
+                />
+              </div>
+            )}
 
             <div className="mt-1 text-sm">
               {!selectedStore ? (

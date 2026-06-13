@@ -7,7 +7,8 @@ namespace SmartShop.Application.Features.PriceCampaigns.Queries.GetBulkEffective
 
 public class GetBulkEffectivePricesQueryHandler(
     IPriceCampaignRepository priceCampaignRepo,
-    IProductRepository productRepo
+    IProductRepository productRepo,
+    IStoreInventoryRepository inventoryRepo
 ) : IRequestHandler<GetBulkEffectivePricesQuery, ApiResponse<List<BulkEffectivePriceResult>>>
 {
     public async Task<ApiResponse<List<BulkEffectivePriceResult>>> Handle(
@@ -15,7 +16,6 @@ public class GetBulkEffectivePricesQueryHandler(
     {
         var at = request.At ?? DateTime.UtcNow;
 
-        // Load base prices — keyed by productId
         var productIds = request.Items.Select(i => i.ProductId).Distinct().ToList();
         var basePrices = new Dictionary<Guid, decimal>();
 
@@ -26,15 +26,19 @@ public class GetBulkEffectivePricesQueryHandler(
                 basePrices[pid] = product.Price;
         }
 
-        // Bulk load effective price rules
         var keys = request.Items.Select(i => (i.ProductId, i.SizeId)).ToList();
         var effectiveRules = await priceCampaignRepo.GetEffectivePriceItemsAsync(
             request.StoreId, keys, at, ct);
+
+        // Bulk load inventory for the selected store
+        var inventories = await inventoryRepo.GetByStoreAndProductsAsync(request.StoreId, productIds, ct);
+        var stockMap = inventories.ToDictionary(inv => inv.ProductId, inv => inv.Quantity);
 
         var results = request.Items.Select(item =>
         {
             var basePrice = basePrices.GetValueOrDefault(item.ProductId, 0m);
             var key = (item.ProductId, item.SizeId);
+            var stock = stockMap.GetValueOrDefault(item.ProductId, 0);
 
             if (effectiveRules.TryGetValue(key, out var rule))
             {
@@ -46,11 +50,11 @@ public class GetBulkEffectivePricesQueryHandler(
                 };
 
                 return new BulkEffectivePriceResult(
-                    item.ProductId, item.SizeId, basePrice, effectivePrice, HasPromotion: true);
+                    item.ProductId, item.SizeId, basePrice, effectivePrice, HasPromotion: true, AvailableStock: stock);
             }
 
             return new BulkEffectivePriceResult(
-                item.ProductId, item.SizeId, basePrice, basePrice, HasPromotion: false);
+                item.ProductId, item.SizeId, basePrice, basePrice, HasPromotion: false, AvailableStock: stock);
         }).ToList();
 
         return ApiResponse<List<BulkEffectivePriceResult>>.Ok(results);

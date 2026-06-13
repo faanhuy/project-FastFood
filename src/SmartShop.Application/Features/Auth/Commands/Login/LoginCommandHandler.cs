@@ -34,7 +34,7 @@ public class LoginCommandHandler(
         if (user.IsBanned)
         {
             await auditLogService.LogAsync(user.Id, AuditActions.LoginFailed, "User", user.Id, ipAddress: ipAddress, ct: cancellationToken);
-            throw new ConflictException("Tài khoản của bạn đã bị khóa bởi quản trị viên.");
+            throw new ConflictException("error.account_banned_by_admin", null);
         }
 
         var token = jwtTokenService.GenerateToken(user);

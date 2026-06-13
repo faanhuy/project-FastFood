@@ -35,5 +35,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(e => e.RefreshToken)
             .HasMaxLength(500);
+
+        builder.Property(e => e.GoogleId)
+            .HasMaxLength(255);
+
+        builder.HasIndex(e => e.GoogleId)
+            .IsUnique()
+            .HasFilter("[GoogleId] IS NOT NULL");
     }
 }

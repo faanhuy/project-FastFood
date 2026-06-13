@@ -15,13 +15,13 @@ public class BanUserCommandHandler(IUserRepository userRepository, IUnitOfWork u
             ?? throw new NotFoundException(nameof(User), request.TargetUserId);
 
         if (request.TargetUserId == request.RequestingUserId)
-            throw new ConflictException("Không thể khóa tài khoản của chính mình.");
+            throw new ConflictException("error.user_cannot_self_ban", null);
 
         if (user.Role == "Admin")
-            throw new ConflictException("Không thể khóa tài khoản Admin.");
+            throw new ConflictException("error.user_cannot_ban_admin", null);
 
         if (user.IsBanned)
-            throw new ConflictException("Tài khoản đã bị khóa trước đó.");
+            throw new ConflictException("error.user_already_banned", null);
 
         user.Ban();
         await unitOfWork.SaveChangesAsync(cancellationToken);

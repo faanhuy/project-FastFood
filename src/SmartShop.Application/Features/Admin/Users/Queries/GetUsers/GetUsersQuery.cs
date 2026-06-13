@@ -8,5 +8,7 @@ public record GetUsersQuery(
     int PageSize = 20,
     string? RoleFilter = null,
     bool? BannedFilter = null,
-    string? SearchEmail = null
+    string? SearchEmail = null,
+    string SortBy = "createdAt",
+    string SortDirection = "desc"
 ) : IRequest<PagedResult<UserDto>>;

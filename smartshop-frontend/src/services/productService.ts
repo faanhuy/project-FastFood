@@ -1,6 +1,6 @@
 import api from './api';
 import type { ApiResponse } from '../types/auth';
-import type { BulkImportResult, CategoryDto, CreateProductRequest, PagedResult, ProductDetailDto, ProductDto, UpdateProductRequest } from '../types/product';
+import type { BulkImportResult, BulkActionResult, CategoryDto, CreateProductRequest, PagedResult, ProductDetailDto, ProductDto, UpdateProductRequest } from '../types/product';
 
 export const productService = {
   getProducts: async (params: {
@@ -49,6 +49,25 @@ export const productService = {
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );
+    return data.data;
+  },
+
+  getAdminProducts: async (params: {
+    page?: number;
+    pageSize?: number;
+    categoryId?: string;
+    search?: string;
+    sortBy?: string;
+    isActiveFilter?: boolean;
+    priceMin?: number;
+    priceMax?: number;
+  }): Promise<PagedResult<ProductDto>> => {
+    const { data } = await api.get<ApiResponse<PagedResult<ProductDto>>>('/products/admin', { params });
+    return data.data;
+  },
+
+  bulkUpdateProducts: async (productIds: string[], action: 'activate' | 'deactivate' | 'delete'): Promise<BulkActionResult> => {
+    const { data } = await api.post<ApiResponse<BulkActionResult>>('/products/bulk-actions', { productIds, action });
     return data.data;
   },
 };

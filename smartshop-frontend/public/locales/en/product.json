@@ -104,5 +104,12 @@
   "primaryBadge": "Primary",
   "noImages": "No images yet",
   "deleteImage": "Delete Image",
-  "imageGallery": "Image Gallery"
+  "imageGallery": "Image Gallery",
+  "flashSale": "Flash Sale",
+  "flashSaleEnds": "Ends in",
+  "flashSaleOff": "{{percent}}% OFF",
+  "flashSaleRemaining": "{{count}} left",
+  "flashSaleSoldOut": "Sold out",
+  "viewAllFlashSales": "View all Flash Sales",
+  "noFlashSales": "No Flash Sales currently available"
 }

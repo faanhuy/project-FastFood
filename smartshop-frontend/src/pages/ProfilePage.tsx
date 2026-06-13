@@ -4,20 +4,127 @@ import { useTranslation } from 'react-i18next';
 import {
   FiUser, FiMail, FiCalendar, FiSave,
   FiMapPin, FiPlus, FiEdit2, FiTrash2, FiCheck,
+  FiLock, FiShield, FiEye, FiEyeOff,
 } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { userService, type UserProfileDto } from '../services/userService';
+import { authService } from '../services/authService';
 import { addressService } from '../services/addressService';
+import { loyaltyService } from '../services/loyaltyService';
+import { getApiError } from '../utils/errorHandler';
 import { imageService } from '../services/imageService';
 import { useAuthStore } from '../store/authStore';
 import type { AddressDto } from '../types/order';
+import type { LoyaltyAccountDto } from '../types/loyalty';
 import { formatDate } from '@/utils/formatters';
 import { getImageUrl } from '@/utils/imageUrl';
 import ImageUploadField from '@/components/common/ImageUploadField';
 import { AddressSelector, type AddressSelection } from '@/components/AddressSelector';
+import { LoyaltyCard } from '@/components/LoyaltyCard';
+import { PointHistoryList } from '@/components/PointHistoryList';
 
-type Tab = 'profile' | 'addresses';
+type Tab = 'profile' | 'addresses' | 'security' | 'loyalty';
+
+// ---- Change Password Card ----
+function ChangePasswordCard() {
+  const { t } = useTranslation(['common', 'toast', 'validation']);
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [show, setShow] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (next.length < 6) {
+      toast.error(t('validation:passwordMin'));
+      return;
+    }
+    if (next !== confirm) {
+      toast.error(t('validation:passwordMismatch'));
+      return;
+    }
+    setSaving(true);
+    try {
+      await authService.changePassword(current, next);
+      toast.success(t('toast:passwordChangeSuccess'));
+      setCurrent('');
+      setNext('');
+      setConfirm('');
+    } catch (err) {
+      toast.error(getApiError(err, t('toast:passwordChangeFailed')));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputClass =
+    'w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400';
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm p-6">
+      <div className="flex items-center gap-2 mb-1">
+        <FiShield size={18} className="text-rose-600" />
+        <h2 className="text-base font-semibold text-gray-800">{t('common:changePassword')}</h2>
+      </div>
+      <p className="text-xs text-gray-400 mb-4">{t('common:changePasswordHint')}</p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('common:currentPassword')}</label>
+          <div className="relative">
+            <input
+              required
+              type={show ? 'text' : 'password'}
+              autoComplete="current-password"
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+              className={inputClass}
+            />
+            <button
+              type="button"
+              onClick={() => setShow((s) => !s)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              tabIndex={-1}
+            >
+              {show ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+            </button>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('common:newPassword')}</label>
+          <input
+            required
+            type={show ? 'text' : 'password'}
+            autoComplete="new-password"
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('common:confirmNewPassword')}</label>
+          <input
+            required
+            type={show ? 'text' : 'password'}
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={saving}
+          className="w-full bg-rose-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-rose-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+        >
+          <FiLock size={15} />
+          {saving ? t('common:processing') : t('common:changePassword')}
+        </button>
+      </form>
+    </div>
+  );
+}
 
 // ---- Address Form Modal ----
 interface AddressFormData {
@@ -210,6 +317,10 @@ export default function ProfilePage() {
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState<AddressDto | null>(null);
 
+  // Loyalty state
+  const [loyaltyAccount, setLoyaltyAccount] = useState<LoyaltyAccountDto | null>(null);
+  const [loyaltyLoading, setLoyaltyLoading] = useState(false);
+
   useEffect(() => {
     userService.getMyProfile()
       .then((p) => {
@@ -231,6 +342,17 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (activeTab === 'addresses') fetchAddresses();
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'loyalty' && !loyaltyAccount) {
+      setLoyaltyLoading(true);
+      loyaltyService
+        .getAccount()
+        .then(setLoyaltyAccount)
+        .catch(() => toast.error(t('toast:loyaltyLoadFailed')))
+        .finally(() => setLoyaltyLoading(false));
+    }
   }, [activeTab]);
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -287,10 +409,10 @@ export default function ProfilePage() {
         <h1 className="text-2xl font-bold mb-6">{t('common:myAccount')}</h1>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6">
+        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 flex-wrap">
           <button
             onClick={() => setActiveTab('profile')}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+            className={`flex-1 min-w-32 py-2 text-sm font-medium rounded-lg transition-colors ${
               activeTab === 'profile'
                 ? 'bg-white text-rose-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-800'
@@ -300,7 +422,7 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setActiveTab('addresses')}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
+            className={`flex-1 min-w-32 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
               activeTab === 'addresses'
                 ? 'bg-white text-rose-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-800'
@@ -308,6 +430,27 @@ export default function ProfilePage() {
           >
             <FiMapPin size={14} />
             {t('common:shippingAddresses')}
+          </button>
+          <button
+            onClick={() => setActiveTab('loyalty')}
+            className={`flex-1 min-w-32 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
+              activeTab === 'loyalty'
+                ? 'bg-white text-rose-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            {t('common:loyaltyPoints')}
+          </button>
+          <button
+            onClick={() => setActiveTab('security')}
+            className={`flex-1 min-w-32 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
+              activeTab === 'security'
+                ? 'bg-white text-rose-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <FiShield size={14} />
+            {t('common:security')}
           </button>
         </div>
 
@@ -473,6 +616,28 @@ export default function ProfilePage() {
             )}
           </div>
         )}
+
+        {/* Tab: Loyalty */}
+        {activeTab === 'loyalty' && (
+          <div className="space-y-6">
+            {loyaltyLoading ? (
+              <p className="text-sm text-gray-400 text-center py-8">{t('common:loading')}</p>
+            ) : loyaltyAccount ? (
+              <>
+                <LoyaltyCard account={loyaltyAccount} />
+                <div className="bg-white rounded-2xl shadow-sm p-6">
+                  <h3 className="text-base font-semibold text-gray-800 mb-4">{t('common:pointsHistory')}</h3>
+                  <PointHistoryList />
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-gray-400 text-center py-8">{t('common:noData')}</p>
+            )}
+          </div>
+        )}
+
+        {/* Tab: Security */}
+        {activeTab === 'security' && <ChangePasswordCard />}
       </div>
       <Footer />
 

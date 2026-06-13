@@ -12,12 +12,6 @@ import type { ProductDto } from '../../types/product';
 import type { ProductSize } from '../../types/size';
 import type { AdminStore } from '../../types/store';
 
-// RULE_TYPES labels are now handled dynamically via translation since we need i18n
-const RULE_TYPES = [
-  { value: 1 },
-  { value: 2 },
-];
-
 interface SizeDiscountEntry {
   sizeId: string;
   sizeLabel: string;
@@ -722,9 +716,8 @@ export default function AdminPromotionalPricePage() {
                         onChange={(e) => updateSizeEntry(sizePopupIdx!, si, { ruleType: Number(e.target.value) })}
                         className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-400 bg-white"
                       >
-                        {RULE_TYPES.map((r) => (
-                          <option key={r.value} value={r.value}>{r.label}</option>
-                        ))}
+                        <option value={1}>{t('ruleTypePercent')}</option>
+                        <option value={2}>{t('ruleTypeFixed')}</option>
                       </select>
                       <div className="relative w-24">
                         <input
@@ -766,7 +759,7 @@ export default function AdminPromotionalPricePage() {
                 onClick={() => setSizePopupIdx(null)}
                 className="px-4 py-1.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors"
               >
-                Xong
+                {t('done', { ns: 'common' })}
               </button>
             </div>
           </div>

@@ -268,11 +268,18 @@ public class ComboPromotionTests
                 It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(Guid, Guid?), (int, decimal)>());
 
+        var flashSaleRepo = new Mock<IFlashSaleRepository>();
+        flashSaleRepo
+            .Setup(r => r.GetActiveByProductIdAsync(
+                It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((FlashSale?)null);
+
         var comboService = new Mock<IComboPromotionService>();
         comboService
             .Setup(s => s.FindApplicableComboAsync(storeId, It.IsAny<IEnumerable<CartItemInput>>(), default))
             .ReturnsAsync(comboMatch);
 
+        var loyaltyRepo = new Mock<ILoyaltyRepository>();
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
@@ -284,6 +291,8 @@ public class ComboPromotionTests
             couponRepo.Object, couponUsageRepo.Object,
             userRepo.Object, userAddressRepo.Object,
             priceCampaignRepo.Object,
+            flashSaleRepo.Object,
+            loyaltyRepo.Object,
             uow.Object, mediator.Object);
 
         var command = new SmartShop.Application.Features.Orders.Commands.PlaceOrder.PlaceOrderCommand(
@@ -352,8 +361,15 @@ public class ComboPromotionTests
                 It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(Guid, Guid?), (int, decimal)>());
 
+        var flashSaleRepo = new Mock<IFlashSaleRepository>();
+        flashSaleRepo
+            .Setup(r => r.GetActiveByProductIdAsync(
+                It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((FlashSale?)null);
+
         var comboService = new Mock<IComboPromotionService>();
 
+        var loyaltyRepo = new Mock<ILoyaltyRepository>();
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
         var mediator = new Mock<MediatR.IMediator>();
@@ -364,6 +380,8 @@ public class ComboPromotionTests
             couponRepo.Object, couponUsageRepo.Object,
             userRepo.Object, userAddressRepo.Object,
             priceCampaignRepo.Object,
+            flashSaleRepo.Object,
+            loyaltyRepo.Object,
             uow.Object, mediator.Object);
 
         var command = new SmartShop.Application.Features.Orders.Commands.PlaceOrder.PlaceOrderCommand(

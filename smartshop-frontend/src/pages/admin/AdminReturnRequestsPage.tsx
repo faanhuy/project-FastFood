@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { FiX } from 'react-icons/fi';
 import returnRequestService from '../../services/returnRequestService';
+import Pagination from '../../components/common/Pagination';
 import type { ReturnRequestDto } from '../../types/returnRequest';
 import { ReturnStatus } from '../../types/returnRequest';
 import {
@@ -21,11 +22,15 @@ interface ActionModalState {
   returnRequestId: string | null;
 }
 
+const PAGE_SIZE = 20;
+
 export default function AdminReturnRequestsPage() {
   const { t } = useTranslation(['admin', 'common', 'order', 'toast']);
   const [returnRequests, setReturnRequests] = useState<ReturnRequestDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterStatus>('all');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [actionModal, setActionModal] = useState<ActionModalState>({
     type: null,
     returnRequestId: null,
@@ -35,14 +40,15 @@ export default function AdminReturnRequestsPage() {
 
   useEffect(() => {
     loadData();
-  }, [filter]);
+  }, [filter, page]);
 
   const loadData = async () => {
     setLoading(true);
     try {
       const statusParam = filter === 'all' ? undefined : (filter as ReturnStatus);
-      const data = await returnRequestService.getAll(statusParam);
-      setReturnRequests(data);
+      const data = await returnRequestService.getAll(page, PAGE_SIZE, statusParam);
+      setReturnRequests(data.items);
+      setTotalPages(data.totalPages);
     } catch (err) {
       toast.error(getApiError(err, t('toast:returnLoadFailed')));
     } finally {
@@ -132,7 +138,10 @@ export default function AdminReturnRequestsPage() {
           </label>
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value as FilterStatus)}
+            onChange={(e) => {
+              setFilter(e.target.value as FilterStatus);
+              setPage(1);
+            }}
             className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">{t('common:all')}</option>
@@ -237,6 +246,13 @@ export default function AdminReturnRequestsPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && returnRequests.length > 0 && (
+          <div className="mt-4 flex justify-end">
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
           </div>
         )}
       </div>

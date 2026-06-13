@@ -16,9 +16,11 @@ import {
 } from 'react-icons/fi';
 import { orderService } from '../services/orderService';
 import { paymentService } from '../services/paymentService';
+import { cartService } from '../services/cartService';
 import type { OrderDto, PaymentStatus } from '../types/order';
 import { ORDER_STATUSES } from '../types/order';
 import { formatPrice, formatDate } from '../utils/formatters';
+import { getApiError } from '../utils/errorHandler';
 import { getImageUrl } from '../utils/imageUrl';
 import Pagination from '../components/common/Pagination';
 import Navbar from '../components/Navbar';
@@ -49,8 +51,12 @@ const getDisplayAddress = (order: OrderDto, t: (key: string) => string) => {
 
 const getPaymentLabel = (t: (key: string) => string, order: OrderDto) => {
   if (!order.paymentMethod) return t('notSelected');
-  if (order.paymentMethod === 'BankTransfer') return t('paymentMethod_BankTransfer');
-  return order.paymentMethod; // COD, VNPay are technical names
+  const map: Record<string, string> = {
+    COD: t('paymentMethodCOD'),
+    VNPay: t('paymentMethodVNPay'),
+    BankTransfer: t('paymentMethodBankTransfer'),
+  };
+  return map[order.paymentMethod] ?? order.paymentMethod;
 };
 
 const canRetryPayment = (order: OrderDto) =>
@@ -62,11 +68,13 @@ export default function OrderHistoryPage() {
   const { t } = useTranslation('order');
   const { t: tCommon } = useTranslation('common');
   const { t: tToast } = useTranslation('toast');
+  const { t: tCart } = useTranslation('cart');
   const [orders, setOrders] = useState<OrderDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [retryingOrderId, setRetryingOrderId] = useState<string | null>(null);
+  const [reorderingId, setReorderingId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const stats = useMemo(() => {
@@ -86,10 +94,24 @@ export default function OrderHistoryPage() {
     try {
       const url = await paymentService.createVNPayUrl(orderId);
       window.location.href = url;
-    } catch (error: any) {
-      toast.error(error.response?.data?.message ?? tToast('paymentLinkFailed'));
+    } catch (err) {
+      toast.error(getApiError(err, tToast('paymentLinkFailed')));
     } finally {
       setRetryingOrderId(null);
+    }
+  };
+
+  const handleReorder = async (e: React.MouseEvent, orderId: string) => {
+    e.stopPropagation();
+    setReorderingId(orderId);
+    try {
+      await cartService.addFromOrder(orderId);
+      toast.success(tCart('reorderSuccess'));
+      navigate('/cart');
+    } catch (err) {
+      toast.error(getApiError(err, tToast('loadFailed')));
+    } finally {
+      setReorderingId(null);
     }
   };
 
@@ -301,6 +323,14 @@ export default function OrderHistoryPage() {
                               {retryingOrderId === order.id ? tCommon('processing') : t('retryPayment')}
                             </button>
                           )}
+                          <button
+                            onClick={(e) => handleReorder(e, order.id)}
+                            disabled={reorderingId === order.id}
+                            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:opacity-60"
+                          >
+                            <FiRotateCcw className={reorderingId === order.id ? 'animate-spin' : ''} size={16} />
+                            {reorderingId === order.id ? tCommon('processing') : tCart('reorder')}
+                          </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();

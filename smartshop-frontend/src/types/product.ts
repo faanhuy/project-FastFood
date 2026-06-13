@@ -93,3 +93,9 @@ export interface ProductImageDto {
   isPrimary: boolean;
   sortOrder: number;
 }
+
+export interface BulkActionResult {
+  succeeded: number;
+  failed: number;
+  errors: { itemId: string; message: string }[];
+}

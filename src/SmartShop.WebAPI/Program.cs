@@ -3,13 +3,16 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Prometheus;
 using SmartShop.Application;
 using SmartShop.Application.Common.Interfaces;
 using SmartShop.Domain.Interfaces;
 using SmartShop.Infrastructure;
+using SmartShop.Infrastructure.BackgroundJobs;
 using SmartShop.Infrastructure.Data;
 using SmartShop.Infrastructure.Email;
 using SmartShop.Infrastructure.Repositories;
+using SmartShop.Infrastructure.Services;
 using SmartShop.WebAPI.Hubs;
 using SmartShop.WebAPI.Middleware;
 using SmartShop.WebAPI.Options;
@@ -68,6 +71,9 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<ICurrentLanguageService, CurrentLanguageService>();
 builder.Services.AddScoped<INotificationHubService, NotificationHubService>();
+
+// Sprint 30 - Google OAuth
+builder.Services.AddHttpClient<IGoogleTokenValidator, GoogleTokenValidator>();
 
 builder.Services.AddCors(options =>
 {
@@ -138,15 +144,35 @@ if (app.Environment.IsDevelopment())
     await DbSeeder.SeedAsync(app.Services);
 }
 
+// Register Hangfire recurring jobs
+RecurringJob.AddOrUpdate<FlashSaleExpiryJob>(
+    "flash-sale-expiry",
+    job => job.ExecuteAsync(),
+    Cron.Minutely());
+
+RecurringJob.AddOrUpdate<SmartShop.Infrastructure.BackgroundJobs.OrderArchiveJob>(
+    "order-archive-daily",
+    job => job.ExecuteAsync(),
+    Cron.Daily());
+
 app.UseCors("AllowFrontend");
 app.UseStaticFiles(); // serve wwwroot/images/...
 app.UseHttpsRedirection();
+
+// Sprint 34 — Metrics & Monitoring
+app.UseMiddleware<MetricsAuthMiddleware>();
+app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseHttpMetrics(); // prometheus-net
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<RateLimitingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<OrderStatusHub>("/hubs/orders");
+
+// Sprint 34 — Prometheus metrics endpoint
+app.MapMetrics("/metrics");
 
 app.Run();
 

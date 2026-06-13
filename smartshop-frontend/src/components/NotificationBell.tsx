@@ -5,22 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { notificationService } from '@/services/notificationService';
 import type { Notification } from '@/types/notification';
 import { useNotificationStore } from '@/store/notificationStore';
+import { localizeNotification } from '@/utils/localizeNotification';
 
-const STATUS_MAP_EN_VI: Record<string, string> = {
-  Pending: 'Pending',
-  Confirmed: 'Confirmed',
-  Shipped: 'Shipped',
-  Delivered: 'Delivered',
-  Cancelled: 'Cancelled',
-  Processing: 'Processing',
-  Refunded: 'Refunded'
-};
-
-function localizeMessage(message: string): string {
-  return message;
-}
-
-function formatRelativeTime(isoString: string, t: (key: string) => string): string {
+function formatRelativeTime(isoString: string): string {
   const normalized = isoString.endsWith('Z') ? isoString : isoString + 'Z';
   const diff = Date.now() - new Date(normalized).getTime();
   const minutes = Math.floor(diff / 60000);
@@ -33,6 +20,7 @@ function formatRelativeTime(isoString: string, t: (key: string) => string): stri
 
 export default function NotificationBell() {
   const { t } = useTranslation('common');
+  const { t: tOrder } = useTranslation('order');
   const { t: tToast } = useTranslation('toast');
   const navigate = useNavigate();
   const { notifications, markOneRead, markAllRead, removeOne, removeAll } = useNotificationStore();
@@ -134,7 +122,9 @@ export default function NotificationBell() {
                 {t('noNotifications')}
               </div>
             ) : (
-              notifications.map((n) => (
+              notifications.map((n) => {
+                const { title, message } = localizeNotification(t, tOrder, n);
+                return (
                 <div
                   key={n.id}
                   className={`group relative border-b border-gray-50 transition-colors ${
@@ -150,11 +140,11 @@ export default function NotificationBell() {
                         <span className="mt-1.5 w-2 h-2 rounded-full bg-rose-500 shrink-0" />
                       )}
                       <div className={!n.isRead ? '' : 'pl-4'}>
-                        <p className="text-sm font-medium text-gray-800 line-clamp-1">{n.title}</p>
+                        <p className="text-sm font-medium text-gray-800 line-clamp-1">{title}</p>
                         <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">
-                          {localizeMessage(n.message)}
+                          {message}
                         </p>
-                        <p className="text-[11px] text-gray-400 mt-1">{formatRelativeTime(n.createdAt, t)}</p>
+                        <p className="text-[11px] text-gray-400 mt-1">{formatRelativeTime(n.createdAt)}</p>
                       </div>
                     </div>
                   </button>
@@ -186,7 +176,8 @@ export default function NotificationBell() {
                     </button>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
 

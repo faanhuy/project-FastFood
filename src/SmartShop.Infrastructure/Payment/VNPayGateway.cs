@@ -72,6 +72,28 @@ public class VNPayGateway(IConfiguration configuration) : IPaymentGateway
             ResponseCode: responseCode);
     }
 
+    public async Task<VNPayRefundResult> RefundAsync(
+        string originalTransactionId,
+        long refundAmountVnd,
+        string transactionRef,
+        CancellationToken ct = default)
+    {
+        // TODO: Implement real VNPay refund API call
+        // For now, return a stub response to allow integration
+        // VNPay refund endpoint: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction (sandbox)
+        // Production: https://api.vnpayment.vn/merchant_webapi/api/transaction
+
+        // This is a stub implementation that simulates successful refund
+        // In production, implement the actual VNPay API call with proper request signing
+        await Task.Delay(100, ct); // Simulate API call
+
+        return new VNPayRefundResult(
+            IsSuccess: true,
+            RefundTransactionId: $"REFUND-{Guid.NewGuid()}",
+            ResponseCode: "00",
+            ErrorMessage: null);
+    }
+
     // Dùng cho cả URL query string lẫn HMAC hash data — WebUtility.UrlEncode (VNPay spec)
     private static string BuildQueryString(SortedDictionary<string, string> parameters)
     {

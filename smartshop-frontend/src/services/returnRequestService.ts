@@ -5,6 +5,7 @@ import type {
   ApproveReturnRequest,
   RejectReturnRequest,
 } from '@/types/returnRequest';
+import type { PagedResult } from '@/types/product';
 import { ReturnStatus, RETURN_REASON_INT, RETURN_STATUS_INT } from '@/types/returnRequest';
 import type { ApiResponse } from '@/types/auth';
 
@@ -23,10 +24,10 @@ const returnRequestService = {
   },
 
   // Admin
-  getAll: async (status?: ReturnStatus): Promise<ReturnRequestDto[]> => {
+  getAll: async (page = 1, pageSize = 20, status?: ReturnStatus): Promise<PagedResult<ReturnRequestDto>> => {
     const statusInt = status ? RETURN_STATUS_INT[status] : undefined;
-    const { data } = await api.get<ApiResponse<ReturnRequestDto[]>>('/admin/return-requests', {
-      params: { ...(statusInt ? { status: statusInt } : {}) },
+    const { data } = await api.get<ApiResponse<PagedResult<ReturnRequestDto>>>('/admin/return-requests', {
+      params: { page, pageSize, ...(statusInt ? { status: statusInt } : {}) },
     });
     return data.data;
   },

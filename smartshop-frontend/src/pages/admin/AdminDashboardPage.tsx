@@ -32,7 +32,6 @@ import AdminLayout from '../../components/AdminLayout';
 import { productService } from '../../services/productService';
 import { orderService } from '../../services/orderService';
 import { storeService } from '../../services/storeService';
-import { resolveOrderStatus } from '../../types/order';
 import {
   analyticsService,
   type RevenueSummaryDto,
@@ -168,6 +167,7 @@ function RevenueTooltip({
   payload?: { value: number }[];
   label?: string;
 }) {
+  const { t } = useTranslation('admin');
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border rounded-lg shadow-md px-3 py-2 text-sm">
@@ -201,16 +201,14 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     Promise.all([
       productService.getProducts({ page: 1, pageSize: 1 }),
-      orderService.getAllOrders(1, 50),
+      orderService.getAllOrders({ page: 1, pageSize: 1 }),
+      orderService.getAllOrders({ page: 1, pageSize: 1, statusFilter: 1 }),
     ])
-      .then(([products, orders]) => {
-        const pending = orders.items.filter(
-          (o) => resolveOrderStatus(o.status) === 1,
-        ).length;
+      .then(([products, allOrders, pendingOrders]) => {
         setStats({
           totalProducts: products.totalCount,
-          totalOrders: orders.totalCount,
-          pendingOrders: pending,
+          totalOrders: allOrders.totalCount,
+          pendingOrders: pendingOrders.totalCount,
         });
       })
       .catch(() => {});
@@ -589,6 +587,38 @@ export default function AdminDashboardPage() {
           </div>
           <p className="text-sm text-gray-500">
             {t('dashboardTaskManageBranches')}
+          </p>
+        </Link>
+
+        <Link
+          to="/admin/flash-sales"
+          className="group bg-white rounded-xl border shadow-sm p-5 hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-gray-800">{t('navFlashSales')}</h3>
+            <FiArrowRight
+              size={16}
+              className="text-gray-400 group-hover:text-rose-600 transition-colors"
+            />
+          </div>
+          <p className="text-sm text-gray-500">
+            {t('dashboardTaskManageFlashSales')}
+          </p>
+        </Link>
+
+        <Link
+          to="/admin/promotional-prices"
+          className="group bg-white rounded-xl border shadow-sm p-5 hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-gray-800">{t('navPromoPrice')}</h3>
+            <FiArrowRight
+              size={16}
+              className="text-gray-400 group-hover:text-rose-600 transition-colors"
+            />
+          </div>
+          <p className="text-sm text-gray-500">
+            {t('dashboardTaskManagePromoPrice')}
           </p>
         </Link>
       </div>

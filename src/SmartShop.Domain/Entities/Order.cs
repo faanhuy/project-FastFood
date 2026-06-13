@@ -20,6 +20,8 @@ public class Order : BaseAuditableEntity
 
     public Guid? StoreId { get; private set; }
 
+    public decimal LoyaltyPointsUsed { get; private set; } = 0;  // Points redeemed for discount
+
     public Guid? ShippingAddressId { get; private set; }
     public string? ShippingStreet { get; private set; }
     public int? ShippingWardId { get; private set; }
@@ -28,6 +30,7 @@ public class Order : BaseAuditableEntity
     public Province? ShippingProvince { get; private set; }
 
     public DateTime? DeliveredAt { get; private set; }
+    public bool IsArchived { get; private set; } = false;
 
     public User? User { get; private set; }
     public Store? Store { get; private set; }
@@ -110,6 +113,13 @@ public class Order : BaseAuditableEntity
         TotalAmount = OriginalAmount - DiscountAmount;
     }
 
+    public void ApplyLoyaltyDiscount(decimal loyaltyDiscountVnd, decimal pointsUsed)
+    {
+        TotalAmount -= loyaltyDiscountVnd;
+        if (TotalAmount < 0) TotalAmount = 0;
+        LoyaltyPointsUsed = pointsUsed;
+    }
+
     public void Cancel()
     {
         if (Status == OrderStatus.Shipped || Status == OrderStatus.Delivered)
@@ -117,4 +127,10 @@ public class Order : BaseAuditableEntity
 
         Status = OrderStatus.Cancelled;
     }
+
+    public void Archive()
+    {
+        IsArchived = true;
+    }
 }
+

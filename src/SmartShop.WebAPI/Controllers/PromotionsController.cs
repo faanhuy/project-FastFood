@@ -38,7 +38,7 @@ public class PromotionsController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetCombosQuery(1, int.MaxValue), ct);
         var combo = result.Data?.Items.FirstOrDefault(c => c.Id == id);
         if (combo is null)
-            return NotFound(ApiResponse<object?>.Fail("Combo không tồn tại."));
+            return NotFound(ApiResponse<object?>.Fail("Combo not found."));
 
         return Ok(ApiResponse<ComboPromotionDto>.Ok(combo));
     }
@@ -60,7 +60,7 @@ public class PromotionsController(IMediator mediator) : ControllerBase
         Guid id, [FromBody] UpdateComboPromotionCommand cmd, CancellationToken ct)
     {
         if (id != cmd.Id)
-            return BadRequest(ApiResponse<object?>.Fail("Id trong URL không khớp với body."));
+            return BadRequest(ApiResponse<object?>.Fail("Id in URL does not match body."));
 
         var result = await mediator.Send(cmd, ct);
         return Ok(result);
@@ -72,7 +72,7 @@ public class PromotionsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<ApiResponse<object?>>> Delete(Guid id, CancellationToken ct)
     {
         await mediator.Send(new DeleteComboPromotionCommand(id), ct);
-        return Ok(ApiResponse.Ok("Combo đã được xóa."));
+        return Ok(ApiResponse.Ok());
     }
 
     // ── Public endpoints ──────────────────────────────────────────────────
@@ -84,7 +84,7 @@ public class PromotionsController(IMediator mediator) : ControllerBase
         [FromQuery] Guid storeId, CancellationToken ct)
     {
         if (storeId == Guid.Empty)
-            return BadRequest(ApiResponse<object?>.Fail("storeId là bắt buộc."));
+            return BadRequest(ApiResponse<object?>.Fail("storeId is required."));
 
         var result = await mediator.Send(new GetActiveCombosQuery(storeId), ct);
         return Ok(result);

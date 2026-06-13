@@ -1,6 +1,5 @@
 using MediatR;
 using SmartShop.Application.Features.Loyalty.Dtos;
-using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.Application.Features.Loyalty.Queries.GetPointTransactions;
@@ -11,8 +10,9 @@ public class GetPointTransactionsQueryHandler(
     public async Task<PagedResult<PointTransactionDto>> Handle(
         GetPointTransactionsQuery request, CancellationToken cancellationToken)
     {
-        var account = await loyaltyRepository.GetByUserIdAsync(request.UserId, cancellationToken)
-            ?? throw new NotFoundException("LoyaltyAccount", request.UserId);
+        var account = await loyaltyRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+        if (account is null)
+            return new PagedResult<PointTransactionDto>([], 0, request.Page, request.PageSize);
 
         var (items, totalCount) = await loyaltyRepository.GetTransactionsByAccountIdAsync(
             account.Id, request.Page, request.PageSize, cancellationToken);

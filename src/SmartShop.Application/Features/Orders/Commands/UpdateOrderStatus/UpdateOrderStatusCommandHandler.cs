@@ -1,9 +1,10 @@
 using MediatR;
-using SmartShop.Domain.Common.Exceptions;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Interfaces;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Enums;
-using SmartShop.Domain.Interfaces;
 using SmartShop.Domain.Events;
+using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.Application.Features.Orders.Commands.UpdateOrderStatus;
 
@@ -12,6 +13,7 @@ public class UpdateOrderStatusCommandHandler(
     ICouponRepository couponRepository,
     ICouponUsageRepository couponUsageRepository,
     IUserRepository userRepository,
+    ILoyaltyService loyaltyService,
     IUnitOfWork unitOfWork,
     IMediator mediator
 ) : IRequestHandler<UpdateOrderStatusCommand, OrderDto>
@@ -20,6 +22,8 @@ public class UpdateOrderStatusCommandHandler(
     {
         var order = await orderRepository.GetByIdWithItemsAsync(request.OrderId, cancellationToken)
             ?? throw new NotFoundException("Order", request.OrderId);
+
+        var previousStatus = order.Status;
 
         // Hoàn lại coupon khi admin chuyển sang Cancelled
         if (request.NewStatus == OrderStatus.Cancelled
@@ -47,6 +51,13 @@ public class UpdateOrderStatusCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Hoàn lại điểm loyalty khi đơn đã giao bị chuyển sang Cancelled/Refunded/Returned
+        if (previousStatus == OrderStatus.Delivered &&
+            request.NewStatus != OrderStatus.Delivered)
+        {
+            await loyaltyService.ReversePointsForOrderAsync(order.UserId, order.Id, cancellationToken);
+        }
 
         // Publish event for email + SignalR notification
         var user = await userRepository.GetByIdAsync(order.UserId, cancellationToken);

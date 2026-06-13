@@ -16,7 +16,7 @@ public class DeleteProductImageCommandHandler(
             ?? throw new NotFoundException(nameof(ProductImage), request.ImageId);
 
         if (image.ProductId != request.ProductId)
-            throw new UnauthorizedException("error.image_product_mismatch");
+            throw new UnauthorizedException("error.image_product_mismatch", null);
 
         imageRepository.Remove(image);
         await unitOfWork.SaveChangesAsync(cancellationToken);

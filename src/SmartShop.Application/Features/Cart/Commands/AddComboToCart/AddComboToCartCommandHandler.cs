@@ -16,7 +16,7 @@ public class AddComboToCartCommandHandler(
     public async Task<CartDto> Handle(AddComboToCartCommand request, CancellationToken cancellationToken)
     {
         if (request.Quantity <= 0)
-            throw new ArgumentException("Số lượng phải lớn hơn 0.");
+            throw new ConflictException("validation.quantity_positive", null);
 
         var combo = await comboRepository.GetByIdAsync(request.ComboId, cancellationToken)
             ?? throw new NotFoundException("Combo", request.ComboId);

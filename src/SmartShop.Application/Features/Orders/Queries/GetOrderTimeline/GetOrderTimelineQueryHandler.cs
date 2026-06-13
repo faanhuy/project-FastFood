@@ -36,7 +36,9 @@ public class GetOrderTimelineQueryHandler(
             Id = Guid.NewGuid(),
             OccurredAt = order.CreatedAt,
             EventType = "Created",
-            Title = "Đơn hàng được tạo",
+            Title = "timeline.created",
+            TitleKey = "timeline.created",
+            IsAdminActor = false,
             Description = null,
             ActorName = null,
             Amount = order.TotalAmount
@@ -50,9 +52,13 @@ public class GetOrderTimelineQueryHandler(
                 Id = Guid.NewGuid(),
                 OccurredAt = history.ChangedAt,
                 EventType = "StatusChanged",
-                Title = $"Trạng thái: {FormatEnumName(history.FromStatus.ToString())} → {FormatEnumName(history.ToStatus.ToString())}",
+                Title = "timeline.statusChanged",
+                TitleKey = "timeline.statusChanged",
+                FromStatus = history.FromStatus.ToString(),
+                ToStatus = history.ToStatus.ToString(),
+                IsAdminActor = history.ChangedBy.HasValue,
                 Description = history.Reason,
-                ActorName = history.ChangedBy.HasValue ? "Quản trị viên" : null,
+                ActorName = history.ChangedBy.HasValue ? "admin" : null,
                 Amount = null
             });
         }
@@ -60,13 +66,13 @@ public class GetOrderTimelineQueryHandler(
         // Events: Return Request status changes
         if (returnRequest != null)
         {
-            string returnTitle = returnRequest.Status switch
+            string returnTitleKey = returnRequest.Status switch
             {
-                ReturnStatus.Pending => "Yêu cầu trả hàng được gửi",
-                ReturnStatus.Approved => "Yêu cầu trả hàng được phê duyệt",
-                ReturnStatus.Rejected => "Yêu cầu trả hàng bị từ chối",
-                ReturnStatus.Refunded => "Hoàn tiền thành công",
-                _ => "Yêu cầu trả hàng cập nhật"
+                ReturnStatus.Pending => "timeline.returnPending",
+                ReturnStatus.Approved => "timeline.returnApproved",
+                ReturnStatus.Rejected => "timeline.returnRejected",
+                ReturnStatus.Refunded => "timeline.refunded",
+                _ => "timeline.returnUpdated"
             };
 
             timelineEvents.Add(new OrderTimelineEventDto
@@ -74,7 +80,9 @@ public class GetOrderTimelineQueryHandler(
                 Id = Guid.NewGuid(),
                 OccurredAt = returnRequest.CreatedAt,
                 EventType = "ReturnRequest",
-                Title = returnTitle,
+                Title = returnTitleKey,
+                TitleKey = returnTitleKey,
+                IsAdminActor = false,
                 Description = returnRequest.Description,
                 ActorName = null,
                 Amount = returnRequest.RefundAmount
@@ -87,9 +95,11 @@ public class GetOrderTimelineQueryHandler(
                     Id = Guid.NewGuid(),
                     OccurredAt = returnRequest.RefundedAt.Value,
                     EventType = "Refunded",
-                    Title = "Hoàn tiền thành công",
+                    Title = "timeline.refunded",
+                    TitleKey = "timeline.refunded",
+                    IsAdminActor = true,
                     Description = returnRequest.RefundNote,
-                    ActorName = "Quản trị viên",
+                    ActorName = "admin",
                     Amount = returnRequest.RefundAmount
                 });
             }
@@ -103,7 +113,9 @@ public class GetOrderTimelineQueryHandler(
                 Id = Guid.NewGuid(),
                 OccurredAt = order.DeliveredAt.Value,
                 EventType = "Delivered",
-                Title = "Đơn hàng đã được giao",
+                Title = "timeline.delivered",
+                TitleKey = "timeline.delivered",
+                IsAdminActor = false,
                 Description = null,
                 ActorName = null,
                 Amount = null
@@ -118,19 +130,4 @@ public class GetOrderTimelineQueryHandler(
         return sortedEvents;
     }
 
-    private static string FormatEnumName(string enumValue)
-    {
-        return enumValue switch
-        {
-            "Pending" => "Chờ xác nhận",
-            "Confirmed" => "Đã xác nhận",
-            "Processing" => "Đang xử lý",
-            "Shipped" => "Đã gửi hàng",
-            "Delivered" => "Đã giao",
-            "Cancelled" => "Đã hủy",
-            "Refunded" => "Đã hoàn tiền",
-            "Returned" => "Đã trả hàng",
-            _ => enumValue
-        };
-    }
 }

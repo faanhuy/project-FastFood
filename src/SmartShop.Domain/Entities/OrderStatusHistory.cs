@@ -1,4 +1,5 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Enums;
 
 namespace SmartShop.Domain.Entities;
@@ -22,7 +23,7 @@ public class OrderStatusHistory : BaseAuditableEntity
         string? reason = null)
     {
         if (orderId == Guid.Empty)
-            throw new ArgumentException("OrderId không được để trống.", nameof(orderId));
+            throw new ConflictException("validation.order_id_invalid", null);
 
         return new OrderStatusHistory
         {

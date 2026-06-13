@@ -52,7 +52,7 @@ public class AddReviewImagesCommandHandler(
             {
                 // Validate magic bytes
                 if (!FileSecurityHelper.ValidateMagicBytes(file.OpenReadStream(), config.AllowedMimeTypes))
-                    throw new ArgumentException($"File {file.FileName} không hợp lệ.");
+                    throw new ConflictException("error.invalid_file_type", new Dictionary<string, string> { ["fileName"] = file.FileName });
 
                 var safeFileName = FileSecurityHelper.BuildStorageFileName(file.FileName, request.ReviewId.ToString());
 

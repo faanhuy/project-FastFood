@@ -73,10 +73,10 @@ public class StoresController(
         Guid storeId, [FromQuery] List<Guid> productIds, CancellationToken ct)
     {
         if (productIds == null || productIds.Count == 0)
-            return BadRequest(ApiResponse<Dictionary<string, int>>.Fail("Danh sách sản phẩm không được trống"));
+            return BadRequest(ApiResponse<Dictionary<string, int>>.Fail("Product list cannot be empty."));
 
         if (productIds.Count > 100)
-            return BadRequest(ApiResponse<Dictionary<string, int>>.Fail("Không thể truy vấn quá 100 sản phẩm cùng lúc"));
+            return BadRequest(ApiResponse<Dictionary<string, int>>.Fail("Cannot query more than 100 products at once."));
 
         var inventories = await inventoryRepository.GetByStoreAndProductsAsync(storeId, productIds, ct);
         var inventoryDict = inventories.ToDictionary(i => i.ProductId.ToString("d").ToLower(), i => i.Quantity);

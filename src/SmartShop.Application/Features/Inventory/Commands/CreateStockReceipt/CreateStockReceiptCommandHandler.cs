@@ -1,6 +1,7 @@
 using MediatR;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Interfaces;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces;
 
@@ -16,7 +17,7 @@ public class CreateStockReceiptCommandHandler(
     public async Task<ApiResponse<StockReceiptDto>> Handle(CreateStockReceiptCommand request, CancellationToken ct)
     {
         if (request.Items == null || request.Items.Count == 0)
-            throw new ArgumentException("Items danh sách không được để trống.", nameof(request.Items));
+            throw new ConflictException("validation.required_field", null);
 
         // Validate items
         foreach (var item in request.Items)

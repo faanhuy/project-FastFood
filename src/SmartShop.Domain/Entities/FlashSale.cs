@@ -24,9 +24,9 @@ public class FlashSale : BaseAuditableEntity
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         if (items.Count == 0)
-            throw new ConflictException("Flash sale must contain at least one item.");
+            throw new ConflictException("error.flashsale_empty_items", null);
         if (endAt <= startAt)
-            throw new ConflictException("End time must be after start time.");
+            throw new ConflictException("error.flashsale_time_invalid", null);
 
         var flashSale = new FlashSale
         {
@@ -45,7 +45,7 @@ public class FlashSale : BaseAuditableEntity
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         if (endAt <= startAt)
-            throw new ConflictException("End time must be after start time.");
+            throw new ConflictException("error.flashsale_time_invalid", null);
 
         Name = name;
         StartAt = startAt;

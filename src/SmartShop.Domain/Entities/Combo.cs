@@ -1,4 +1,5 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Common.Exceptions;
 
 namespace SmartShop.Domain.Entities;
 
@@ -27,7 +28,7 @@ public class Combo : BaseAuditableEntity
         ArgumentException.ThrowIfNullOrWhiteSpace(imageUrl);
 
         if (endsAt.HasValue && endsAt <= startsAt)
-            throw new ArgumentException("EndsAt must be greater than StartsAt.", nameof(endsAt));
+            throw new ConflictException("validation.date_from_before_to", null);
 
         return new Combo
         {
@@ -61,7 +62,7 @@ public class Combo : BaseAuditableEntity
         ArgumentException.ThrowIfNullOrWhiteSpace(imageUrl);
 
         if (endsAt.HasValue && endsAt <= startsAt)
-            throw new ArgumentException("EndsAt must be greater than StartsAt.", nameof(endsAt));
+            throw new ConflictException("validation.date_from_before_to", null);
 
         Name = name;
         Title = title;

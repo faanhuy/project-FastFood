@@ -71,14 +71,14 @@ public class Cart : BaseAuditableEntity
     {
         var item = _items.FirstOrDefault(i =>
                 i.ItemType == CartItemType.Product && i.ProductId == productId && i.SizeId == sizeId)
-            ?? throw new InvalidOperationException("Sản phẩm không có trong giỏ hàng.");
+            ?? throw new ConflictException("error.cart_item_not_found", null);
         item.UpdateQuantity(quantity);
     }
 
     public void UpdateItemQuantityById(Guid cartItemId, int quantity)
     {
         var item = _items.FirstOrDefault(i => i.Id == cartItemId)
-            ?? throw new InvalidOperationException("Dòng giỏ hàng không tồn tại.");
+            ?? throw new ConflictException("error.cart_item_not_found", null);
         item.UpdateQuantity(quantity);
     }
 

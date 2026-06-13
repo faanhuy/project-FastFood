@@ -80,6 +80,12 @@ internal sealed class LocalizationSeeder(
             LocalizedMessage.Create("error.internal_server_error", "vi",
                 "Đã xảy ra lỗi hệ thống.", "error"),
 
+            // ── Auth — Google Login ──────────────────────────────────────────────────
+            LocalizedMessage.Create("error.email_already_registered", "vi",
+                "Email này đã được đăng ký bằng phương thức khác.", "error"),
+            LocalizedMessage.Create("error.account_banned", "vi",
+                "Tài khoản của bạn đã bị khóa.", "error"),
+
             // ── Admin / Flash sale / Refund (key hóa throw hardcode) — Vietnamese ────
             LocalizedMessage.Create("error.bulk_max_items", "vi",
                 "Tối đa 100 mục cho mỗi thao tác hàng loạt.", "error"),
@@ -111,6 +117,12 @@ internal sealed class LocalizationSeeder(
                 "Size không hợp lệ hoặc đã ngừng cho sản phẩm '{product}'.", "error"),
             LocalizedMessage.Create("error.flashsale_duplicate_items", "vi",
                 "Có sản phẩm/size bị trùng trong danh sách flash sale.", "error"),
+            LocalizedMessage.Create("error.flashsale_time_invalid", "vi",
+                "Thời gian kết thúc phải sau thời gian bắt đầu.", "error"),
+            LocalizedMessage.Create("error.flashsale_item_saleprice_invalid", "vi",
+                "Giá khuyến mãi phải lớn hơn 0 và nhỏ hơn giá gốc.", "error"),
+            LocalizedMessage.Create("error.flashsale_item_stock_limit_positive", "vi",
+                "Giới hạn tồn kho phải lớn hơn 0.", "error"),
             LocalizedMessage.Create("error.order_no_return_request", "vi",
                 "Đơn hàng không có yêu cầu trả hàng.", "error"),
             LocalizedMessage.Create("error.refund_requires_approved", "vi",
@@ -127,6 +139,8 @@ internal sealed class LocalizationSeeder(
                 "Không tìm thấy mã giao dịch VNPay gốc.", "error"),
             LocalizedMessage.Create("error.vnpay_refund_failed", "vi",
                 "VNPay hoàn tiền thất bại: {reason}.", "error"),
+            LocalizedMessage.Create("error.rate_limit_exceeded", "vi",
+                "Quá nhiều yêu cầu. Vui lòng thử lại sau {retryAfter} giây.", "error"),
 
             // ── Auth — Vietnamese ────────────────────────────────────────────────────
             LocalizedMessage.Create("error.auth_invalid_credentials", "vi",
@@ -236,6 +250,10 @@ internal sealed class LocalizationSeeder(
             LocalizedMessage.Create("error.return_reject_invalid_status", "vi",
                 "Chỉ có thể từ chối yêu cầu trả hàng đang chờ xử lý.", "error"),
 
+            // ── Product Images — Vietnamese ──────────────────────────────────────────
+            LocalizedMessage.Create("error.image_product_mismatch", "vi",
+                "Ảnh này không thuộc sản phẩm được chỉ định.", "error"),
+
             // ── Products — Vietnamese ────────────────────────────────────────────────
             LocalizedMessage.Create("error.product_no_size_support", "vi",
                 "Sản phẩm này không hỗ trợ phân loại theo size.", "error"),
@@ -283,6 +301,36 @@ internal sealed class LocalizationSeeder(
                 "Combo phải có ít nhất 1 sản phẩm.", "error"),
             LocalizedMessage.Create("error.combo_product_inactive", "vi",
                 "Sản phẩm '{name}' không hoạt động.", "error"),
+
+            // ── Loyalty — Vietnamese ──────────────────────────────────────────────────
+            LocalizedMessage.Create("error.loyalty_insufficient_points", "vi",
+                "Số điểm không đủ. Điểm hiện có: {available}, yêu cầu: {required}.", "error"),
+
+            // ── Inventory — Vietnamese ────────────────────────────────────────────────
+            LocalizedMessage.Create("error.inventory_insufficient_stock", "vi",
+                "Không đủ tồn kho. Hiện có: {available}, cần: {required}.", "error"),
+
+            // ── Cart — Vietnamese (additional) ────────────────────────────────────────
+            LocalizedMessage.Create("error.cart_item_not_found", "vi",
+                "Sản phẩm không có trong giỏ hàng.", "error"),
+            LocalizedMessage.Create("error.cart_size_required", "vi",
+                "Sản phẩm này yêu cầu chọn size.", "error"),
+
+            // ── Stock Receipt — Vietnamese ─────────────────────────────────────────────
+            LocalizedMessage.Create("error.stock_receipt_already_cancelled", "vi",
+                "Phiếu nhập hàng đã bị hủy.", "error"),
+            LocalizedMessage.Create("error.stock_receipt_already_completed", "vi",
+                "Phiếu nhập hàng đã hoàn thành.", "error"),
+            LocalizedMessage.Create("error.stock_receipt_invalid_status", "vi",
+                "Trạng thái phiếu nhập không hợp lệ để thực hiện thao tác này.", "error"),
+
+            // ── Size — Vietnamese ──────────────────────────────────────────────────────
+            LocalizedMessage.Create("error.size_already_exists", "vi",
+                "Size '{label}' đã tồn tại trong hệ thống.", "error"),
+
+            // ── File Upload — Vietnamese ───────────────────────────────────────────────
+            LocalizedMessage.Create("error.invalid_file_type", "vi",
+                "File '{fileName}' không hợp lệ. Chỉ chấp nhận file ảnh.", "error"),
 
             // ── Validation Messages — Vietnamese ────────────────────────────────────
             LocalizedMessage.Create("validation.required", "vi",
@@ -468,6 +516,12 @@ internal sealed class LocalizationSeeder(
             LocalizedMessage.Create("error.internal_server_error", "en",
                 "A system error has occurred.", "error"),
 
+            // ── Auth — Google Login ──────────────────────────────────────────────────
+            LocalizedMessage.Create("error.email_already_registered", "en",
+                "This email is already registered with another sign-in method.", "error"),
+            LocalizedMessage.Create("error.account_banned", "en",
+                "Your account has been banned.", "error"),
+
             // ── Admin / Flash sale / Refund (key hóa throw hardcode) — English ──────
             LocalizedMessage.Create("error.bulk_max_items", "en",
                 "Maximum 100 items allowed per bulk action.", "error"),
@@ -499,6 +553,12 @@ internal sealed class LocalizationSeeder(
                 "Size is invalid or inactive for product '{product}'.", "error"),
             LocalizedMessage.Create("error.flashsale_duplicate_items", "en",
                 "Duplicate product/size combinations found in flash sale items.", "error"),
+            LocalizedMessage.Create("error.flashsale_time_invalid", "en",
+                "End time must be after start time.", "error"),
+            LocalizedMessage.Create("error.flashsale_item_saleprice_invalid", "en",
+                "Sale price must be positive and less than the original price.", "error"),
+            LocalizedMessage.Create("error.flashsale_item_stock_limit_positive", "en",
+                "Stock limit must be greater than 0.", "error"),
             LocalizedMessage.Create("error.order_no_return_request", "en",
                 "The order has no return request.", "error"),
             LocalizedMessage.Create("error.refund_requires_approved", "en",
@@ -515,6 +575,8 @@ internal sealed class LocalizationSeeder(
                 "Original VNPay transaction not found.", "error"),
             LocalizedMessage.Create("error.vnpay_refund_failed", "en",
                 "VNPay refund failed: {reason}.", "error"),
+            LocalizedMessage.Create("error.rate_limit_exceeded", "en",
+                "Too many requests. Please try again in {retryAfter} seconds.", "error"),
 
             // ── Auth — English ────────────────────────────────────────────────────────
             LocalizedMessage.Create("error.auth_invalid_credentials", "en",
@@ -624,6 +686,10 @@ internal sealed class LocalizationSeeder(
             LocalizedMessage.Create("error.return_reject_invalid_status", "en",
                 "Only pending return requests can be rejected.", "error"),
 
+            // ── Product Images — English ──────────────────────────────────────────────
+            LocalizedMessage.Create("error.image_product_mismatch", "en",
+                "This image does not belong to the specified product.", "error"),
+
             // ── Products — English ────────────────────────────────────────────────────
             LocalizedMessage.Create("error.product_no_size_support", "en",
                 "This product does not support size classification.", "error"),
@@ -671,6 +737,36 @@ internal sealed class LocalizationSeeder(
                 "Combo must have at least 1 product.", "error"),
             LocalizedMessage.Create("error.combo_product_inactive", "en",
                 "Product '{name}' is inactive.", "error"),
+
+            // ── Loyalty — English ──────────────────────────────────────────────────────
+            LocalizedMessage.Create("error.loyalty_insufficient_points", "en",
+                "Insufficient points. Available: {available}, required: {required}.", "error"),
+
+            // ── Inventory — English ────────────────────────────────────────────────────
+            LocalizedMessage.Create("error.inventory_insufficient_stock", "en",
+                "Insufficient stock. Available: {available}, required: {required}.", "error"),
+
+            // ── Cart — English (additional) ────────────────────────────────────────────
+            LocalizedMessage.Create("error.cart_item_not_found", "en",
+                "Item not found in cart.", "error"),
+            LocalizedMessage.Create("error.cart_size_required", "en",
+                "This product requires a size selection.", "error"),
+
+            // ── Stock Receipt — English ─────────────────────────────────────────────────
+            LocalizedMessage.Create("error.stock_receipt_already_cancelled", "en",
+                "Stock receipt has already been cancelled.", "error"),
+            LocalizedMessage.Create("error.stock_receipt_already_completed", "en",
+                "Stock receipt has already been completed.", "error"),
+            LocalizedMessage.Create("error.stock_receipt_invalid_status", "en",
+                "Stock receipt status is invalid for this operation.", "error"),
+
+            // ── Size — English ──────────────────────────────────────────────────────────
+            LocalizedMessage.Create("error.size_already_exists", "en",
+                "Size '{label}' already exists.", "error"),
+
+            // ── File Upload — English ───────────────────────────────────────────────────
+            LocalizedMessage.Create("error.invalid_file_type", "en",
+                "File '{fileName}' is invalid. Only image files are accepted.", "error"),
 
             // ── Validation Messages — English ─────────────────────────────────────────
             LocalizedMessage.Create("validation.required", "en",

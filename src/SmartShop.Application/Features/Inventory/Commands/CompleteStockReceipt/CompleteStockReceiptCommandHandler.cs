@@ -1,6 +1,8 @@
 using MediatR;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Interfaces;
+using SmartShop.Domain.Common.Exceptions;
+using SmartShop.Domain.Entities;
 using SmartShop.Domain.Enums;
 using SmartShop.Domain.Interfaces;
 
@@ -17,10 +19,10 @@ public class CompleteStockReceiptCommandHandler(
     public async Task<ApiResponse<StockReceiptDto>> Handle(CompleteStockReceiptCommand request, CancellationToken ct)
     {
         var receipt = await receiptRepo.GetByIdWithItemsAsync(request.Id, ct)
-            ?? throw new InvalidOperationException($"Phiếu nhập hàng với ID {request.Id} không tồn tại.");
+            ?? throw new NotFoundException(nameof(StockReceipt), request.Id);
 
         if (receipt.Status != ReceiptStatus.Pending)
-            throw new InvalidOperationException($"Chỉ có thể hoàn thành phiếu có trạng thái Pending. Trạng thái hiện tại: {receipt.Status}");
+            throw new ConflictException("error.stock_receipt_invalid_status", null);
 
         var sizedItems = receipt.Items
             .Where(item => item.SizeId.HasValue)

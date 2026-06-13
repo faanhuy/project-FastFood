@@ -1,4 +1,5 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Enums;
 
 namespace SmartShop.Domain.Entities;
@@ -71,7 +72,7 @@ public class CartItem : BaseEntity
     public void UpdateQuantity(int quantity)
     {
         if (quantity <= 0)
-            throw new ArgumentException("Số lượng phải lớn hơn 0.");
+            throw new ConflictException("validation.quantity_positive", null);
         Quantity = quantity;
         foreach (var c in _components)
             c.RecalculateTotalQuantity(quantity);

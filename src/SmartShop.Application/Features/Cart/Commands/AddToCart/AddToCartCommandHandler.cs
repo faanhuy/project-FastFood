@@ -27,7 +27,7 @@ public class AddToCartCommandHandler(
         if (product.HasSizes)
         {
             if (!request.SizeId.HasValue)
-                throw new ArgumentException("Sản phẩm này yêu cầu chọn size.");
+                throw new ConflictException("error.cart_size_required", null);
 
             var productSize = await productSizeRepository.GetByIdAsync(request.SizeId.Value, cancellationToken)
                 ?? throw new NotFoundException("ProductSize", request.SizeId.Value);

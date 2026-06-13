@@ -1,4 +1,5 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Common.Exceptions;
 
 namespace SmartShop.Domain.Entities;
 
@@ -18,11 +19,11 @@ public class StoreInventory : BaseAuditableEntity
     public static StoreInventory Create(Guid storeId, Guid productId, int quantity)
     {
         if (storeId == Guid.Empty)
-            throw new ArgumentException("StoreId không được để trống.", nameof(storeId));
+            throw new ConflictException("validation.store_id_invalid", null);
         if (productId == Guid.Empty)
-            throw new ArgumentException("ProductId không được để trống.", nameof(productId));
+            throw new ConflictException("validation.product_id_invalid", null);
         if (quantity < 0)
-            throw new ArgumentException("Số lượng tồn kho không được âm.", nameof(quantity));
+            throw new ConflictException("validation.inventory_non_negative", null);
 
         return new StoreInventory
         {
@@ -36,9 +37,10 @@ public class StoreInventory : BaseAuditableEntity
     public void DeductStock(int quantity)
     {
         if (quantity <= 0)
-            throw new ArgumentException("Số lượng cần trừ phải lớn hơn 0.", nameof(quantity));
+            throw new ConflictException("validation.quantity_positive", null);
         if (quantity > Quantity)
-            throw new InvalidOperationException($"Không đủ tồn kho. Hiện có: {Quantity}, cần: {quantity}.");
+            throw new ConflictException("error.inventory_insufficient_stock",
+                new Dictionary<string, string> { ["available"] = Quantity.ToString(), ["required"] = quantity.ToString() });
 
         Quantity -= quantity;
     }
@@ -46,7 +48,7 @@ public class StoreInventory : BaseAuditableEntity
     public void RestoreStock(int quantity)
     {
         if (quantity <= 0)
-            throw new ArgumentException("Số lượng cần khôi phục phải lớn hơn 0.", nameof(quantity));
+            throw new ConflictException("validation.quantity_positive", null);
 
         Quantity += quantity;
     }
@@ -54,7 +56,7 @@ public class StoreInventory : BaseAuditableEntity
     public void SetQuantity(int quantity)
     {
         if (quantity < 0)
-            throw new ArgumentException("Số lượng tồn kho không được âm.", nameof(quantity));
+            throw new ConflictException("validation.inventory_non_negative", null);
 
         Quantity = quantity;
     }

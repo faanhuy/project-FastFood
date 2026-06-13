@@ -108,9 +108,13 @@ export interface OrderTimelineEventDto {
   id: string;
   occurredAt: string;
   eventType: 'Created' | 'StatusChanged' | 'Refunded' | 'ReturnRequested' | 'ReturnApproved' | 'ReturnRejected';
-  title: string;
+  title: string;           // deprecated — dùng titleKey
+  titleKey: string;        // i18n key
+  fromStatus?: string;     // cho StatusChanged
+  toStatus?: string;       // cho StatusChanged
+  isAdminActor: boolean;
   description?: string;
-  actorName?: string;
+  actorName?: string;      // deprecated — dùng isAdminActor
   amount?: number;
 }
 

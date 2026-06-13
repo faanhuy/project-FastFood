@@ -50,7 +50,7 @@ public class ReviewsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<ApiResponse<object?>>> Delete(Guid id, CancellationToken ct)
     {
         await mediator.Send(new DeleteReviewCommand(id, CurrentUserId, IsAdmin), ct);
-        return Ok(ApiResponse.Ok("Đánh giá đã được xóa."));
+        return Ok(ApiResponse.Ok());
     }
 }
 

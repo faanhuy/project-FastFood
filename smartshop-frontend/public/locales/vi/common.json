@@ -133,6 +133,7 @@
   "pointRedeem": "Đổi điểm",
   "pointExpire": "Hết hạn",
   "pointAdjust": "Điều chỉnh",
+  "pointReverse": "Hoàn điểm",
   "availablePoints": "{{count}} điểm khả dụng",
   "installApp": "Cài đặt ứng dụng",
   "installBannerTitle": "Cài SmartShop lên thiết bị của bạn",
@@ -143,5 +144,6 @@
   "promotion": "Khuyến mãi",
   "done": "Xong",
   "saving": "Đang lưu...",
-  "update": "Cập nhật"
+  "update": "Cập nhật",
+  "admin": "Quản trị viên"
 }

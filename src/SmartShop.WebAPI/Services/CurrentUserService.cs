@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using SmartShop.Application.Common.Interfaces;
+using SmartShop.Domain.Common.Exceptions;
 
 namespace SmartShop.WebAPI.Services;
 
@@ -9,7 +10,7 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICur
 
     public string UserId =>
         User?.FindFirstValue(ClaimTypes.NameIdentifier)
-        ?? throw new UnauthorizedAccessException("Người dùng chưa đăng nhập.");
+        ?? throw new UnauthorizedException();
 
     public string? UserEmail =>
         User?.FindFirstValue(ClaimTypes.Email);

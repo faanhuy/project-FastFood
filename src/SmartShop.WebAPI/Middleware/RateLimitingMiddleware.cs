@@ -11,7 +11,8 @@ public class RateLimitingMiddleware(
     RequestDelegate next,
     IRateLimitStore store,
     IOptions<RateLimitOptions> options,
-    ILogger<RateLimitingMiddleware> logger)
+    ILogger<RateLimitingMiddleware> logger,
+    IServiceScopeFactory scopeFactory)
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -85,8 +86,16 @@ public class RateLimitingMiddleware(
                 "Rate limit exceeded for client '{ClientKey}' on policy '{Policy}'. Count={Count}, Limit={Limit}.",
                 clientKey, policyName, count, rule.PermitLimit);
 
-            var response = ApiResponse<object>.Fail(
-                $"Quá nhiều yêu cầu. Vui lòng thử lại sau {retryAfter} giây.");
+            string message;
+            using (var scope = scopeFactory.CreateScope())
+            {
+                var localization = scope.ServiceProvider.GetRequiredService<ILocalizationService>();
+                var acceptLanguage = context.Request.Headers["Accept-Language"].FirstOrDefault();
+                var lang = localization.DetectLanguage(acceptLanguage);
+                message = localization.GetMessage("error.rate_limit_exceeded", lang,
+                    new Dictionary<string, string> { ["retryAfter"] = retryAfter.ToString() });
+            }
+            var response = ApiResponse<object>.Fail(message);
 
             await context.Response.WriteAsync(JsonSerializer.Serialize(response, JsonOptions));
             return;

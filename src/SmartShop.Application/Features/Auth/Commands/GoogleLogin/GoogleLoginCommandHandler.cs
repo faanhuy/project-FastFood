@@ -51,7 +51,7 @@ public class GoogleLoginCommandHandler(
                 await auditLogService.LogAsync(
                     null, AuditActions.LoginFailed, "User", null,
                     ipAddress: ipAddress, ct: cancellationToken);
-                throw new ConflictException("error.email_already_registered");
+                throw new ConflictException("error.email_already_registered", null);
             }
 
             // Auto-create new user
@@ -69,7 +69,7 @@ public class GoogleLoginCommandHandler(
             await auditLogService.LogAsync(
                 user.Id, AuditActions.LoginFailed, "User", user.Id,
                 ipAddress: ipAddress, ct: cancellationToken);
-            throw new ConflictException("error.account_banned");
+            throw new ConflictException("error.account_banned", null);
         }
 
         // Generate JWT tokens

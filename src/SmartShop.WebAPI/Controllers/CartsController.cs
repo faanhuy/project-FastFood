@@ -98,7 +98,7 @@ public class CartsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<ApiResponse<object?>>> ClearCart(CancellationToken ct)
     {
         await mediator.Send(new ClearCartCommand(CurrentUserId), ct);
-        return Ok(ApiResponse.Ok("Giỏ hàng đã được xoá."));
+        return Ok(ApiResponse.Ok());
     }
 }
 

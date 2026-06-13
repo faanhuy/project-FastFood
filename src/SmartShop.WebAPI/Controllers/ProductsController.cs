@@ -103,7 +103,7 @@ public class ProductsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<ApiResponse<object?>>> Delete(Guid id, CancellationToken ct)
     {
         await mediator.Send(new DeleteProductCommand(id), ct);
-        return Ok(ApiResponse.Ok("Sản phẩm đã được xoá."));
+        return Ok(ApiResponse.Ok());
     }
 
     /// <summary>Preview CSV import (validate without saving)</summary>

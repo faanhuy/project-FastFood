@@ -31,7 +31,7 @@ public class ReviewRepository(ApplicationDbContext context) : IReviewRepository
             .Select(r => new ReviewSummary(
                 r.Id,
                 r.UserId,
-                r.User != null ? r.User.FirstName + " " + r.User.LastName : "Ẩn danh",
+                r.User != null ? r.User.FirstName + " " + r.User.LastName : "Anonymous",
                 r.ProductId,
                 r.Rating,
                 r.Comment,

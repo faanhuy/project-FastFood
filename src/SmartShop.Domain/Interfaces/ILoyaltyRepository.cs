@@ -14,6 +14,8 @@ public interface ILoyaltyRepository
     Task<(IEnumerable<PointTransaction> Items, int TotalCount)> GetTransactionsByAccountIdAsync(
         Guid accountId, int page, int pageSize, CancellationToken ct = default);
     Task AddTransactionAsync(PointTransaction transaction, CancellationToken ct = default);
+    Task<decimal> GetEarnedPointsByOrderAsync(Guid accountId, Guid orderId, CancellationToken ct = default);
+    Task<decimal> GetReversedPointsByOrderAsync(Guid accountId, Guid orderId, CancellationToken ct = default);
 
     // Analytics
     Task<(int TotalCustomersWithLoyalty, int PlatinumCustomers)> GetLoyaltyStatsAsync(CancellationToken ct = default);

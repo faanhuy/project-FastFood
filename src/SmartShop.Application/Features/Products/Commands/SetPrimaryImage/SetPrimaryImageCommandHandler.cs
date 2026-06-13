@@ -16,7 +16,7 @@ public class SetPrimaryImageCommandHandler(
             ?? throw new NotFoundException(nameof(ProductImage), request.ImageId);
 
         if (targetImage.ProductId != request.ProductId)
-            throw new UnauthorizedException("error.image_product_mismatch");
+            throw new UnauthorizedException("error.image_product_mismatch", null);
 
         // Get all images for this product
         var allImages = await imageRepository.GetByProductIdAsync(request.ProductId, cancellationToken);

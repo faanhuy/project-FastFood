@@ -13,6 +13,21 @@ export function OrderTimeline({ orderId }: Props) {
   const [events, setEvents] = useState<OrderTimelineEventDto[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const renderTitle = (event: OrderTimelineEventDto): string => {
+    if (event.eventType === 'StatusChanged' && event.fromStatus && event.toStatus) {
+      return t('order:timeline.statusChanged', {
+        fromStatus: t(`order:statusLabel_${event.fromStatus}`),
+        toStatus: t(`order:statusLabel_${event.toStatus}`),
+      });
+    }
+    return t(`order:${event.titleKey}`);
+  };
+
+  const renderActor = (event: OrderTimelineEventDto): string | null => {
+    if (event.isAdminActor) return t('common:admin');
+    return null;
+  };
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -46,7 +61,7 @@ export function OrderTimeline({ orderId }: Props) {
                 </div>
                 <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{event.title}</p>
+                    <p className="text-sm font-medium text-gray-900">{renderTitle(event)}</p>
                     {event.description && <p className="text-xs text-gray-500">{event.description}</p>}
                     {event.amount != null && (
                       <p className="text-xs text-green-600 font-medium">
@@ -57,7 +72,7 @@ export function OrderTimeline({ orderId }: Props) {
                   <div className="whitespace-nowrap text-right text-xs text-gray-500">
                     <div>{new Date(event.occurredAt).toLocaleDateString('vi-VN')}</div>
                     <div>{new Date(event.occurredAt).toLocaleTimeString('vi-VN')}</div>
-                    {event.actorName && <div className="text-gray-400">{event.actorName}</div>}
+                    {renderActor(event) && <div className="text-gray-400">{renderActor(event)}</div>}
                   </div>
                 </div>
               </div>

@@ -26,10 +26,10 @@ public class UpdatePriceCampaignCommandHandler(
         ArgumentException.ThrowIfNullOrWhiteSpace(cmd.Name);
 
         if (cmd.EndsAt <= cmd.StartsAt)
-            throw new ArgumentException("EndsAt phải sau StartsAt.");
+            throw new ConflictException("validation.date_from_before_to", null);
 
         if (!cmd.AppliesToAll && (cmd.StoreIds is null || cmd.StoreIds.Count == 0))
-            throw new ArgumentException("Phải chọn ít nhất một chi nhánh khi AppliesToAll = false.");
+            throw new ConflictException("validation.store_required", null);
 
         await ValidateItemsAsync(cmd.Items, productRepo, ct);
 
@@ -82,8 +82,7 @@ public class UpdatePriceCampaignCommandHandler(
 
                 var missing = activeSizeIds.Except(providedSizeIds).ToList();
                 if (missing.Count > 0)
-                    throw new ArgumentException(
-                        $"Sản phẩm '{product.Name}' có sizes — phải cung cấp giá cho tất cả active sizes.");
+                    throw new ConflictException("validation.required_field", null);
             }
         }
     }

@@ -23,9 +23,9 @@ public class FlashSaleItem : BaseAuditableEntity
         decimal salePrice, decimal originalPrice, int stockLimit)
     {
         if (salePrice <= 0 || salePrice >= originalPrice)
-            throw new ConflictException("Sale price must be positive and less than original price.");
+            throw new ConflictException("error.flashsale_item_saleprice_invalid", null);
         if (stockLimit <= 0)
-            throw new ConflictException("Stock limit must be positive.");
+            throw new ConflictException("error.flashsale_item_stock_limit_positive", null);
 
         return new FlashSaleItem
         {
@@ -43,7 +43,7 @@ public class FlashSaleItem : BaseAuditableEntity
     public int GetRemainingStock() => Math.Max(0, StockLimit - SoldCount);
     public void IncrementSoldCount(int quantity)
     {
-        if (quantity <= 0) throw new ArgumentException("Quantity must be positive.");
+        if (quantity <= 0) throw new ConflictException("validation.quantity_positive", null);
         SoldCount += quantity;
     }
 }

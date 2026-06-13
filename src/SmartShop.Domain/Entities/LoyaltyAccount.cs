@@ -1,4 +1,5 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Common.Exceptions;
 
 namespace SmartShop.Domain.Entities;
 
@@ -28,7 +29,7 @@ public class LoyaltyAccount : BaseAuditableEntity
     public static LoyaltyAccount Create(Guid userId)
     {
         if (userId == Guid.Empty)
-            throw new ArgumentException("UserId không được để trống.", nameof(userId));
+            throw new ConflictException("validation.user_id_invalid", null);
 
         return new LoyaltyAccount
         {
@@ -52,10 +53,10 @@ public class LoyaltyAccount : BaseAuditableEntity
     }
 
     // Earn points when order is delivered
-    public void EarnPoints(decimal points, Guid orderId, string note = "")
+    public PointTransaction EarnPoints(decimal points, Guid orderId, string note = "")
     {
         if (points < 0)
-            throw new ArgumentException("Điểm không được âm.", nameof(points));
+            throw new ConflictException("validation.inventory_non_negative", null);
 
         TotalPoints += points;
         LifetimePoints += points;
@@ -64,41 +65,59 @@ public class LoyaltyAccount : BaseAuditableEntity
         var transaction = PointTransaction.Create(
             this.Id, orderId, points, PointTransactionType.Earn, note);
         _transactions.Add(transaction);
+        return transaction;
     }
 
     // Redeem points at checkout
-    public void RedeemPoints(decimal points, Guid orderId, string note = "")
+    public PointTransaction RedeemPoints(decimal points, Guid orderId, string note = "")
     {
         if (points < 0)
-            throw new ArgumentException("Điểm không được âm.", nameof(points));
+            throw new ConflictException("validation.inventory_non_negative", null);
 
         if (points > TotalPoints)
-            throw new InvalidOperationException(
-                $"Số điểm không đủ. Có: {TotalPoints}, yêu cầu: {points}");
+            throw new ConflictException("error.loyalty_insufficient_points",
+                new Dictionary<string, string> { ["available"] = TotalPoints.ToString(), ["required"] = points.ToString() });
 
         TotalPoints -= points;
-        // LifetimePoints không thay đổi khi redeem
 
         var transaction = PointTransaction.Create(
             this.Id, orderId, points, PointTransactionType.Redeem, note);
         _transactions.Add(transaction);
+        return transaction;
     }
 
     // Expire points (e.g., after 1 year of inactivity)
-    public void ExpirePoints(decimal points, string note = "")
+    public PointTransaction ExpirePoints(decimal points, string note = "")
     {
         if (points > TotalPoints)
-            throw new InvalidOperationException("Không thể xóa điểm hơn số hiện có.");
+            throw new ConflictException("error.loyalty_insufficient_points", null);
 
         TotalPoints -= points;
 
         var transaction = PointTransaction.Create(
             this.Id, null, points, PointTransactionType.Expire, note);
         _transactions.Add(transaction);
+        return transaction;
+    }
+
+    // Reverse points when a delivered order is cancelled/returned/refunded
+    public PointTransaction ReversePoints(decimal points, Guid orderId, string note = "")
+    {
+        if (points < 0)
+            throw new ConflictException("validation.inventory_non_negative", null);
+
+        TotalPoints = Math.Max(0, TotalPoints - points);
+        LifetimePoints = Math.Max(0, LifetimePoints - points);
+        Tier = CalculateTier();
+
+        var transaction = PointTransaction.Create(
+            this.Id, orderId, points, PointTransactionType.Reverse, note);
+        _transactions.Add(transaction);
+        return transaction;
     }
 
     // Admin manual adjustment
-    public void AdjustPoints(decimal pointsDelta, string reason)
+    public PointTransaction AdjustPoints(decimal pointsDelta, string reason)
     {
         TotalPoints += pointsDelta;
         LifetimePoints = Math.Max(0, LifetimePoints + pointsDelta);
@@ -106,8 +125,9 @@ public class LoyaltyAccount : BaseAuditableEntity
 
         var transaction = PointTransaction.Create(
             this.Id, null, Math.Abs(pointsDelta),
-            pointsDelta > 0 ? PointTransactionType.Adjust : PointTransactionType.Adjust,
+            PointTransactionType.Adjust,
             $"Admin: {reason}");
         _transactions.Add(transaction);
+        return transaction;
     }
 }

@@ -1,4 +1,5 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Common.Exceptions;
 
 namespace SmartShop.Domain.Entities;
 
@@ -23,10 +24,10 @@ public class ComboItem : BaseEntity
         ArgumentException.ThrowIfNullOrWhiteSpace(productName);
 
         if (quantity <= 0)
-            throw new ArgumentException("Quantity must be greater than 0.", nameof(quantity));
+            throw new ConflictException("validation.quantity_positive", null);
 
         if (unitPriceSnapshot < 0)
-            throw new ArgumentException("UnitPriceSnapshot cannot be negative.", nameof(unitPriceSnapshot));
+            throw new ConflictException("validation.price_positive", null);
 
         return new ComboItem
         {

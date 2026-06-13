@@ -1,18 +1,16 @@
 using MediatR;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Features.Loyalty.Dtos;
-using SmartShop.Domain.Common.Exceptions;
-using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.Application.Features.Loyalty.Queries.GetLoyaltyAccount;
 
 public class GetLoyaltyAccountQueryHandler(
-    ILoyaltyRepository loyaltyRepository) : IRequestHandler<GetLoyaltyAccountQuery, LoyaltyAccountDto>
+    ILoyaltyService loyaltyService) : IRequestHandler<GetLoyaltyAccountQuery, LoyaltyAccountDto>
 {
     public async Task<LoyaltyAccountDto> Handle(
         GetLoyaltyAccountQuery request, CancellationToken cancellationToken)
     {
-        var account = await loyaltyRepository.GetByUserIdAsync(request.UserId, cancellationToken)
-            ?? throw new NotFoundException("LoyaltyAccount", request.UserId);
+        var account = await loyaltyService.GetOrCreateAccountAsync(request.UserId, cancellationToken);
 
         var (tierName, nextTier, nextTierPoints) = GetTierInfo(account.Tier, account.LifetimePoints);
 

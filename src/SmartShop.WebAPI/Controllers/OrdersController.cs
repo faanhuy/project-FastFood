@@ -63,7 +63,7 @@ public class OrdersController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<ApiResponse<object?>>> Cancel(Guid id, CancellationToken ct)
     {
         await mediator.Send(new CancelOrderCommand(id, CurrentUserId), ct);
-        return Ok(ApiResponse.Ok("Đơn hàng đã được huỷ."));
+        return Ok(ApiResponse.Ok());
     }
 
     // ── Admin endpoints ───────────────────────────────────────────────────

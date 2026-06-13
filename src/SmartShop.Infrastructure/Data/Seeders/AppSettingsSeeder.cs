@@ -39,8 +39,9 @@ internal sealed class AppSettingsSeeder(
         }
 
         // Đảm bảo các keys mới luôn tồn tại (upsert khi table đã có data)
-        await EnsureKeyAsync("FileStorage:LocalBasePath", "",         "text", "Đường dẫn tuyệt đối lưu file upload (để trống = dùng wwwroot/uploads)", cancellationToken);
-        await EnsureKeyAsync("FileStorage:LocalUrlPrefix", "/uploads", "text", "Prefix URL trả về cho file upload (ví dụ /images)", cancellationToken);
+        await EnsureKeyAsync("FileStorage:LocalBasePath", "",         "text",   "Đường dẫn tuyệt đối lưu file upload (để trống = dùng wwwroot/uploads)", cancellationToken);
+        await EnsureKeyAsync("FileStorage:LocalUrlPrefix", "/uploads", "text",   "Prefix URL trả về cho file upload (ví dụ /images)", cancellationToken);
+        await EnsureKeyAsync("Loyalty:VndPerPoint",        "1000",     "number", "Số VND cần chi để được 1 điểm thưởng (ví dụ 1000 → mua 1000₫ được 1đ)", cancellationToken);
     }
 
     private async Task EnsureKeyAsync(string key, string defaultValue, string dataType, string description, CancellationToken ct)

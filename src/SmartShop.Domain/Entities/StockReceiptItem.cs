@@ -1,4 +1,5 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Common.Exceptions;
 
 namespace SmartShop.Domain.Entities;
 
@@ -18,11 +19,11 @@ public class StockReceiptItem : BaseEntity
     public static StockReceiptItem Create(Guid stockReceiptId, Guid productId, Guid? sizeId, int quantity, string? notes = null)
     {
         if (stockReceiptId == Guid.Empty)
-            throw new ArgumentException("StockReceiptId không được để trống.", nameof(stockReceiptId));
+            throw new ConflictException("validation.order_id_invalid", null);
         if (productId == Guid.Empty)
-            throw new ArgumentException("ProductId không được để trống.", nameof(productId));
+            throw new ConflictException("validation.product_id_invalid", null);
         if (quantity <= 0)
-            throw new ArgumentException("Số lượng phải lớn hơn 0.", nameof(quantity));
+            throw new ConflictException("validation.quantity_positive", null);
 
         return new StockReceiptItem
         {

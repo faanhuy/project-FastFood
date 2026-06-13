@@ -20,7 +20,7 @@ public class AddFromOrderCommandHandler(
             ?? throw new NotFoundException("Order", request.OrderId);
 
         if (order.UserId != request.UserId)
-            throw new UnauthorizedException("error.unauthorized");
+            throw new UnauthorizedException("error.unauthorized", null);
 
         var cart = await cartRepository.GetByUserIdAsync(request.UserId, ct);
         if (cart == null)

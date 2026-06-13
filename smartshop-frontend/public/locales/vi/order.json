@@ -104,5 +104,21 @@
   "fullRefund": "Hoàn tiền toàn bộ",
   "selectItemsToRefund": "Chọn sản phẩm cần hoàn tiền",
   "refundConfirm": "Xác nhận hoàn tiền {{amount}}?",
-  "actorSystem": "Hệ thống"
+  "actorSystem": "Hệ thống",
+  "timeline.created": "Đơn hàng được tạo",
+  "timeline.statusChanged": "Trạng thái: {{fromStatus}} → {{toStatus}}",
+  "timeline.returnPending": "Yêu cầu trả hàng được gửi",
+  "timeline.returnApproved": "Yêu cầu trả hàng được phê duyệt",
+  "timeline.returnRejected": "Yêu cầu trả hàng bị từ chối",
+  "timeline.returnUpdated": "Yêu cầu trả hàng cập nhật",
+  "timeline.refunded": "Hoàn tiền thành công",
+  "timeline.delivered": "Đơn hàng đã được giao",
+  "statusLabel_Pending": "Chờ xác nhận",
+  "statusLabel_Confirmed": "Đã xác nhận",
+  "statusLabel_Processing": "Đang xử lý",
+  "statusLabel_Shipped": "Đã gửi hàng",
+  "statusLabel_Delivered": "Đã giao",
+  "statusLabel_Cancelled": "Đã hủy",
+  "statusLabel_Refunded": "Đã hoàn tiền",
+  "statusLabel_Returned": "Đã trả hàng"
 }

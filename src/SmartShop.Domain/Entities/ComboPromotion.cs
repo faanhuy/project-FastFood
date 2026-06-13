@@ -1,4 +1,5 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Enums;
 
 namespace SmartShop.Domain.Entities;
@@ -44,20 +45,20 @@ public class ComboPromotion : BaseAuditableEntity
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
         if (triggerMinQty < 1)
-            throw new ArgumentException("TriggerMinQuantity phải >= 1.", nameof(triggerMinQty));
+            throw new ConflictException("validation.quantity_positive", null);
 
         if (rewardType == ComboRewardType.FreeProduct)
         {
             if (!rewardProductId.HasValue || rewardProductId.Value == Guid.Empty)
-                throw new ArgumentException("RewardProductId là bắt buộc cho loại FreeProduct.", nameof(rewardProductId));
+                throw new ConflictException("validation.product_id_invalid", null);
             if (!rewardQty.HasValue || rewardQty.Value <= 0)
-                throw new ArgumentException("RewardQuantity phải > 0 cho loại FreeProduct.", nameof(rewardQty));
+                throw new ConflictException("validation.quantity_positive", null);
         }
 
         if (rewardType == ComboRewardType.DiscountAmount)
         {
             if (!rewardAmount.HasValue || rewardAmount.Value <= 0)
-                throw new ArgumentException("RewardAmount phải > 0 cho loại DiscountAmount.", nameof(rewardAmount));
+                throw new ConflictException("validation.discount_value_positive", null);
         }
 
         return new ComboPromotion
@@ -95,20 +96,20 @@ public class ComboPromotion : BaseAuditableEntity
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
         if (triggerMinQty < 1)
-            throw new ArgumentException("TriggerMinQuantity phải >= 1.", nameof(triggerMinQty));
+            throw new ConflictException("validation.quantity_positive", null);
 
         if (rewardType == ComboRewardType.FreeProduct)
         {
             if (!rewardProductId.HasValue || rewardProductId.Value == Guid.Empty)
-                throw new ArgumentException("RewardProductId là bắt buộc cho loại FreeProduct.", nameof(rewardProductId));
+                throw new ConflictException("validation.product_id_invalid", null);
             if (!rewardQty.HasValue || rewardQty.Value <= 0)
-                throw new ArgumentException("RewardQuantity phải > 0 cho loại FreeProduct.", nameof(rewardQty));
+                throw new ConflictException("validation.quantity_positive", null);
         }
 
         if (rewardType == ComboRewardType.DiscountAmount)
         {
             if (!rewardAmount.HasValue || rewardAmount.Value <= 0)
-                throw new ArgumentException("RewardAmount phải > 0 cho loại DiscountAmount.", nameof(rewardAmount));
+                throw new ConflictException("validation.discount_value_positive", null);
         }
 
         Name = name.Trim();

@@ -1,3 +1,4 @@
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Enums;
 
 namespace SmartShop.Domain.Entities;
@@ -18,10 +19,10 @@ public class PriceCampaignItem
         PriceRuleType ruleType, decimal discountValue)
     {
         if (ruleType == PriceRuleType.Coefficient && (discountValue <= 0 || discountValue > 100))
-            throw new ArgumentException("Coefficient phải nằm trong khoảng (0, 100].", nameof(discountValue));
+            throw new ConflictException("validation.discount_percent_max", null);
 
         if (ruleType == PriceRuleType.FixedPrice && discountValue < 0)
-            throw new ArgumentException("FixedPrice không được âm.", nameof(discountValue));
+            throw new ConflictException("validation.discount_value_positive", null);
 
         return new PriceCampaignItem
         {

@@ -23,5 +23,10 @@ public class LoyaltyAccountConfiguration : IEntityTypeConfiguration<LoyaltyAccou
             .WithMany()
             .HasForeignKey(e => e.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Tell EF to use the private backing field so change tracking detects EarnPoints/ReversePoints mutations
+        builder.Navigation(e => e.Transactions)
+            .HasField("_transactions")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

@@ -19,7 +19,7 @@ public class SetStoreSizeInventoryCommandHandler(
         SetStoreSizeInventoryCommand request, CancellationToken cancellationToken)
     {
         if (request.Quantity < 0)
-            throw new ArgumentException("Số lượng tồn kho không được âm.");
+            throw new ConflictException("validation.inventory_non_negative", null);
 
         _ = await storeRepository.GetByIdAsync(request.StoreId, cancellationToken)
             ?? throw new NotFoundException(nameof(Store), request.StoreId);

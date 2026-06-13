@@ -1,4 +1,5 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Common.Exceptions;
 
 namespace SmartShop.Domain.Entities;
 
@@ -7,7 +8,8 @@ public enum PointTransactionType
     Earn = 1,      // Points earned from order delivery
     Redeem = 2,    // Points used at checkout
     Expire = 3,    // Points expired (inactivity)
-    Adjust = 4     // Admin adjustment
+    Adjust = 4,    // Admin adjustment
+    Reverse = 5    // Points reversed when delivered order is cancelled/returned/refunded
 }
 
 public class PointTransaction : BaseAuditableEntity
@@ -31,9 +33,9 @@ public class PointTransaction : BaseAuditableEntity
         string? note = null)
     {
         if (accountId == Guid.Empty)
-            throw new ArgumentException("AccountId không được để trống.", nameof(accountId));
+            throw new ConflictException("validation.user_id_invalid", null);
         if (points < 0)
-            throw new ArgumentException("Điểm không được âm.", nameof(points));
+            throw new ConflictException("validation.inventory_non_negative", null);
 
         return new PointTransaction
         {

@@ -1,4 +1,5 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Common.Exceptions;
 
 namespace SmartShop.Domain.Entities;
 
@@ -21,7 +22,7 @@ public class Review : BaseAuditableEntity
     public static Review Create(Guid userId, Guid productId, int rating, string comment)
     {
         if (rating < 1 || rating > 5)
-            throw new ArgumentException("Đánh giá phải từ 1 đến 5 sao.");
+            throw new ConflictException("validation.review_rating_range", null);
 
         return new Review
         {
@@ -40,7 +41,7 @@ public class Review : BaseAuditableEntity
     public void Update(int rating, string comment)
     {
         if (rating < 1 || rating > 5)
-            throw new ArgumentException("Đánh giá phải từ 1 đến 5 sao.");
+            throw new ConflictException("validation.review_rating_range", null);
 
         Rating = rating;
         Comment = comment;

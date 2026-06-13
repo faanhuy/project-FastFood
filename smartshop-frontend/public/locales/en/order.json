@@ -104,5 +104,21 @@
   "fullRefund": "Full refund",
   "selectItemsToRefund": "Select items to refund",
   "refundConfirm": "Confirm refund {{amount}}?",
-  "actorSystem": "System"
+  "actorSystem": "System",
+  "timeline.created": "Order created",
+  "timeline.statusChanged": "Status: {{fromStatus}} → {{toStatus}}",
+  "timeline.returnPending": "Return request submitted",
+  "timeline.returnApproved": "Return request approved",
+  "timeline.returnRejected": "Return request rejected",
+  "timeline.returnUpdated": "Return request updated",
+  "timeline.refunded": "Refund completed",
+  "timeline.delivered": "Order delivered",
+  "statusLabel_Pending": "Pending",
+  "statusLabel_Confirmed": "Confirmed",
+  "statusLabel_Processing": "Processing",
+  "statusLabel_Shipped": "Shipped",
+  "statusLabel_Delivered": "Delivered",
+  "statusLabel_Cancelled": "Cancelled",
+  "statusLabel_Refunded": "Refunded",
+  "statusLabel_Returned": "Returned"
 }

@@ -56,7 +56,7 @@ public class PriceCampaignsController(IMediator mediator) : ControllerBase
         Guid id, [FromBody] UpdatePriceCampaignCommand cmd, CancellationToken ct)
     {
         if (id != cmd.Id)
-            return BadRequest(ApiResponse<object?>.Fail("Id trong URL không khớp với body."));
+            return BadRequest(ApiResponse<object?>.Fail("Id in URL does not match body."));
 
         var result = await mediator.Send(cmd, ct);
         return Ok(result);

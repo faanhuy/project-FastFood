@@ -1,4 +1,5 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Enums;
 
 namespace SmartShop.Domain.Entities;
@@ -62,7 +63,7 @@ public class Order : BaseAuditableEntity
     public void SetStoreId(Guid storeId)
     {
         if (storeId == Guid.Empty)
-            throw new ArgumentException("StoreId không được để trống.", nameof(storeId));
+            throw new ConflictException("validation.store_id_invalid", null);
         StoreId = storeId;
     }
 
@@ -123,7 +124,7 @@ public class Order : BaseAuditableEntity
     public void Cancel()
     {
         if (Status == OrderStatus.Shipped || Status == OrderStatus.Delivered)
-            throw new InvalidOperationException("Không thể hủy đơn hàng đã giao.");
+            throw new ConflictException("error.order_cancel_invalid_status", null);
 
         Status = OrderStatus.Cancelled;
     }

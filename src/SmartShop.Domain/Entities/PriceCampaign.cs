@@ -1,4 +1,5 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Common.Exceptions;
 
 namespace SmartShop.Domain.Entities;
 
@@ -26,7 +27,7 @@ public class PriceCampaign : BaseAuditableEntity
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
         if (endsAt <= startsAt)
-            throw new ArgumentException("EndsAt phải sau StartsAt.", nameof(endsAt));
+            throw new ConflictException("validation.date_from_before_to", null);
 
         var campaign = new PriceCampaign
         {
@@ -48,7 +49,7 @@ public class PriceCampaign : BaseAuditableEntity
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
         if (endsAt <= startsAt)
-            throw new ArgumentException("EndsAt phải sau StartsAt.", nameof(endsAt));
+            throw new ConflictException("validation.date_from_before_to", null);
 
         Name = name;
         StartsAt = startsAt;

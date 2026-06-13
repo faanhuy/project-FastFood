@@ -1,4 +1,5 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Enums;
 
 namespace SmartShop.Domain.Entities;
@@ -20,9 +21,9 @@ public class StockReceipt : BaseAuditableEntity
     public static StockReceipt Create(Guid storeId, DateTime receiptDate, string? notes, string receiptNumber)
     {
         if (storeId == Guid.Empty)
-            throw new ArgumentException("StoreId không được để trống.", nameof(storeId));
+            throw new ConflictException("validation.store_id_invalid", null);
         if (string.IsNullOrWhiteSpace(receiptNumber))
-            throw new ArgumentException("ReceiptNumber không được để trống.", nameof(receiptNumber));
+            throw new ConflictException("validation.required_field", null);
 
         return new StockReceipt
         {

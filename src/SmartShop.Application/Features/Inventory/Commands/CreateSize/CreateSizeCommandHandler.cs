@@ -1,6 +1,7 @@
 using MediatR;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Interfaces;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces;
 
@@ -16,7 +17,7 @@ public class CreateSizeCommandHandler(ISizeRepository repo, IUnitOfWork uow)
         // Check for duplicate
         var exists = await repo.ExistsByLabelAndCategoryAsync(request.Label, request.Category, ct);
         if (exists)
-            throw new InvalidOperationException($"Size với tên '{request.Label}' đã tồn tại trong category này.");
+            throw new ConflictException("error.size_already_exists", new Dictionary<string, string> { ["label"] = request.Label });
 
         var size = Size.Create(request.Category, request.Label, request.DisplayOrder);
         await repo.AddAsync(size, ct);

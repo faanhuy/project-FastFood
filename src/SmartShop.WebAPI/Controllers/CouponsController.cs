@@ -52,7 +52,7 @@ public class CouponsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<ApiResponse<string>>> Delete(string code, CancellationToken ct)
     {
         await mediator.Send(new DeleteCouponCommand(code), ct);
-        return Ok(ApiResponse<string>.Ok("Đã xoá coupon thành công."));
+        return Ok(ApiResponse.Ok());
     }
 
     /// <summary>Kiểm tra và tính toán giá trị coupon</summary>

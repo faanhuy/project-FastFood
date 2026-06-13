@@ -33,9 +33,13 @@ export function PointHistoryList() {
       Redeem: t('pointRedeem'),
       Expire: t('pointExpire'),
       Adjust: t('pointAdjust'),
+      Reverse: t('pointReverse'),
     };
     return map[type] ?? type;
   };
+
+  const isDeduction = (type: string) =>
+    type === 'Redeem' || type === 'Expire' || type === 'Reverse';
 
   if (loading) return <div className="text-sm text-gray-400">{t('loading')}</div>;
 
@@ -49,9 +53,8 @@ export function PointHistoryList() {
               {tx.note && <p className="text-xs text-gray-400">{tx.note}</p>}
               <p className="text-xs text-gray-400">{new Date(tx.createdAt).toLocaleDateString('vi-VN')}</p>
             </div>
-            <span className={`text-sm font-bold ${tx.points > 0 ? 'text-green-600' : 'text-red-500'}`}>
-              {tx.points > 0 ? '+' : ''}
-              {tx.points}
+            <span className={`text-sm font-bold ${isDeduction(tx.type) ? 'text-red-500' : 'text-green-600'}`}>
+              {isDeduction(tx.type) ? '-' : '+'}{tx.points}
             </span>
           </div>
         ))}

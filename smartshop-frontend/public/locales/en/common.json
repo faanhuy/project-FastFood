@@ -133,6 +133,7 @@
   "pointRedeem": "Redeemed",
   "pointExpire": "Expired",
   "pointAdjust": "Adjusted",
+  "pointReverse": "Reversed",
   "availablePoints": "{{count}} points available",
   "installApp": "Install App",
   "installBannerTitle": "Install SmartShop on your device",
@@ -143,5 +144,6 @@
   "promotion": "Promotion",
   "done": "Done",
   "saving": "Saving...",
-  "update": "Update"
+  "update": "Update",
+  "admin": "Admin"
 }

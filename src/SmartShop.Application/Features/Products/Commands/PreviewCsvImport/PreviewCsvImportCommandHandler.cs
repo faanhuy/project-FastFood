@@ -46,7 +46,7 @@ public class PreviewCsvImportCommandHandler(ICategoryRepository categoryReposito
                                 errors.Add(new ImportRowError(
                                     rowNumber,
                                     nameof(record.Name),
-                                    "Tên sản phẩm không được để trống."));
+                                    "Product name is required."));
                                 isValid = false;
                             }
 
@@ -56,7 +56,7 @@ public class PreviewCsvImportCommandHandler(ICategoryRepository categoryReposito
                                 errors.Add(new ImportRowError(
                                     rowNumber,
                                     nameof(record.Price),
-                                    "Giá phải lớn hơn 0."));
+                                    "Price must be greater than 0."));
                                 isValid = false;
                             }
 
@@ -66,7 +66,7 @@ public class PreviewCsvImportCommandHandler(ICategoryRepository categoryReposito
                                 errors.Add(new ImportRowError(
                                     rowNumber,
                                     nameof(record.CategoryId),
-                                    "CategoryId không hợp lệ."));
+                                    "Invalid CategoryId."));
                                 isValid = false;
                             }
                             else
@@ -78,7 +78,7 @@ public class PreviewCsvImportCommandHandler(ICategoryRepository categoryReposito
                                     errors.Add(new ImportRowError(
                                         rowNumber,
                                         nameof(record.CategoryId),
-                                        "Danh mục không tồn tại."));
+                                        "Category does not exist."));
                                     isValid = false;
                                 }
                             }

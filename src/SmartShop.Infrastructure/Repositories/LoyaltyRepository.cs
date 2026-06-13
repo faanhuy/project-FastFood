@@ -17,7 +17,6 @@ public class LoyaltyRepository(ApplicationDbContext context) : ILoyaltyRepositor
     public async Task<LoyaltyAccount?> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
         return await context.LoyaltyAccounts
-            .AsNoTracking()
             .FirstOrDefaultAsync(a => a.UserId == userId, ct);
     }
 
@@ -54,6 +53,24 @@ public class LoyaltyRepository(ApplicationDbContext context) : ILoyaltyRepositor
     public async Task AddTransactionAsync(PointTransaction transaction, CancellationToken ct = default)
     {
         await context.PointTransactions.AddAsync(transaction, ct);
+    }
+
+    public async Task<decimal> GetEarnedPointsByOrderAsync(Guid accountId, Guid orderId, CancellationToken ct = default)
+    {
+        return await context.PointTransactions
+            .Where(t => t.AccountId == accountId
+                     && t.OrderId == orderId
+                     && t.Type == PointTransactionType.Earn)
+            .SumAsync(t => t.Points, ct);
+    }
+
+    public async Task<decimal> GetReversedPointsByOrderAsync(Guid accountId, Guid orderId, CancellationToken ct = default)
+    {
+        return await context.PointTransactions
+            .Where(t => t.AccountId == accountId
+                     && t.OrderId == orderId
+                     && t.Type == PointTransactionType.Reverse)
+            .SumAsync(t => t.Points, ct);
     }
 
     public async Task<(int TotalCustomersWithLoyalty, int PlatinumCustomers)> GetLoyaltyStatsAsync(

@@ -44,7 +44,8 @@ public class Coupon : BaseAuditableEntity
     {
 
         if (!MeetsMinOrderValue(orderTotal))
-            throw new InvalidOperationException("Giá trị đơn hàng không đạt yêu cầu để sử dụng Mã khuyến mãi");
+            throw new ConflictException("error.order_coupon_min_value",
+                new Dictionary<string, string> { ["minValue"] = MinOrderValue.ToString("N0"), ["current"] = orderTotal.ToString("N0") });
 
         if (DiscountType == DiscountType.Percentage)
             return orderTotal * DiscountValue / 100;
@@ -60,10 +61,10 @@ public class Coupon : BaseAuditableEntity
     public void Use()
     {
         if (IsExpired())
-            throw new ConflictException($"Coupon '{Code}' đã hết hạn");
+            throw new ConflictException("error.order_coupon_expired", new Dictionary<string, string> { ["code"] = Code });
 
         if (!HasRemaining())
-            throw new ConflictException($"Coupon '{Code}' đã hết lượt sử dụng");
+            throw new ConflictException("error.order_coupon_used_up", new Dictionary<string, string> { ["code"] = Code });
 
         UsedQuantity++;
     }

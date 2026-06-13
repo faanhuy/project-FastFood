@@ -50,7 +50,7 @@ public class BulkImportProductsCommandHandler(
                                 errors.Add(new ImportRowError(
                                     rowNumber,
                                     nameof(record.Name),
-                                    "Tên sản phẩm không được để trống."));
+                                    "Product name is required."));
                                 failed++;
                                 rowNumber++;
                                 continue;
@@ -62,7 +62,7 @@ public class BulkImportProductsCommandHandler(
                                 errors.Add(new ImportRowError(
                                     rowNumber,
                                     nameof(record.Price),
-                                    "Giá phải lớn hơn 0."));
+                                    "Price must be greater than 0."));
                                 failed++;
                                 rowNumber++;
                                 continue;
@@ -74,7 +74,7 @@ public class BulkImportProductsCommandHandler(
                                 errors.Add(new ImportRowError(
                                     rowNumber,
                                     nameof(record.CategoryId),
-                                    "CategoryId không hợp lệ."));
+                                    "Invalid CategoryId."));
                                 failed++;
                                 rowNumber++;
                                 continue;
@@ -87,7 +87,7 @@ public class BulkImportProductsCommandHandler(
                                 errors.Add(new ImportRowError(
                                     rowNumber,
                                     nameof(record.CategoryId),
-                                    "Danh mục không tồn tại."));
+                                    "Category does not exist."));
                                 failed++;
                                 rowNumber++;
                                 continue;
@@ -128,7 +128,7 @@ public class BulkImportProductsCommandHandler(
                             errors.Add(new ImportRowError(
                                 rowNumber,
                                 "General",
-                                $"Không thể đọc dòng này: {ex.Message}"));
+                                $"Cannot read this row: {ex.Message}"));
                             failed++;
                         }
 

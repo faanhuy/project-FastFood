@@ -1,6 +1,7 @@
 using MediatR;
 using SmartShop.Application.Common.Models;
 using SmartShop.Application.Interfaces;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Enums;
 using SmartShop.Domain.Interfaces;
@@ -17,13 +18,13 @@ public class UpdateStockReceiptCommandHandler(
     public async Task<ApiResponse<StockReceiptDetailDto>> Handle(UpdateStockReceiptCommand request, CancellationToken ct)
     {
         var receipt = await receiptRepo.GetByIdWithItemsAsync(request.Id, ct)
-            ?? throw new InvalidOperationException($"Phiếu nhập hàng với ID {request.Id} không tồn tại.");
+            ?? throw new NotFoundException(nameof(StockReceipt), request.Id);
 
         if (receipt.Status != ReceiptStatus.Pending)
-            throw new InvalidOperationException("Chỉ có thể chỉnh sửa phiếu có trạng thái Chờ xử lý.");
+            throw new ConflictException("error.stock_receipt_invalid_status", null);
 
         if (request.Items == null || request.Items.Count == 0)
-            throw new ArgumentException("Danh sách sản phẩm không được để trống.", nameof(request.Items));
+            throw new ConflictException("validation.required_field", null);
 
         // Validate items
         foreach (var item in request.Items)

@@ -12,7 +12,7 @@ export interface LoyaltyAccountDto {
 export interface PointTransactionDto {
   id: string;
   points: number;
-  type: 'Earn' | 'Redeem' | 'Expire' | 'Adjust';
+  type: 'Earn' | 'Redeem' | 'Expire' | 'Adjust' | 'Reverse';
   note?: string;
   orderId?: string;
   createdAt: string;

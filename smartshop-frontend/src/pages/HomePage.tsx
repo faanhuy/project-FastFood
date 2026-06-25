@@ -12,7 +12,6 @@ import { FlashSaleBadge } from '../components/FlashSaleBadge';
 import WishlistButton from '../components/WishlistButton';
 import { formatPrice } from '../utils/formatters';
 import { getImageUrl } from '../utils/imageUrl';
-import { useAuthStore } from '../store/authStore';
 import { useFlashSaleStore } from '../store/useFlashSaleStore';
 
 const CATEGORY_PALETTES = [
@@ -55,7 +54,6 @@ function getCategoryEmoji(name: string): string {
 export default function HomePage() {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
   const { flashSaleMap } = useFlashSaleStore();
 
   const [categories, setCategories] = useState<CategoryDto[]>([]);
@@ -243,17 +241,14 @@ export default function HomePage() {
                         />
                         {isInFlashSale && (
                           <div className="absolute top-3 right-3">
-                            <FlashSaleBadge discount={isInFlashSale.percentDiscount} />
+                            <FlashSaleBadge item={isInFlashSale} />
                           </div>
                         )}
                         <button
                           className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <WishlistButton
-                            productId={product.id}
-                            isAuthenticated={isAuthenticated}
-                          />
+                          <WishlistButton productId={product.id} />
                         </button>
                       </div>
 

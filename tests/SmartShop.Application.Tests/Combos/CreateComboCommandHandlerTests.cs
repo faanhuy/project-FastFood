@@ -255,7 +255,7 @@ public class CreateComboCommandHandlerTests
 
         var act = () => CreateHandler().Handle(command, default);
 
-        await act.Should().ThrowAsync<ArgumentException>()
-            .WithMessage("*EndsAt must be greater than StartsAt*");
+        await act.Should().ThrowAsync<ConflictException>()
+            .WithMessage("*validation.date_from_before_to*");
     }
 }

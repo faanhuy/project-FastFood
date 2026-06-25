@@ -85,8 +85,8 @@ public class ComboPromotionTests
             startsAt: null,
             endsAt: null);
 
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("*RewardProductId*");
+        act.Should().Throw<ConflictException>()
+            .WithMessage("*validation.product_id_invalid*");
     }
 
     [Fact]
@@ -106,8 +106,8 @@ public class ComboPromotionTests
             startsAt: null,
             endsAt: null);
 
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("*RewardAmount*");
+        act.Should().Throw<ConflictException>()
+            .WithMessage("*validation.discount_value_positive*");
     }
 
     // ── Service: FindApplicableComboAsync ─────────────────────────────────

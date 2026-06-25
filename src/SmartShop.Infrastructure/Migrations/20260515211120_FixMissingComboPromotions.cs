@@ -21,38 +21,36 @@ IF COL_LENGTH('Orders', 'ComboPromotionId') IS NULL
     ALTER TABLE [Orders] ADD [ComboPromotionId] uniqueidentifier NULL;
 ");
 
-            migrationBuilder.CreateTable(
-                name: "ComboPromotions",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    TriggerProductId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TriggerSizeId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    TriggerMinQuantity = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
-                    RewardType = table.Column<int>(type: "int", nullable: false),
-                    RewardProductId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    RewardSizeId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    RewardQuantity = table.Column<int>(type: "int", nullable: true),
-                    RewardAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    StoreId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    StartsAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    EndsAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ComboPromotions", x => x.Id);
-                });
+            // Guarded: on a fresh DB, AddComboColumnsToOrders already created this table —
+            // only create it here if that didn't happen (the broken-history case this migration fixes).
+            migrationBuilder.Sql(@"
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'ComboPromotions')
+BEGIN
+    CREATE TABLE [ComboPromotions] (
+        [Id] uniqueidentifier NOT NULL,
+        [Name] nvarchar(200) NOT NULL,
+        [TriggerProductId] uniqueidentifier NOT NULL,
+        [TriggerSizeId] uniqueidentifier NULL,
+        [TriggerMinQuantity] int NOT NULL DEFAULT 1,
+        [RewardType] int NOT NULL,
+        [RewardProductId] uniqueidentifier NULL,
+        [RewardSizeId] uniqueidentifier NULL,
+        [RewardQuantity] int NULL,
+        [RewardAmount] decimal(18,2) NULL,
+        [StoreId] uniqueidentifier NULL,
+        [StartsAt] datetime2 NULL,
+        [EndsAt] datetime2 NULL,
+        [IsActive] bit NOT NULL DEFAULT CAST(1 AS bit),
+        [CreatedAt] datetime2 NOT NULL,
+        [CreatedBy] nvarchar(max) NULL,
+        [UpdatedAt] datetime2 NULL,
+        [UpdatedBy] nvarchar(max) NULL,
+        CONSTRAINT [PK_ComboPromotions] PRIMARY KEY ([Id])
+    );
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ComboPromotions_IsActive_StartsAt_EndsAt",
-                table: "ComboPromotions",
-                columns: new[] { "IsActive", "StartsAt", "EndsAt" });
+    CREATE INDEX [IX_ComboPromotions_IsActive_StartsAt_EndsAt] ON [ComboPromotions] ([IsActive], [StartsAt], [EndsAt]);
+END
+");
         }
 
         /// <inheritdoc />

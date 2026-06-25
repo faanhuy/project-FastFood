@@ -145,15 +145,24 @@ if (app.Environment.IsDevelopment())
 }
 
 // Register Hangfire recurring jobs
-RecurringJob.AddOrUpdate<FlashSaleExpiryJob>(
-    "flash-sale-expiry",
-    job => job.ExecuteAsync(),
-    Cron.Minutely());
+// Uses IRecurringJobManager (DI) instead of the static RecurringJob API — the static API
+// relies on JobStorage.Current, which in this app only gets initialized as a side effect of
+// app.UseHangfireDashboard() inside the Development-only block above. In Production that
+// block never runs, so JobStorage.Current stays uninitialized and the static call throws.
+using (var scope = app.Services.CreateScope())
+{
+    var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
 
-RecurringJob.AddOrUpdate<SmartShop.Infrastructure.BackgroundJobs.OrderArchiveJob>(
-    "order-archive-daily",
-    job => job.ExecuteAsync(),
-    Cron.Daily());
+    recurringJobManager.AddOrUpdate<FlashSaleExpiryJob>(
+        "flash-sale-expiry",
+        job => job.ExecuteAsync(),
+        Cron.Minutely());
+
+    recurringJobManager.AddOrUpdate<SmartShop.Infrastructure.BackgroundJobs.OrderArchiveJob>(
+        "order-archive-daily",
+        job => job.ExecuteAsync(),
+        Cron.Daily());
+}
 
 app.UseCors("AllowFrontend");
 app.UseStaticFiles(); // serve wwwroot/images/...

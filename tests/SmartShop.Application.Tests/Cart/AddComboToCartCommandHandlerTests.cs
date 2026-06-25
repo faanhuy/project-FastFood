@@ -260,8 +260,8 @@ public class AddComboToCartCommandHandlerTests
         var act = () => CreateHandler().Handle(
             new AddComboToCartCommand(userId, combo.Id, 0), default);
 
-        await act.Should().ThrowAsync<ArgumentException>()
-            .WithMessage("*Số lượng phải lớn hơn 0*");
+        await act.Should().ThrowAsync<ConflictException>()
+            .WithMessage("*validation.quantity_positive*");
     }
 
     [Fact]

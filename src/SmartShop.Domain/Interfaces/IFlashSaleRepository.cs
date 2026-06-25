@@ -6,6 +6,13 @@ public interface IFlashSaleRepository
 {
     Task<FlashSale?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<List<FlashSale>> GetActiveFlashSalesAsync(DateTime now, CancellationToken ct = default);
+    Task<List<FlashSale>> GetUpcomingFlashSalesAsync(DateTime now, int withinDays, CancellationToken ct = default);
+    Task<bool> HasOverlappingFlashSaleItemsAsync(
+        IEnumerable<(Guid ProductId, Guid? SizeId)> items,
+        DateTime startAt,
+        DateTime endAt,
+        Guid? excludedFlashSaleId = null,
+        CancellationToken ct = default);
     Task<FlashSale?> GetActiveByProductIdAsync(Guid productId, DateTime now, CancellationToken ct = default);
     Task<List<FlashSale>> GetExpiredFlashSalesAsync(DateTime now, CancellationToken ct = default);
     Task<(IEnumerable<FlashSale> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, bool? isActive = null, string? status = null, CancellationToken ct = default);

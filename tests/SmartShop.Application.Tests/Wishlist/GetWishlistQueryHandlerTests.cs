@@ -12,6 +12,7 @@ public class GetWishlistQueryHandlerTests
 {
     private readonly Mock<IWishlistRepository> _wishlistRepo = new();
     private readonly Mock<ICurrentUserService> _currentUser = new();
+    private readonly Mock<IPriceCampaignRepository> _priceCampaignRepo = new();
 
     private static readonly Guid UserId = Guid.NewGuid();
     private static readonly string UserIdString = UserId.ToString();
@@ -22,7 +23,7 @@ public class GetWishlistQueryHandlerTests
     }
 
     private GetWishlistQueryHandler CreateHandler() =>
-        new(_wishlistRepo.Object, _currentUser.Object);
+        new(_wishlistRepo.Object, _currentUser.Object, _priceCampaignRepo.Object);
 
     [Fact]
     public async Task Handle_EmptyWishlist_ReturnsEmptyList()

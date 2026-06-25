@@ -25,6 +25,7 @@ public class PlaceOrderSizeInventoryTests
     private readonly Mock<IUserAddressRepository> _userAddressRepo = new();
     private readonly Mock<IPriceCampaignRepository> _priceCampaignRepo = new();
     private readonly Mock<IFlashSaleRepository> _flashSaleRepo = new();
+    private readonly Mock<IOrderFlashSaleUsageRepository> _orderFlashSaleUsageRepo = new();
     private readonly Mock<ILoyaltyRepository> _loyaltyRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
     private readonly Mock<IMediator> _mediator = new();
@@ -55,6 +56,7 @@ public class PlaceOrderSizeInventoryTests
             _couponRepo.Object, _couponUsageRepo.Object,
             _userRepo.Object, _userAddressRepo.Object, _priceCampaignRepo.Object,
             _flashSaleRepo.Object,
+            _orderFlashSaleUsageRepo.Object,
             _loyaltyRepo.Object,
             _uow.Object, _mediator.Object);
 

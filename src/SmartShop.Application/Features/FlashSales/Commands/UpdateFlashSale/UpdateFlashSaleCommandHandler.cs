@@ -88,6 +88,16 @@ public class UpdateFlashSaleCommandHandler(
         if (duplicates.Any())
             throw new ConflictException("error.flashsale_duplicate_items", null);
 
+        var hasOverlappingItems = await flashSaleRepository.HasOverlappingFlashSaleItemsAsync(
+            newItems.Select(x => (x.ProductId, x.SizeId)),
+            request.StartAt,
+            request.EndAt,
+            excludedFlashSaleId: flashSale.Id,
+            ct: cancellationToken);
+
+        if (hasOverlappingItems)
+            throw new ConflictException("error.flashsale_item_time_overlap", null);
+
         // Update flash sale metadata
         flashSale.Update(request.Name, request.StartAt, request.EndAt);
 

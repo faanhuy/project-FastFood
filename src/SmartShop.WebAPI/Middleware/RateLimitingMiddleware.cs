@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Options;
 using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Common.Models;
+using SmartShop.Domain.Interfaces;
 using SmartShop.WebAPI.Options;
 
 namespace SmartShop.WebAPI.Middleware;

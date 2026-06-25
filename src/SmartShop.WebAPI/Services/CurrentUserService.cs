@@ -10,7 +10,7 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICur
 
     public string UserId =>
         User?.FindFirstValue(ClaimTypes.NameIdentifier)
-        ?? throw new UnauthorizedException();
+        ?? throw new UnauthorizedException("error.unauthorized", null);
 
     public string? UserEmail =>
         User?.FindFirstValue(ClaimTypes.Email);

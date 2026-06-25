@@ -26,7 +26,6 @@ public class CreateFlashSaleCommandHandler(
 
         // Validate and create items
         var items = new List<FlashSaleItem>();
-        var sizeIds = request.Items.Where(x => x.SizeId.HasValue).Select(x => x.SizeId.Value).Distinct().ToList();
 
         foreach (var itemRequest in request.Items)
         {
@@ -74,6 +73,15 @@ public class CreateFlashSaleCommandHandler(
 
         if (duplicates.Any())
             throw new ConflictException("error.flashsale_duplicate_items", null);
+
+        var hasOverlappingItems = await flashSaleRepository.HasOverlappingFlashSaleItemsAsync(
+            items.Select(x => (x.ProductId, x.SizeId)),
+            request.StartAt,
+            request.EndAt,
+            ct: cancellationToken);
+
+        if (hasOverlappingItems)
+            throw new ConflictException("error.flashsale_item_time_overlap", null);
 
         var flashSale = FlashSale.Create(request.Name, request.StartAt, request.EndAt, items);
 

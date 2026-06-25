@@ -32,6 +32,57 @@ public class FlashSaleRepository : IFlashSaleRepository
             .ToListAsync(ct);
     }
 
+    public async Task<List<FlashSale>> GetUpcomingFlashSalesAsync(DateTime now, int withinDays, CancellationToken ct = default)
+    {
+        var until = now.AddDays(Math.Max(0, withinDays));
+
+        return await _context.FlashSales
+            .AsNoTracking()
+            .Include(fs => fs.Items)
+            .Where(fs =>
+                fs.IsActive &&
+                fs.Status == FlashSaleStatus.Approved &&
+                fs.StartAt > now &&
+                fs.StartAt <= until)
+            .OrderBy(fs => fs.StartAt)
+            .ToListAsync(ct);
+    }
+
+    public async Task<bool> HasOverlappingFlashSaleItemsAsync(
+        IEnumerable<(Guid ProductId, Guid? SizeId)> items,
+        DateTime startAt,
+        DateTime endAt,
+        Guid? excludedFlashSaleId = null,
+        CancellationToken ct = default)
+    {
+        var itemKeys = items
+            .Distinct()
+            .ToList();
+
+        if (itemKeys.Count == 0)
+            return false;
+
+        var productIds = itemKeys
+            .Select(i => i.ProductId)
+            .Distinct()
+            .ToList();
+
+        var candidateItems = await _context.FlashSaleItems
+            .AsNoTracking()
+            .Where(item =>
+                productIds.Contains(item.ProductId) &&
+                (!excludedFlashSaleId.HasValue || item.FlashSaleId != excludedFlashSaleId.Value) &&
+                item.FlashSale != null &&
+                item.FlashSale.Status != FlashSaleStatus.Rejected &&
+                item.FlashSale.StartAt < endAt &&
+                startAt < item.FlashSale.EndAt)
+            .Select(item => new { item.ProductId, item.SizeId })
+            .ToListAsync(ct);
+
+        return candidateItems.Any(candidate =>
+            itemKeys.Any(key => key.ProductId == candidate.ProductId && key.SizeId == candidate.SizeId));
+    }
+
     public async Task<FlashSale?> GetActiveByProductIdAsync(Guid productId, DateTime now, CancellationToken ct = default)
     {
         return await _context.FlashSales

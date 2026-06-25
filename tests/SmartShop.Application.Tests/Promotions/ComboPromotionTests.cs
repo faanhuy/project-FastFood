@@ -273,6 +273,7 @@ public class ComboPromotionTests
             .Setup(r => r.GetActiveByProductIdAsync(
                 It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((FlashSale?)null);
+        var orderFlashSaleUsageRepo = new Mock<IOrderFlashSaleUsageRepository>();
 
         var comboService = new Mock<IComboPromotionService>();
         comboService
@@ -292,6 +293,7 @@ public class ComboPromotionTests
             userRepo.Object, userAddressRepo.Object,
             priceCampaignRepo.Object,
             flashSaleRepo.Object,
+            orderFlashSaleUsageRepo.Object,
             loyaltyRepo.Object,
             uow.Object, mediator.Object);
 
@@ -366,6 +368,7 @@ public class ComboPromotionTests
             .Setup(r => r.GetActiveByProductIdAsync(
                 It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((FlashSale?)null);
+        var orderFlashSaleUsageRepo = new Mock<IOrderFlashSaleUsageRepository>();
 
         var comboService = new Mock<IComboPromotionService>();
 
@@ -381,6 +384,7 @@ public class ComboPromotionTests
             userRepo.Object, userAddressRepo.Object,
             priceCampaignRepo.Object,
             flashSaleRepo.Object,
+            orderFlashSaleUsageRepo.Object,
             loyaltyRepo.Object,
             uow.Object, mediator.Object);
 

@@ -12,9 +12,20 @@ public class GetBulkEffectivePricesQueryHandlerTests
 {
     private readonly Mock<IPriceCampaignRepository> _priceRepo = new();
     private readonly Mock<IProductRepository> _productRepo = new();
+    private readonly Mock<IStoreInventoryRepository> _inventoryRepo = new();
 
     private GetBulkEffectivePricesQueryHandler CreateHandler() =>
-        new(_priceRepo.Object, _productRepo.Object);
+        new(_priceRepo.Object, _productRepo.Object, _inventoryRepo.Object);
+
+    public GetBulkEffectivePricesQueryHandlerTests()
+    {
+        _inventoryRepo
+            .Setup(r => r.GetByStoreAndProductsAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<StoreInventory>());
+    }
 
     private static Product MakeProduct(decimal price = 100m)
     {

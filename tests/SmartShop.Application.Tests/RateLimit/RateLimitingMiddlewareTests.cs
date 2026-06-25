@@ -1,10 +1,12 @@
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using SmartShop.Application.Common.Interfaces;
+using SmartShop.Domain.Interfaces;
 using SmartShop.WebAPI.Middleware;
 using SmartShop.WebAPI.Options;
 using Xunit;
@@ -30,7 +32,20 @@ public class RateLimitingMiddlewareTests
     {
         var options = Options.Create(opts);
         var logger = NullLogger<RateLimitingMiddleware>.Instance;
-        return new RateLimitingMiddleware(BuildNext(), _storeMock.Object, options, logger);
+        var localization = new Mock<ILocalizationService>();
+        localization.Setup(s => s.DetectLanguage(It.IsAny<string?>())).Returns("vi");
+        localization
+            .Setup(s => s.GetMessage(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<Dictionary<string, string>?>()))
+            .Returns("Too many requests");
+
+        var services = new ServiceCollection()
+            .AddSingleton(localization.Object)
+            .BuildServiceProvider();
+
+        return new RateLimitingMiddleware(BuildNext(), _storeMock.Object, options, logger, services.GetRequiredService<IServiceScopeFactory>());
     }
 
     private static DefaultHttpContext BuildContext(

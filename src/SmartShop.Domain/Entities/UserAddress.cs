@@ -13,7 +13,7 @@ public class UserAddress : BaseAuditableEntity
     public string Street { get; private set; } = string.Empty;
     public bool IsDefault { get; private set; }
 
-    // Structured geography FKs (Sprint 18B)
+    // Structured geography FKs
     public int? ProvinceId { get; private set; }
     public int? WardId { get; private set; }
     public Province? Province { get; private set; }

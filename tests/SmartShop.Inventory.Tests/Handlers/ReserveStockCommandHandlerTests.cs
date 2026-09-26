@@ -7,6 +7,7 @@ using SmartShop.Inventory.Domain.Entities;
 using SmartShop.Inventory.Domain.Enums;
 using SmartShop.Inventory.Domain.Interfaces;
 using SmartShop.Inventory.Tests.TestData;
+using Xunit;
 
 namespace SmartShop.Inventory.Tests.Handlers;
 

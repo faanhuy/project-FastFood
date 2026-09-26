@@ -36,8 +36,9 @@ public class ProcessVNPayCallbackCommandHandler(
         if (order.PaymentStatus == PaymentStatus.Failed && !callbackResult.IsSuccess)
             return ApiResponse<bool>.Ok(false);
 
-        // Sprint 36 — publish Payment*IntegrationEvent qua Outbox (Notification Service sẽ
-        // consume ở Sprint 39, Inventory Service consume PaymentFailed ở Sprint 38)
+        // Publish Payment*IntegrationEvent qua Outbox (Notification Service consume các event này;
+        // Inventory Service cố ý bỏ qua PaymentFailed: đơn chưa bị hủy và khách có thể thanh toán lại,
+        // nên chỗ đã giữ chỉ được nhả khi đơn bị hủy)
         OutboxMessage outboxMessage;
         if (callbackResult.IsSuccess)
         {

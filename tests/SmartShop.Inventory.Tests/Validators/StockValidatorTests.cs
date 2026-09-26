@@ -3,6 +3,7 @@ using SmartShop.Inventory.Application.Features.Stock.Commands.ConfirmStock;
 using SmartShop.Inventory.Application.Features.Stock.Commands.ReleaseStock;
 using SmartShop.Inventory.Application.Features.Stock.Commands.ReserveStock;
 using SmartShop.Inventory.Application.Features.Stock.Queries.GetStockLevel;
+using Xunit;
 
 namespace SmartShop.Inventory.Tests.Validators;
 

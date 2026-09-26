@@ -7,6 +7,7 @@ using SmartShop.Inventory.Domain.Entities;
 using SmartShop.Inventory.Domain.Enums;
 using SmartShop.Inventory.Domain.Interfaces;
 using SmartShop.Inventory.Tests.TestData;
+using Xunit;
 
 namespace SmartShop.Inventory.Tests.Handlers;
 
@@ -102,7 +103,7 @@ public class ReleaseStockCommandHandlerTests
     [Fact]
     public async Task Handle_CalledTwiceForTheSameOrder_SecondCallIsANoOp()
     {
-        // Kafka at-least-once (Sprint 38) có thể gửi lại cùng 1 event
+        // Kafka at-least-once có thể gửi lại cùng 1 event
         var orderId = Guid.NewGuid();
         var item = StockTestData.Item(available: 10);
         item.Reserve(4);

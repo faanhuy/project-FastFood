@@ -1,5 +1,5 @@
 /**
- * E2E test: CheckoutPage (Sprint 11)
+ * E2E test: CheckoutPage
  * Tests: (1) page load, (2) form submit without errors
  *
  * Requires: backend on :5284, frontend on :5173

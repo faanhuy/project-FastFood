@@ -297,7 +297,11 @@ public class ComboPromotionTests
             orderFlashSaleUsageRepo.Object,
             loyaltyRepo.Object,
             outboxRepo.Object,
-            uow.Object, mediator.Object);
+            uow.Object, mediator.Object,
+            SmartShop.Application.Tests.Orders.InventoryTestDoubles.ReservingClient().Object,
+            SmartShop.Application.Tests.Orders.InventoryTestDoubles.GrantingLock().Object,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<
+                SmartShop.Application.Features.Orders.Commands.PlaceOrder.PlaceOrderCommandHandler>.Instance);
 
         var command = new SmartShop.Application.Features.Orders.Commands.PlaceOrder.PlaceOrderCommand(
             userId, storeId, addressId, null, null);
@@ -390,7 +394,11 @@ public class ComboPromotionTests
             orderFlashSaleUsageRepo.Object,
             loyaltyRepo.Object,
             outboxRepo.Object,
-            uow.Object, mediator.Object);
+            uow.Object, mediator.Object,
+            SmartShop.Application.Tests.Orders.InventoryTestDoubles.ReservingClient().Object,
+            SmartShop.Application.Tests.Orders.InventoryTestDoubles.GrantingLock().Object,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<
+                SmartShop.Application.Features.Orders.Commands.PlaceOrder.PlaceOrderCommandHandler>.Instance);
 
         var command = new SmartShop.Application.Features.Orders.Commands.PlaceOrder.PlaceOrderCommand(
             userId, storeId, addressId, null, "SAVE10");

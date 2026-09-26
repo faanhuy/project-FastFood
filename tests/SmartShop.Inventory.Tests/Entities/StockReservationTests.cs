@@ -2,6 +2,7 @@ using FluentAssertions;
 using SmartShop.Inventory.Domain.Common.Exceptions;
 using SmartShop.Inventory.Domain.Entities;
 using SmartShop.Inventory.Domain.Enums;
+using Xunit;
 
 namespace SmartShop.Inventory.Tests.Entities;
 

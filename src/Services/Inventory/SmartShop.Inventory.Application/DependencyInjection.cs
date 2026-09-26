@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using SmartShop.Inventory.Application.Common.Behaviours;
+using SmartShop.Inventory.Application.IntegrationEvents;
 
 namespace SmartShop.Inventory.Application;
 
@@ -14,6 +15,7 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
         services.AddValidatorsFromAssembly(assembly);
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
+        services.AddScoped<StockReleaseEventHandler>();
 
         return services;
     }

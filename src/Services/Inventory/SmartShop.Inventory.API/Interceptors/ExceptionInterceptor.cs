@@ -42,6 +42,15 @@ public class ExceptionInterceptor(ILogger<ExceptionInterceptor> logger) : Interc
                 StatusCode.InvalidArgument,
                 string.Join("; ", ex.Errors.Select(e => e.ErrorMessage))));
         }
+        catch (Exception ex) when (context.CancellationToken.IsCancellationRequested
+                                   && (ex is OperationCanceledException || ex.InnerException is OperationCanceledException))
+        {
+            // Client (Core) đã hết deadline hoặc ngắt kết nối nên câu truy vấn đang chạy bị hủy: không phải lỗi của
+            // Inventory, không log Error kèm stack trace và cũng không trả Internal.
+            logger.LogInformation(
+                "gRPC method {Method} was cancelled by the client (deadline exceeded or connection closed).", context.Method);
+            throw new RpcException(new Status(StatusCode.Cancelled, "Request was cancelled by the client."));
+        }
         catch (Exception ex)
         {
             // Không lộ chi tiết nội bộ cho client

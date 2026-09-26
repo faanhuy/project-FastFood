@@ -20,7 +20,7 @@ public class ReleaseStockCommandHandler(
             var toRelease = reservations.Where(r => r.Status == ReservationStatus.Reserved).ToList();
 
             // Không có gì để trả (order chưa từng giữ chỗ / đã trả rồi) → thành công, không làm gì.
-            // Idempotent: Kafka at-least-once có thể gửi cùng 1 event nhiều lần (Sprint 38).
+            // Idempotent: Kafka at-least-once có thể gửi cùng 1 event nhiều lần.
             if (toRelease.Count == 0)
                 return true;
 

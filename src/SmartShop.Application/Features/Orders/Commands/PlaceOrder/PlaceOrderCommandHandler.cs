@@ -1,4 +1,6 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Interfaces;
 using SmartShop.Contracts.Events;
 using SmartShop.Domain.Common.Exceptions;
@@ -27,9 +29,31 @@ public class PlaceOrderCommandHandler(
     ILoyaltyRepository loyaltyRepository,
     IOutboxRepository outboxRepository,
     IUnitOfWork unitOfWork,
-    IMediator mediator) : IRequestHandler<PlaceOrderCommand, OrderDto>
+    IMediator mediator,
+    IInventoryClient inventoryClient,
+    IDistributedLock distributedLock,
+    ILogger<PlaceOrderCommandHandler> logger) : IRequestHandler<PlaceOrderCommand, OrderDto>
 {
+    // Lớn hơn deadline gRPC (3s) + thời gian lưu DB; nếu process chết giữa chừng thì khóa tự hết hạn.
+    private static readonly TimeSpan InventoryLockTtl = TimeSpan.FromSeconds(5);
+
     public async Task<OrderDto> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
+    {
+        // Khóa được thêm vào danh sách này ngay khi giành được; finally nhả hết ở MỌI đường thoát
+        // (lỗi validate, reserve thất bại, SaveChanges lỗi...). Nhả 2 lần là an toàn (xem ReleaseLocksAsync).
+        var heldLocks = new List<IAsyncDisposable>();
+        try
+        {
+            return await PlaceOrderAsync(request, heldLocks, cancellationToken);
+        }
+        finally
+        {
+            await ReleaseLocksAsync(heldLocks);
+        }
+    }
+
+    private async Task<OrderDto> PlaceOrderAsync(
+        PlaceOrderCommand request, List<IAsyncDisposable> heldLocks, CancellationToken cancellationToken)
     {
         var cart = await cartRepository.GetByUserIdAsync(request.UserId, cancellationToken)
             ?? throw new NotFoundException("Cart", request.UserId);
@@ -73,6 +97,10 @@ public class PlaceOrderCommandHandler(
 
         var allProductIds = directProductIds.Concat(comboProductIds).Distinct().ToList();
         var allSizeIds    = directSizeIds.Concat(comboSizeIds).Distinct().ToList();
+
+        // ── Khóa (store, product) TRƯỚC khi đọc tồn kho ─────────────
+        // Để đoạn kiểm tra → giữ chỗ → trừ kho → lưu không bị request khác chen vào cùng sản phẩm.
+        await AcquireInventoryLocksAsync(request.StoreId, allProductIds, heldLocks, cancellationToken);
 
         // ── Load inventories ──────────────────────────────────────────────────
         var inventories = allProductIds.Count > 0
@@ -286,33 +314,51 @@ public class PlaceOrderCommandHandler(
                 DateTime.UtcNow),
             cancellationToken);
 
+        // ── Giữ chỗ ở Inventory Service (all-or-nothing) ────────────
+        // Đặt SAU mọi validate (coupon, loyalty) và ngay TRƯỚC khi lưu: đơn bị từ chối vì lý do khác sẽ không
+        // để lại reservation mồ côi. Thiếu hàng → ConflictException, chưa giữ chỗ dòng nào nên không cần nhả.
+        await ReserveInventoryAsync(order, request.StoreId, productItems, products, comboItems, cancellationToken);
+
         try
         {
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+            catch (ConcurrencyException)
+            {
+                // Retry once
+                var freshInventories = allProductIds.Count > 0
+                    ? (await storeInventoryRepository.GetByStoreAndProductsAsync(
+                        request.StoreId, allProductIds, cancellationToken))
+                        .ToDictionary(i => i.ProductId)
+                    : new Dictionary<Guid, StoreInventory>();
+
+                var freshSizeInventories = allSizeIds.Count > 0
+                    ? (await storeSizeInventoryRepository.GetByStoreAndSizesAsync(
+                        request.StoreId, allSizeIds, cancellationToken))
+                        .ToDictionary(i => i.SizeId)
+                    : new Dictionary<Guid, StoreSizeInventory>();
+
+                ValidateProductStock(productItems, products, freshInventories, freshSizeInventories);
+                ValidateComboStock(comboItems, freshInventories, freshSizeInventories);
+                DeductProductStock(productItems, freshInventories, freshSizeInventories);
+                DeductComboStock(comboItems, freshInventories, freshSizeInventories);
+
+                try { await unitOfWork.SaveChangesAsync(cancellationToken); }
+                catch (ConcurrencyException) { throw new ConflictException("error.order_out_of_stock_race", null); }
+            }
         }
-        catch (ConcurrencyException)
+        catch
         {
-            // Retry once
-            var freshInventories = allProductIds.Count > 0
-                ? (await storeInventoryRepository.GetByStoreAndProductsAsync(
-                    request.StoreId, allProductIds, cancellationToken))
-                    .ToDictionary(i => i.ProductId)
-                : new Dictionary<Guid, StoreInventory>();
-
-            var freshSizeInventories = allSizeIds.Count > 0
-                ? (await storeSizeInventoryRepository.GetByStoreAndSizesAsync(
-                    request.StoreId, allSizeIds, cancellationToken))
-                    .ToDictionary(i => i.SizeId)
-                : new Dictionary<Guid, StoreSizeInventory>();
-
-            ValidateProductStock(productItems, products, freshInventories, freshSizeInventories);
-            ValidateComboStock(comboItems, freshInventories, freshSizeInventories);
-            DeductProductStock(productItems, freshInventories, freshSizeInventories);
-            DeductComboStock(comboItems, freshInventories, freshSizeInventories);
-
-            try { await unitOfWork.SaveChangesAsync(cancellationToken); }
-            catch (ConcurrencyException) { throw new ConflictException("error.order_out_of_stock_race", null); }
+            // Order không được lưu → sẽ không bao giờ có OrderCancelled event để Inventory tự nhả chỗ,
+            // nên phải nhả tại đây. Best-effort: lỗi nhả chỉ log, không che exception gốc.
+            await ReleaseReservationBestEffortAsync(order.Id);
+            throw;
         }
+
+        // Tồn kho đã lưu xong → nhả khóa sớm, không giữ qua các bước loyalty/notification bên dưới.
+        await ReleaseLocksAsync(heldLocks);
 
         // ── Deduct loyalty points if redeemed ──────────────────────────────
         if (loyaltyPointsUsed > 0)
@@ -364,6 +410,114 @@ public class PlaceOrderCommandHandler(
             Items = order.Items.Select(OrderMapper.ToDto).ToList(),
             CreatedAt = order.CreatedAt
         };
+    }
+
+    /// <summary>
+    /// Giành khóa non-blocking cho từng sản phẩm; ai đang giữ thì 409 ngay (không chờ). Khóa nào giành được
+    /// đều vào <paramref name="heldLocks"/> ngay lập tức để finally của <see cref="Handle"/> nhả được,
+    /// kể cả khi lần giành sau ném exception. Redis lỗi → ServiceUnavailableException (fail-safe, từ chối order).
+    /// </summary>
+    private async Task AcquireInventoryLocksAsync(
+        Guid storeId, IEnumerable<Guid> distinctProductIds, List<IAsyncDisposable> heldLocks, CancellationToken ct)
+    {
+        // Key không chứa sizeId → mọi size của cùng 1 sản phẩm (và combo chứa nó) dùng CHUNG 1 key. Caller truyền
+        // danh sách productId đã Distinct nên không có key trùng (trùng thì request tự khóa chính mình).
+        // Sắp thứ tự cố định cho log/test ổn định; khóa non-blocking nên không lo deadlock.
+        var keys = distinctProductIds
+            .Select(productId => $"lock:inventory:{storeId}:{productId}")
+            .Order(StringComparer.Ordinal);
+
+        foreach (var key in keys)
+        {
+            var handle = await distributedLock.TryAcquireAsync(key, InventoryLockTtl, ct)
+                ?? throw new ConflictException("error.order_inventory_locked", null);
+            heldLocks.Add(handle);
+        }
+    }
+
+    /// <summary>
+    /// Giữ chỗ toàn bộ giỏ (sản phẩm lẻ + thành phần combo, đã trải phẳng) trong 1 lần gọi all-or-nothing.
+    /// Inventory tự gộp các dòng trùng (product, store, size) rồi cộng số lượng.
+    /// </summary>
+    private async Task ReserveInventoryAsync(
+        Order order, Guid storeId, List<CartItem> productItems, Dictionary<Guid, Product> products,
+        List<CartItem> comboItems, CancellationToken ct)
+    {
+        var lines = productItems
+            .Select(i => new InventoryStockLine(i.ProductId!.Value, storeId, i.SizeId, i.Quantity))
+            .Concat(comboItems
+                .SelectMany(ci => ci.Components)
+                .Select(c => new InventoryStockLine(c.ProductId, storeId, c.SizeId, c.TotalQuantity)))
+            .ToList();
+
+        var outcome = await inventoryClient.CheckAndReserveStockAsync(order.Id, lines, ct);
+        if (!outcome.Success)
+            throw InsufficientInventoryException(outcome, productItems, products, comboItems);
+    }
+
+    /// <summary>
+    /// Dựng lỗi 409 từ dòng đầu tiên Inventory báo thiếu, dùng lại đúng các key i18n mà validate tồn kho của Core
+    /// đang dùng (thiếu/không có dòng ở Inventory đều trả Reserved=false, available=0 → "còn 0").
+    /// </summary>
+    private static ConflictException InsufficientInventoryException(
+        ReserveStockOutcome outcome, List<CartItem> productItems, Dictionary<Guid, Product> products,
+        List<CartItem> comboItems)
+    {
+        var failed = outcome.Results.FirstOrDefault(r => !r.Reserved);
+        if (failed is null)
+            return new ConflictException("error.order_out_of_stock_race", null);
+
+        var qty = failed.AvailableQuantity.ToString();
+
+        var productItem = productItems.FirstOrDefault(i => i.ProductId == failed.ProductId && i.SizeId == failed.SizeId);
+        if (productItem is not null)
+        {
+            var name = products[failed.ProductId].Name;
+            return failed.SizeId.HasValue
+                ? new ConflictException("error.order_inventory_insufficient_size",
+                    new Dictionary<string, string> { ["name"] = name, ["size"] = productItem.SizeLabel ?? "", ["qty"] = qty })
+                : new ConflictException("error.order_inventory_insufficient",
+                    new Dictionary<string, string> { ["name"] = name, ["qty"] = qty });
+        }
+
+        var component = comboItems
+            .SelectMany(ci => ci.Components)
+            .FirstOrDefault(c => c.ProductId == failed.ProductId && c.SizeId == failed.SizeId);
+        if (component is null)
+            return new ConflictException("error.order_out_of_stock_race", null);
+
+        return failed.SizeId.HasValue
+            ? new ConflictException("error.order_combo_insufficient_size",
+                new Dictionary<string, string> { ["name"] = component.ProductName, ["size"] = component.SizeLabel ?? "", ["qty"] = qty })
+            : new ConflictException("error.order_combo_insufficient",
+                new Dictionary<string, string> { ["name"] = component.ProductName, ["qty"] = qty });
+    }
+
+    /// <summary>
+    /// Nhả reservation khi Order không lưu được. Không nhận CancellationToken của request (client ngắt kết nối
+    /// vẫn phải nhả). Lỗi nhả chỉ log — reservation sót lại là nợ kỹ thuật, cần job dọn reservation quá hạn ở Inventory.
+    /// </summary>
+    private async Task ReleaseReservationBestEffortAsync(Guid orderId)
+    {
+        try
+        {
+            await inventoryClient.ReleaseStockAsync(orderId, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,
+                "Could not release inventory reservation for order {OrderId} after the order failed to save. " +
+                "The reservation stays held until it is cleaned up.", orderId);
+        }
+    }
+
+    /// <summary>Nhả và xóa sạch danh sách → gọi lại lần 2 (sớm + finally) không nhả trùng.</summary>
+    private static async Task ReleaseLocksAsync(List<IAsyncDisposable> heldLocks)
+    {
+        foreach (var handle in heldLocks)
+            await handle.DisposeAsync();
+
+        heldLocks.Clear();
     }
 
     private static void ValidateProductStock(

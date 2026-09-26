@@ -14,6 +14,88 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "build-inventory",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/Services/Inventory/SmartShop.Inventory.API/SmartShop.Inventory.API.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            // Container inventory-service (docker compose) chiếm cổng 5290 và cùng Kafka consumer group
+            // với bản chạy local → phải dừng trước khi debug. Chưa có container thì lệnh này vẫn thành công.
+            // Chỉ gọi docker khi container thật sự đang chạy: `docker compose stop` từng treo vô hạn trong terminal
+            // của VS Code dù container đã dừng sẵn, làm F5 đứng ở bước này.
+            "label": "inventory-stop-container",
+            "command": "powershell",
+            "type": "process",
+            "args": [
+                "-NoProfile",
+                "-Command",
+                "$id = docker ps -q --filter 'name=^smartshop-inventory$'; if ($id) { docker stop $id | Out-Null }; exit 0"
+            ],
+            "problemMatcher": []
+        },
+        {
+            // Postgres (5433) + Kafka (9092) mà appsettings.Development.json của Inventory trỏ tới. Idempotent.
+            "label": "inventory-infra-up",
+            "command": "docker",
+            "type": "process",
+            // --progress plain: bỏ giao diện tiến trình tương tác của compose (dễ kẹt khi chạy trong terminal task)
+            "args": ["compose", "--progress", "plain", "up", "-d", "--wait", "postgres-inventory", "kafka"],
+            "options": { "cwd": "${workspaceFolder}" },
+            "problemMatcher": []
+        },
+        {
+            "label": "prepare-inventory",
+            "dependsOrder": "sequence",
+            "dependsOn": ["inventory-stop-container", "inventory-infra-up", "build-inventory"],
+            "problemMatcher": []
+        },
+        {
+            // Core cần SQL Server local (Server=localhost). Service đã cài mà đang dừng thì dừng F5 ngay với thông báo
+            // rõ ràng, thay vì để Core khởi động rồi văng lỗi kết nối DB. Máy không cài SQL Server local thì bỏ qua.
+            "label": "check-sqlserver",
+            "command": "powershell",
+            "type": "process",
+            "args": [
+                "-NoProfile",
+                "-Command",
+                "$s = Get-Service MSSQLSERVER -ErrorAction SilentlyContinue; if ($s -and $s.Status -ne 'Running') { Write-Error 'SQL Server (MSSQLSERVER) chua chay. Mo PowerShell bang Run as administrator va chay: net start MSSQLSERVER'; exit 1 }"
+            ],
+            "problemMatcher": []
+        },
+        {
+            // Các phiên debug của compound khởi chạy song song, nên Chrome phải tự chờ Core nghe cổng HTTPS (7046)
+            // trước khi mở tab Swagger. Quá 120 giây Core vẫn chưa lên thì báo lỗi thay vì chờ mãi.
+            "label": "wait-for-core",
+            "command": "powershell",
+            "type": "process",
+            "args": [
+                "-NoProfile",
+                "-Command",
+                "$deadline = (Get-Date).AddSeconds(120); while ((Get-Date) -lt $deadline) { if (Get-NetTCPConnection -LocalPort 7046 -State Listen -ErrorAction SilentlyContinue) { exit 0 }; Start-Sleep -Milliseconds 500 }; Write-Error 'Core (cong 7046) chua san sang sau 120 giay'; exit 1"
+            ],
+            "problemMatcher": []
+        },
+        {
+            // Build tuần tự (2 project cùng tham chiếu SmartShop.Contracts, build song song dễ khóa file obj/).
+            "label": "prepare-backend",
+            "dependsOrder": "sequence",
+            "dependsOn": ["check-sqlserver", "prepare-inventory", "build-webapi"],
+            "problemMatcher": []
+        },
+        {
+            "label": "prepare-fullstack",
+            "dependsOrder": "sequence",
+            "dependsOn": ["prepare-backend", "start-react"],
+            "problemMatcher": []
+        },
+        {
             "label": "watch-webapi",
             "command": "dotnet",
             "type": "process",

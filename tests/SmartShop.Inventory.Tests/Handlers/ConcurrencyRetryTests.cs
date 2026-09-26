@@ -1,6 +1,7 @@
 using FluentAssertions;
 using SmartShop.Inventory.Application.Common;
 using SmartShop.Inventory.Domain.Common.Exceptions;
+using Xunit;
 
 namespace SmartShop.Inventory.Tests.Handlers;
 

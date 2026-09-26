@@ -18,6 +18,7 @@ using SmartShop.Infrastructure.Data;
 using SmartShop.Infrastructure.Data.Seeders;
 using SmartShop.Infrastructure.Email;
 using SmartShop.Infrastructure.HealthChecks;
+using SmartShop.Infrastructure.Locking;
 using SmartShop.Infrastructure.Messaging;
 using SmartShop.Infrastructure.Payment;
 using SmartShop.Infrastructure.RateLimit;
@@ -85,16 +86,41 @@ public static class DependencyInjection
         services.AddScoped<ILoyaltyRepository, LoyaltyRepository>();
         services.AddScoped<ILoyaltyService, LoyaltyService>();
 
-        // Sprint 36 — Kafka event backbone (Outbox pattern)
+        // Kafka event backbone (Outbox pattern)
         services.AddScoped<IOutboxRepository, OutboxRepository>();
         services.AddSingleton<IEventPublisher, KafkaEventPublisher>();
         services.AddHostedService<OutboxPublisherBackgroundService>();
 
-        // Sprint 38 — Inventory Service qua gRPC (h2c trong docker network, không TLS)
+        // Inventory Service qua gRPC (h2c trong docker network, không TLS)
         var inventoryUrl = configuration["Grpc:InventoryServiceUrl"]
             ?? throw new InvalidOperationException("Missing configuration 'Grpc:InventoryServiceUrl'.");
         services.AddGrpcClient<InventoryGrpc.InventoryGrpcClient>(options => options.Address = new Uri(inventoryUrl));
         services.AddScoped<IInventoryClient, InventoryGrpcClient>();
+
+        // Distributed lock chống oversell. Cùng điều kiện bật Redis như cache/rate-limit:
+        // Redis tắt bằng config (dev) → lock in-process (đủ cho 1 instance). Redis đã bật mà chết lúc chạy →
+        // RedisDistributedLock ném ServiceUnavailableException (từ chối order), KHÔNG fallback im lặng sang in-memory.
+        services.AddSingleton<IDistributedLock>(serviceProvider =>
+        {
+            var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+            var logger = loggerFactory.CreateLogger("DistributedLockRegistration");
+            var cacheEnabled = configuration.GetValue("Cache:Enabled", true);
+            var cacheProvider = configuration.GetValue<string>("Cache:Provider") ?? "Redis";
+
+            if (!cacheEnabled || !cacheProvider.Equals("Redis", StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogWarning("Distributed lock: Redis disabled, using InMemoryDistributedLock (single instance only).");
+                return new InMemoryDistributedLock();
+            }
+
+            var redisConfig = ConfigurationOptions.Parse(configuration.GetConnectionString("Redis") ?? "localhost:6379");
+            redisConfig.AbortOnConnectFail = false;
+
+            logger.LogInformation("Distributed lock: using Redis.");
+            return new RedisDistributedLock(
+                ConnectionMultiplexer.Connect(redisConfig),
+                loggerFactory.CreateLogger<RedisDistributedLock>());
+        });
 
         services.AddScoped<IDataSeeder, LocalizationSeeder>();
         services.AddScoped<IDataSeeder, AppSettingsSeeder>();
@@ -220,7 +246,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailJobService, HangfireEmailJobService>();
         services.AddScoped<FlashSaleExpiryJob>();
 
-        // Health checks (Sprint 34)
+        // Health checks
         services.AddHealthChecks()
             .AddCheck<DatabaseHealthCheck>("database")
             .AddCheck<RedisHealthCheck>("redis")

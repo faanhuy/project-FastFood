@@ -22,7 +22,7 @@ public class StoreConfiguration : IEntityTypeConfiguration<Store>
             .IsRequired()
             .HasDefaultValue(true);
 
-        // Structured geography FKs (Sprint 18B)
+        // Structured geography FKs
         builder.Property(s => s.Street).HasMaxLength(500).IsRequired(false);
         builder.Property(s => s.ProvinceId).IsRequired(false);
         builder.Property(s => s.WardId).IsRequired(false);

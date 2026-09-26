@@ -64,7 +64,7 @@ builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, Smar
 // HTTP Context for CurrentUserService
 builder.Services.AddHttpContextAccessor();
 
-// Sprint 10 services
+// Email, wishlist, notification & current-user/language services
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
@@ -72,7 +72,7 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<ICurrentLanguageService, CurrentLanguageService>();
 builder.Services.AddScoped<INotificationHubService, NotificationHubService>();
 
-// Sprint 30 - Google OAuth
+// Google OAuth
 builder.Services.AddHttpClient<IGoogleTokenValidator, GoogleTokenValidator>();
 
 builder.Services.AddCors(options =>
@@ -168,7 +168,7 @@ app.UseCors("AllowFrontend");
 app.UseStaticFiles(); // serve wwwroot/images/...
 app.UseHttpsRedirection();
 
-// Sprint 34 — Metrics & Monitoring
+// Metrics & Monitoring
 app.UseMiddleware<MetricsAuthMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseHttpMetrics(); // prometheus-net
@@ -180,7 +180,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<OrderStatusHub>("/hubs/orders");
 
-// Sprint 34 — Prometheus metrics endpoint
+// Prometheus metrics endpoint
 app.MapMetrics("/metrics");
 
 app.Run();

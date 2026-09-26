@@ -1,6 +1,8 @@
 ﻿using FluentAssertions;
 using MediatR;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using SmartShop.Application.Common.Interfaces;
 using SmartShop.Domain.Common.Exceptions;
 using Xunit;
 using SmartShop.Application.Features.Orders.Commands.PlaceOrder;
@@ -30,6 +32,8 @@ public class PlaceOrderCommandHandlerTests
     private readonly Mock<IOutboxRepository> _outboxRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<IInventoryClient> _inventoryClient = InventoryTestDoubles.ReservingClient();
+    private readonly Mock<IDistributedLock> _distributedLock = InventoryTestDoubles.GrantingLock();
     private readonly Guid _storeId = Guid.NewGuid();
     private readonly Guid _addressId = Guid.NewGuid();
 
@@ -61,7 +65,8 @@ public class PlaceOrderCommandHandlerTests
             _orderFlashSaleUsageRepo.Object,
             _loyaltyRepo.Object,
             _outboxRepo.Object,
-            _uow.Object, _mediator.Object);
+            _uow.Object, _mediator.Object,
+            _inventoryClient.Object, _distributedLock.Object, NullLogger<PlaceOrderCommandHandler>.Instance);
 
     private PlaceOrderCommand ValidCommand(Guid userId, string? couponCode = null) =>
         new(userId, _storeId, _addressId, null, couponCode);

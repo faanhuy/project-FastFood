@@ -48,6 +48,11 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+      # Cụm chỉ có 1 broker: mặc định của Kafka là 3 bản sao cho topic nội bộ nên không tạo được __consumer_offsets,
+      # dẫn tới không có group coordinator và consumer nào cũng không vào được group (Kafka UI không thấy group nào).
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
     healthcheck:
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]
@@ -65,7 +70,7 @@ services:
     depends_on:
       - kafka
 
-  # Inventory Service DB (Sprint 37) — Postgres riêng, không dùng chung SQL Server của Core.
+  # Inventory Service DB — Postgres riêng, không dùng chung SQL Server của Core.
   # Host port 5433 (tránh trùng Postgres cài sẵn trên máy); container khác trong compose dùng postgres-inventory:5432.
   postgres-inventory:
     image: postgres:16-alpine
@@ -114,7 +119,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # Inventory Service (Sprint 37) — gRPC h2c, chạy độc lập chưa nối Core (Sprint 38 mới nối).
+  # Inventory Service — gRPC h2c, service độc lập với Core.
   # Host port 5290 → container 8080. Migrate + seed tự chạy lúc start (Seed__Enabled).
   inventory-service:
     build:
@@ -128,8 +133,11 @@ services:
       ConnectionStrings__InventoryDb: "Host=postgres-inventory;Port=5432;Database=smartshop_inventory;Username=inventory;Password=${INVENTORY_DB_PASSWORD}"
       Seed__Enabled: "true"
       Grpc__EnableReflection: "true"
+      Kafka__BootstrapServers: "kafka:29092"
     depends_on:
       postgres-inventory:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     restart: unless-stopped
 

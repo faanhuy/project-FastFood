@@ -92,7 +92,7 @@ public class LoginCommandHandlerTests
 
         await CreateHandler().Handle(new LoginCommand("test@test.com", "password"), default);
 
-        // Sprint 23: refresh token được hash trước khi lưu — plaintext không persist.
+        // Refresh token được hash trước khi lưu — plaintext không persist.
         user.RefreshTokenHash.Should().Be("hashed-refresh-token");
         user.RefreshToken.Should().BeNull();
     }

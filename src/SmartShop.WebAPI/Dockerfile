@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS restore
 WORKDIR /app
 
 # Copy only csproj files first for layer caching
-# Shared/* (Sprint 36): Application + Infrastructure tham chiếu Contracts và Shared.Messaging
+# Shared/*: Application + Infrastructure tham chiếu Contracts và Shared.Messaging
 COPY src/Shared/SmartShop.Contracts/SmartShop.Contracts.csproj                       src/Shared/SmartShop.Contracts/
 COPY src/Shared/SmartShop.Shared.Messaging/SmartShop.Shared.Messaging.csproj         src/Shared/SmartShop.Shared.Messaging/
 COPY src/SmartShop.Domain/SmartShop.Domain.csproj           src/SmartShop.Domain/

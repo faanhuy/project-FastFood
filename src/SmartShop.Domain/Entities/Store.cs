@@ -8,7 +8,7 @@ public class Store : BaseAuditableEntity
     public string Phone { get; private set; } = string.Empty;
     public bool IsActive { get; private set; } = true;
 
-    // Structured geography FKs (Sprint 18B)
+    // Structured geography FKs
     public int? ProvinceId { get; private set; }
     public int? WardId { get; private set; }
     public string? Street { get; private set; }

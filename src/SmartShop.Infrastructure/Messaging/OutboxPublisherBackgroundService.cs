@@ -68,10 +68,10 @@ public class OutboxPublisherBackgroundService(
 
     private static string ResolveTopic(string eventType) => eventType switch
     {
-        nameof(OrderPlacedIntegrationEvent) => "smartshop.order.placed",
-        nameof(OrderCancelledIntegrationEvent) => "smartshop.order.cancelled",
-        nameof(PaymentCompletedIntegrationEvent) => "smartshop.payment.completed",
-        nameof(PaymentFailedIntegrationEvent) => "smartshop.payment.failed",
+        nameof(OrderPlacedIntegrationEvent) => EventTopics.OrderPlaced,
+        nameof(OrderCancelledIntegrationEvent) => EventTopics.OrderCancelled,
+        nameof(PaymentCompletedIntegrationEvent) => EventTopics.PaymentCompleted,
+        nameof(PaymentFailedIntegrationEvent) => EventTopics.PaymentFailed,
         _ => throw new InvalidOperationException($"Unknown outbox event type: {eventType}")
     };
 }

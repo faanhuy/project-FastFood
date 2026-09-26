@@ -1,7 +1,7 @@
 namespace SmartShop.Application.Common.Interfaces;
 
 /// <summary>
-/// Cổng gọi Inventory Service (Sprint 38). Application chỉ biết các record thuần bên dưới —
+/// Cổng gọi Inventory Service. Application chỉ biết các record thuần bên dưới —
 /// proto/gRPC nằm hoàn toàn trong Infrastructure (<c>InventoryGrpcClient</c>).
 /// </summary>
 public interface IInventoryClient

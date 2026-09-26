@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SmartShop.Inventory.Domain\SmartShop.Inventory.Domain.csproj" />
+    <ProjectReference Include="..\..\..\Shared\SmartShop.Contracts\SmartShop.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

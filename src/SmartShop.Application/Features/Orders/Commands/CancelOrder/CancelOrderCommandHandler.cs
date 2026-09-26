@@ -61,8 +61,8 @@ public class CancelOrderCommandHandler(
             }
         }
 
-        // Sprint 36 — publish OrderCancelledIntegrationEvent qua Outbox (Inventory Service
-        // sẽ consume ở Sprint 38 để release reservation — xem docs/sprints/sprint38-plan.md)
+        // Publish OrderCancelledIntegrationEvent qua Outbox (Inventory Service
+        // consume để release reservation)
         var cancelledIntegrationEvent = new OrderCancelledIntegrationEvent(
             OrderId: order.Id,
             UserId: order.UserId,

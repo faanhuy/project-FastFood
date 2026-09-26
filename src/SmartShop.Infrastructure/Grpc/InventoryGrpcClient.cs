@@ -1,4 +1,5 @@
 using Grpc.Core;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SmartShop.Application.Common.Interfaces;
 using SmartShop.Contracts.Grpc.Inventory;
@@ -13,10 +14,13 @@ namespace SmartShop.Infrastructure.Grpc;
 /// </summary>
 public class InventoryGrpcClient(
     InventoryGrpc.InventoryGrpcClient client,
+    IConfiguration configuration,
     ILogger<InventoryGrpcClient> logger) : IInventoryClient
 {
-    // Deadline cứng: Inventory chậm/chết thì fail rõ ràng, không để request của FE treo.
-    private static readonly TimeSpan CallTimeout = TimeSpan.FromSeconds(3);
+    // Deadline cứng: Inventory chậm/chết thì fail rõ ràng, không để request của FE treo. Mặc định 3 giây.
+    // Grpc:InventoryTimeoutSeconds cho phép nới ra khi debug Inventory (đứng ở breakpoint quá deadline là cuộc gọi bị hủy).
+    private readonly TimeSpan _callTimeout =
+        TimeSpan.FromSeconds(Math.Max(1, configuration.GetValue("Grpc:InventoryTimeoutSeconds", 3)));
 
     public async Task<ReserveStockOutcome> CheckAndReserveStockAsync(
         Guid orderId, IReadOnlyList<InventoryStockLine> items, CancellationToken ct = default)
@@ -107,7 +111,7 @@ public class InventoryGrpcClient(
     {
         try
         {
-            return await call(DateTime.UtcNow.Add(CallTimeout));
+            return await call(DateTime.UtcNow.Add(_callTimeout));
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled && ct.IsCancellationRequested)
         {

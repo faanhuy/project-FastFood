@@ -41,7 +41,7 @@ public class UserAddressConfiguration : IEntityTypeConfiguration<UserAddress>
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Structured geography FKs (Sprint 18B)
+        // Structured geography FKs
         builder.Property(a => a.ProvinceId).IsRequired(false);
         builder.Property(a => a.WardId).IsRequired(false);
 

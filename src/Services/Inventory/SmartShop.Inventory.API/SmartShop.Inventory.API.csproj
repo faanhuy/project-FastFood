@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\SmartShop.Inventory.Application\SmartShop.Inventory.Application.csproj" />
+    <ProjectReference Include="..\SmartShop.Inventory.Infrastructure\SmartShop.Inventory.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\Shared\SmartShop.Contracts\SmartShop.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="..\..\..\Shared\SmartShop.Contracts\Protos\inventory.proto"
+              GrpcServices="Server" Link="Protos\inventory.proto" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" Version="2.84.0" />
+    <PackageReference Include="Grpc.AspNetCore.Server.Reflection" Version="2.84.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

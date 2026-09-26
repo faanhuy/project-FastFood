@@ -70,6 +70,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<LoyaltyAccount> LoyaltyAccounts { get; set; }
     public DbSet<PointTransaction> PointTransactions { get; set; }
 
+    public DbSet<OutboxMessage> OutboxMessages { get; set; }
+
     private static readonly TimeZoneInfo _vnTz =
         TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
 

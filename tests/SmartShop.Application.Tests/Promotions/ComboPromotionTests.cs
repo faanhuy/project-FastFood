@@ -281,6 +281,7 @@ public class ComboPromotionTests
             .ReturnsAsync(comboMatch);
 
         var loyaltyRepo = new Mock<ILoyaltyRepository>();
+        var outboxRepo = new Mock<IOutboxRepository>();
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
@@ -295,6 +296,7 @@ public class ComboPromotionTests
             flashSaleRepo.Object,
             orderFlashSaleUsageRepo.Object,
             loyaltyRepo.Object,
+            outboxRepo.Object,
             uow.Object, mediator.Object);
 
         var command = new SmartShop.Application.Features.Orders.Commands.PlaceOrder.PlaceOrderCommand(
@@ -373,6 +375,7 @@ public class ComboPromotionTests
         var comboService = new Mock<IComboPromotionService>();
 
         var loyaltyRepo = new Mock<ILoyaltyRepository>();
+        var outboxRepo = new Mock<IOutboxRepository>();
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
         var mediator = new Mock<MediatR.IMediator>();
@@ -386,6 +389,7 @@ public class ComboPromotionTests
             flashSaleRepo.Object,
             orderFlashSaleUsageRepo.Object,
             loyaltyRepo.Object,
+            outboxRepo.Object,
             uow.Object, mediator.Object);
 
         var command = new SmartShop.Application.Features.Orders.Commands.PlaceOrder.PlaceOrderCommand(

@@ -3,10 +3,23 @@
   <ItemGroup>
     <ProjectReference Include="..\SmartShop.Application\SmartShop.Application.csproj" />
     <ProjectReference Include="..\SmartShop.Domain\SmartShop.Domain.csproj" />
+    <ProjectReference Include="..\Shared\SmartShop.Contracts\SmartShop.Contracts.csproj" />
+    <ProjectReference Include="..\Shared\SmartShop.Shared.Messaging\SmartShop.Shared.Messaging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="..\Shared\SmartShop.Contracts\Protos\inventory.proto"
+              GrpcServices="Client" Link="Protos\inventory.proto" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.35.1" />
+    <PackageReference Include="Grpc.Net.ClientFactory" Version="2.84.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.84.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.20" />
     <PackageReference Include="Hangfire.SqlServer" Version="1.8.20" />
     <PackageReference Include="MailKit" Version="4.16.0" />

@@ -27,6 +27,7 @@ public class PlaceOrderCommandHandlerTests
     private readonly Mock<IFlashSaleRepository> _flashSaleRepo = new();
     private readonly Mock<IOrderFlashSaleUsageRepository> _orderFlashSaleUsageRepo = new();
     private readonly Mock<ILoyaltyRepository> _loyaltyRepo = new();
+    private readonly Mock<IOutboxRepository> _outboxRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
     private readonly Mock<IMediator> _mediator = new();
     private readonly Guid _storeId = Guid.NewGuid();
@@ -59,6 +60,7 @@ public class PlaceOrderCommandHandlerTests
             _flashSaleRepo.Object,
             _orderFlashSaleUsageRepo.Object,
             _loyaltyRepo.Object,
+            _outboxRepo.Object,
             _uow.Object, _mediator.Object);
 
     private PlaceOrderCommand ValidCommand(Guid userId, string? couponCode = null) =>

@@ -1,10 +1,12 @@
 using MediatR;
 using SmartShop.Application.Interfaces;
+using SmartShop.Contracts.Events;
 using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Enums;
 using SmartShop.Domain.Events;
 using SmartShop.Domain.Interfaces;
+using System.Text.Json;
 
 namespace SmartShop.Application.Features.Orders.Commands.PlaceOrder;
 
@@ -23,6 +25,7 @@ public class PlaceOrderCommandHandler(
     IFlashSaleRepository flashSaleRepository,
     IOrderFlashSaleUsageRepository orderFlashSaleUsageRepository,
     ILoyaltyRepository loyaltyRepository,
+    IOutboxRepository outboxRepository,
     IUnitOfWork unitOfWork,
     IMediator mediator) : IRequestHandler<PlaceOrderCommand, OrderDto>
 {
@@ -262,6 +265,26 @@ public class PlaceOrderCommandHandler(
 
         await orderRepository.AddAsync(order, cancellationToken);
         cart.Clear();
+
+        // ghi Outbox cùng transaction với Order để đảm bảo publish sự kiện
+        // reliable (không mất event nếu crash giữa chừng). 
+        var placedIntegrationEvent = new OrderPlacedIntegrationEvent(
+            OrderId: order.Id,
+            UserId: order.UserId,
+            StoreId: order.StoreId,
+            TotalAmount: order.TotalAmount,
+            Items: order.Items.Where(i => i.ProductId.HasValue)
+                .Select(i => new OrderItemEventDto(i.ProductId!.Value, i.Quantity))
+                .ToList(),
+            OccurredAt: DateTime.UtcNow);
+
+        await outboxRepository.AddAsync(
+            OutboxMessage.Create(
+                nameof(OrderPlacedIntegrationEvent),
+                order.Id.ToString(),
+                JsonSerializer.Serialize(placedIntegrationEvent),
+                DateTime.UtcNow),
+            cancellationToken);
 
         try
         {

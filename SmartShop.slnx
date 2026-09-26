@@ -5,7 +5,19 @@
     <Project Path="src/SmartShop.Infrastructure/SmartShop.Infrastructure.csproj" />
     <Project Path="src/SmartShop.WebAPI/SmartShop.WebAPI.csproj" />
   </Folder>
+  <Folder Name="/src/Services/" />
+  <Folder Name="/src/Services/Inventory/">
+    <Project Path="src/Services/Inventory/SmartShop.Inventory.API/SmartShop.Inventory.API.csproj" />
+    <Project Path="src/Services/Inventory/SmartShop.Inventory.Application/SmartShop.Inventory.Application.csproj" />
+    <Project Path="src/Services/Inventory/SmartShop.Inventory.Domain/SmartShop.Inventory.Domain.csproj" />
+    <Project Path="src/Services/Inventory/SmartShop.Inventory.Infrastructure/SmartShop.Inventory.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="src/Shared/SmartShop.Contracts/SmartShop.Contracts.csproj" />
+    <Project Path="src/Shared/SmartShop.Shared.Messaging/SmartShop.Shared.Messaging.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/SmartShop.Application.Tests/SmartShop.Application.Tests.csproj" />
+    <Project Path="tests/SmartShop.Inventory.Tests/SmartShop.Inventory.Tests.csproj" />
   </Folder>
 </Solution>

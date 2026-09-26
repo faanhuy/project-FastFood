@@ -1,8 +1,11 @@
 using MediatR;
 using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Application.Interfaces;
+using SmartShop.Contracts.Events;
+using SmartShop.Domain.Entities;
 using SmartShop.Domain.Enums;
 using SmartShop.Domain.Interfaces;
+using System.Text.Json;
 
 namespace SmartShop.Application.Features.Orders.Commands.CancelOrder;
 
@@ -12,6 +15,7 @@ public class CancelOrderCommandHandler(
     ICouponUsageRepository couponUsageRepository,
     IStoreInventoryRepository storeInventoryRepository,
     IStoreSizeInventoryRepository storeSizeInventoryRepository,
+    IOutboxRepository outboxRepository,
     IUnitOfWork unitOfWork
 ) : IRequestHandler<CancelOrderCommand>
 {
@@ -56,6 +60,21 @@ public class CancelOrderCommandHandler(
                 }
             }
         }
+
+        // Sprint 36 — publish OrderCancelledIntegrationEvent qua Outbox (Inventory Service
+        // sẽ consume ở Sprint 38 để release reservation — xem docs/sprints/sprint38-plan.md)
+        var cancelledIntegrationEvent = new OrderCancelledIntegrationEvent(
+            OrderId: order.Id,
+            UserId: order.UserId,
+            OccurredAt: DateTime.UtcNow);
+
+        await outboxRepository.AddAsync(
+            OutboxMessage.Create(
+                nameof(OrderCancelledIntegrationEvent),
+                order.Id.ToString(),
+                JsonSerializer.Serialize(cancelledIntegrationEvent),
+                DateTime.UtcNow),
+            cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }

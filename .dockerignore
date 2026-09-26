@@ -18,3 +18,5 @@ coverage-local2/
 Dockerfile*
 docker-compose*
 .env
+# Cấu hình dev (mật khẩu/API key local, đã gitignore) — không đưa vào image; Production dùng biến môi trường
+**/appsettings.Development.json

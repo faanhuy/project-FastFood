@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+option csharp_namespace = "SmartShop.Contracts.Grpc.Inventory";
+
+package smartshop.inventory.v1;
+
+service InventoryGrpc {
+  rpc CheckAndReserveStock (ReserveStockRequest) returns (ReserveStockResponse);
+  rpc ReleaseStock (ReleaseStockRequest) returns (ReleaseStockResponse);
+  rpc ConfirmStock (ConfirmStockRequest) returns (ConfirmStockResponse);
+  rpc GetStockLevel (GetStockLevelRequest) returns (GetStockLevelResponse);
+}
+
+message StockItem {
+  string product_id = 1;
+  string store_id = 2;
+  int32 quantity = 3;
+  optional string size_id = 4;          // vắng mặt = sản phẩm không có size
+}
+message ReserveStockRequest {
+  string order_id = 1;
+  repeated StockItem items = 2;
+}
+message StockItemResult {
+  string product_id = 1;
+  bool reserved = 2;
+  int32 available_quantity = 3;         // sellable = available - reserved
+  optional string size_id = 4;
+}
+message ReserveStockResponse {
+  bool success = 1;
+  repeated StockItemResult results = 2;
+}
+
+message ReleaseStockRequest { string order_id = 1; }
+message ReleaseStockResponse { bool success = 1; }
+message ConfirmStockRequest { string order_id = 1; }
+message ConfirmStockResponse { bool success = 1; }
+
+message GetStockLevelRequest {
+  string product_id = 1;
+  string store_id = 2;
+  optional string size_id = 3;
+}
+message GetStockLevelResponse { int32 available_quantity = 1; }

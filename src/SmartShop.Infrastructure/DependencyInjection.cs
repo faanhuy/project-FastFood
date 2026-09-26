@@ -8,7 +8,9 @@ using Microsoft.IdentityModel.Tokens;
 using SmartShop.Application.Common.Interfaces;
 using SmartShop.Application.Interfaces;
 using SmartShop.Application.Services;
+using SmartShop.Contracts.Grpc.Inventory;
 using SmartShop.Domain.Interfaces;
+using SmartShop.Infrastructure.Grpc;
 using SmartShop.Infrastructure.Services;
 using SmartShop.Infrastructure.BackgroundJobs;
 using SmartShop.Infrastructure.Caching;
@@ -16,10 +18,12 @@ using SmartShop.Infrastructure.Data;
 using SmartShop.Infrastructure.Data.Seeders;
 using SmartShop.Infrastructure.Email;
 using SmartShop.Infrastructure.HealthChecks;
+using SmartShop.Infrastructure.Messaging;
 using SmartShop.Infrastructure.Payment;
 using SmartShop.Infrastructure.RateLimit;
 using SmartShop.Infrastructure.Repositories;
 using SmartShop.Infrastructure.UnitOfWork;
+using SmartShop.Shared.Messaging;
 using StackExchange.Redis;
 using System.Text;
 
@@ -80,6 +84,17 @@ public static class DependencyInjection
         services.AddScoped<IOrderFlashSaleUsageRepository, OrderFlashSaleUsageRepository>();
         services.AddScoped<ILoyaltyRepository, LoyaltyRepository>();
         services.AddScoped<ILoyaltyService, LoyaltyService>();
+
+        // Sprint 36 — Kafka event backbone (Outbox pattern)
+        services.AddScoped<IOutboxRepository, OutboxRepository>();
+        services.AddSingleton<IEventPublisher, KafkaEventPublisher>();
+        services.AddHostedService<OutboxPublisherBackgroundService>();
+
+        // Sprint 38 — Inventory Service qua gRPC (h2c trong docker network, không TLS)
+        var inventoryUrl = configuration["Grpc:InventoryServiceUrl"]
+            ?? throw new InvalidOperationException("Missing configuration 'Grpc:InventoryServiceUrl'.");
+        services.AddGrpcClient<InventoryGrpc.InventoryGrpcClient>(options => options.Address = new Uri(inventoryUrl));
+        services.AddScoped<IInventoryClient, InventoryGrpcClient>();
 
         services.AddScoped<IDataSeeder, LocalizationSeeder>();
         services.AddScoped<IDataSeeder, AppSettingsSeeder>();

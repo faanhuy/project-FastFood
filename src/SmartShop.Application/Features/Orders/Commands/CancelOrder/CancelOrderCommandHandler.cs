@@ -16,6 +16,7 @@ public class CancelOrderCommandHandler(
     IStoreInventoryRepository storeInventoryRepository,
     IStoreSizeInventoryRepository storeSizeInventoryRepository,
     IOutboxRepository outboxRepository,
+    IUserRepository userRepository,
     IUnitOfWork unitOfWork
 ) : IRequestHandler<CancelOrderCommand>
 {
@@ -61,11 +62,15 @@ public class CancelOrderCommandHandler(
             }
         }
 
-        // Publish OrderCancelledIntegrationEvent qua Outbox (Inventory Service
-        // consume để release reservation)
+        // Publish OrderCancelledIntegrationEvent qua Outbox (Inventory Service consume để release
+        // reservation; Notification Service consume để gửi email hủy đơn + đẩy realtime)
+        var user = await userRepository.GetByIdAsync(order.UserId, cancellationToken);
+
         var cancelledIntegrationEvent = new OrderCancelledIntegrationEvent(
             OrderId: order.Id,
             UserId: order.UserId,
+            UserEmail: user?.Email,
+            UserName: user is null ? null : $"{user.FirstName} {user.LastName}".Trim(),
             OccurredAt: DateTime.UtcNow);
 
         await outboxRepository.AddAsync(

@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using Prometheus;
 using SmartShop.Application;
 using SmartShop.Application.Common.Interfaces;
+using SmartShop.Application.Common.Models;
 using SmartShop.Domain.Interfaces;
 using SmartShop.Infrastructure;
 using SmartShop.Infrastructure.BackgroundJobs;
@@ -13,8 +14,10 @@ using SmartShop.Infrastructure.Data;
 using SmartShop.Infrastructure.Email;
 using SmartShop.Infrastructure.Repositories;
 using SmartShop.Infrastructure.Services;
+using SmartShop.WebAPI.Filters;
 using SmartShop.WebAPI.Hubs;
 using SmartShop.WebAPI.Middleware;
+using SmartShop.WebAPI.Models;
 using SmartShop.WebAPI.Options;
 using SmartShop.WebAPI.Services;
 using System.Text;
@@ -179,6 +182,37 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<OrderStatusHub>("/hubs/orders");
+
+// Endpoint nội bộ service-to-service (Notification Service → Core) để đẩy realtime qua SignalR.
+// Không dùng JWT (caller không có token người dùng) — bảo vệ bằng header shared-secret, xem InternalApiKeyFilter.
+// Best-effort: user offline thì Clients.User() là no-op, không throw.
+app.MapPost("/api/internal/notify", async (
+    InternalNotifyRequest request,
+    INotificationHubService hubService,
+    CancellationToken ct) =>
+{
+    if (request.UserId == Guid.Empty ||
+        string.IsNullOrWhiteSpace(request.TitleKey) ||
+        string.IsNullOrWhiteSpace(request.MessageKey))
+    {
+        return Results.BadRequest(ApiResponse<bool>.Fail("Missing required fields."));
+    }
+
+    var payload = new
+    {
+        request.NotificationId,
+        request.TitleKey,
+        request.MessageKey,
+        Params = request.ParamsJson,
+        request.OrderId
+    };
+
+    await hubService.SendToUserAsync(request.UserId.ToString(), "OrderStatusUpdated", payload, ct);
+
+    return Results.Ok(ApiResponse<bool>.Ok(true));
+})
+.AddEndpointFilter<InternalApiKeyFilter>()
+.ExcludeFromDescription();
 
 // Prometheus metrics endpoint
 app.MapMetrics("/metrics");

@@ -294,6 +294,9 @@ public class PlaceOrderCommandHandler(
         await orderRepository.AddAsync(order, cancellationToken);
         cart.Clear();
 
+        //Notification Service consume để gửi email hủy đơn + đẩy realtime)
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
+
         // ghi Outbox cùng transaction với Order để đảm bảo publish sự kiện
         // reliable (không mất event nếu crash giữa chừng). 
         var placedIntegrationEvent = new OrderPlacedIntegrationEvent(
@@ -301,8 +304,10 @@ public class PlaceOrderCommandHandler(
             UserId: order.UserId,
             StoreId: order.StoreId,
             TotalAmount: order.TotalAmount,
+            UserEmail: user?.Email,
+            UserName: user is null ? null : $"{user.FirstName} {user.LastName}".Trim(),
             Items: order.Items.Where(i => i.ProductId.HasValue)
-                .Select(i => new OrderItemEventDto(i.ProductId!.Value, i.Quantity))
+                .Select(i => new OrderItemEventDto(i.ProductId!.Value, i.ProductName, i.Quantity, i.UnitPrice))
                 .ToList(),
             OccurredAt: DateTime.UtcNow);
 
@@ -371,7 +376,6 @@ public class PlaceOrderCommandHandler(
             }
         }
 
-        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is not null)
         {
             var eventItems = order.Items.Select(i =>

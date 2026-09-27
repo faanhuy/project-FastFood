@@ -15,10 +15,11 @@ public class ProcessVNPayCallbackCommandHandlerTests
     private readonly Mock<IOrderRepository> _orderRepo = new();
     private readonly Mock<IPaymentGateway> _paymentGateway = new();
     private readonly Mock<IOutboxRepository> _outboxRepo = new();
+    private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
 
     private ProcessVNPayCallbackCommandHandler CreateHandler() =>
-        new(_orderRepo.Object, _paymentGateway.Object, _outboxRepo.Object, _uow.Object);
+        new(_orderRepo.Object, _paymentGateway.Object, _outboxRepo.Object, _userRepo.Object, _uow.Object);
 
     private static ProcessVNPayCallbackCommand AnyCallback() =>
         new(new Dictionary<string, string> { ["vnp_ResponseCode"] = "00" });

@@ -5,5 +5,7 @@ public record OrderPlacedIntegrationEvent(
     Guid UserId,
     Guid? StoreId,
     decimal TotalAmount,
+    string? UserEmail,
+    string? UserName,
     List<OrderItemEventDto> Items,
     DateTime OccurredAt);

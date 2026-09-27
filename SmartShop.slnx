@@ -12,6 +12,12 @@
     <Project Path="src/Services/Inventory/SmartShop.Inventory.Domain/SmartShop.Inventory.Domain.csproj" />
     <Project Path="src/Services/Inventory/SmartShop.Inventory.Infrastructure/SmartShop.Inventory.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Services/Notification/">
+    <Project Path="src/Services/Notification/SmartShop.Notification.API/SmartShop.Notification.API.csproj" />
+    <Project Path="src/Services/Notification/SmartShop.Notification.Application/SmartShop.Notification.Application.csproj" />
+    <Project Path="src/Services/Notification/SmartShop.Notification.Domain/SmartShop.Notification.Domain.csproj" />
+    <Project Path="src/Services/Notification/SmartShop.Notification.Infrastructure/SmartShop.Notification.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/src/Shared/">
     <Project Path="src/Shared/SmartShop.Contracts/SmartShop.Contracts.csproj" />
     <Project Path="src/Shared/SmartShop.Shared.Messaging/SmartShop.Shared.Messaging.csproj" />

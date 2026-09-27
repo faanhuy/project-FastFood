@@ -54,6 +54,21 @@
             }
         },
         {
+            "name": "Launch Notification Service",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "prepare-notification",
+            "program": "${workspaceFolder}/src/Services/Notification/SmartShop.Notification.API/bin/Debug/net8.0/SmartShop.Notification.API.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/Services/Notification/SmartShop.Notification.API",
+            "launchSettingsProfile": "http",
+            "stopAtEntry": false,
+            "justMyCode": true,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
+        },
+        {
             // Dùng cho "Run Full Stack": bản Core KHÔNG tự mở trình duyệt mặc định (Swagger đã mở ở tab của Chrome debug bên dưới),
             // nếu không sẽ có thêm 1 trình duyệt thứ hai.
             "name": "Launch SmartShop WebAPI (no browser)",
@@ -94,14 +109,14 @@
     ],
     "compounds": [
         {
-            "name": "Run Backend (Core + Inventory)",
-            "configurations": ["Launch Inventory Service", "Launch SmartShop WebAPI"],
+            "name": "Run Backend (Core + Inventory + Notification)",
+            "configurations": ["Launch Inventory Service", "Launch Notification Service", "Launch SmartShop WebAPI"],
             "preLaunchTask": "prepare-backend",
             "stopAll": true
         },
         {
             "name": "Run Full Stack (BE + FE)",
-            "configurations": ["Launch Inventory Service", "Launch SmartShop WebAPI (no browser)", "Debug React Frontend + Swagger"],
+            "configurations": ["Launch Inventory Service", "Launch Notification Service", "Launch SmartShop WebAPI (no browser)", "Debug React Frontend + Swagger"],
             "preLaunchTask": "prepare-fullstack",
             "stopAll": true
         }

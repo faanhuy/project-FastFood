@@ -14,6 +14,7 @@ public class ProcessVNPayCallbackCommandHandler(
     IOrderRepository orderRepository,
     IPaymentGateway paymentGateway,
     IOutboxRepository outboxRepository,
+    IUserRepository userRepository,
     IUnitOfWork unitOfWork) : IRequestHandler<ProcessVNPayCallbackCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(ProcessVNPayCallbackCommand command, CancellationToken ct)
@@ -39,6 +40,10 @@ public class ProcessVNPayCallbackCommandHandler(
         // Publish Payment*IntegrationEvent qua Outbox (Notification Service consume các event này;
         // Inventory Service cố ý bỏ qua PaymentFailed: đơn chưa bị hủy và khách có thể thanh toán lại,
         // nên chỗ đã giữ chỉ được nhả khi đơn bị hủy)
+        var user = await userRepository.GetByIdAsync(order.UserId, ct);
+        var userEmail = user?.Email;
+        var userName = user is null ? null : $"{user.FirstName} {user.LastName}".Trim();
+
         OutboxMessage outboxMessage;
         if (callbackResult.IsSuccess)
         {
@@ -48,6 +53,9 @@ public class ProcessVNPayCallbackCommandHandler(
 
             var completedEvent = new PaymentCompletedIntegrationEvent(
                 OrderId: order.Id,
+                UserId: order.UserId,
+                UserEmail: userEmail,
+                UserName: userName,
                 TransactionId: callbackResult.TransactionId,
                 Amount: order.TotalAmount,
                 Method: "VNPay",
@@ -63,6 +71,9 @@ public class ProcessVNPayCallbackCommandHandler(
 
             var failedEvent = new PaymentFailedIntegrationEvent(
                 OrderId: order.Id,
+                UserId: order.UserId,
+                UserEmail: userEmail,
+                UserName: userName,
                 Reason: "VNPay callback reported failure",
                 OccurredAt: DateTime.UtcNow);
 

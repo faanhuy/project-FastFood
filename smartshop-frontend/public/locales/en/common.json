@@ -54,7 +54,15 @@
     "returnApprovedTitle": "Return request approved",
     "returnApprovedBody": "Order #{{orderCode}}: your return request was approved. You will receive a refund of {{refund}}đ.",
     "returnRejectedTitle": "Return request rejected",
-    "returnRejectedBody": "Order #{{orderCode}}: your return request was rejected. Reason: {{reason}}."
+    "returnRejectedBody": "Order #{{orderCode}}: your return request was rejected. Reason: {{reason}}.",
+    "orderPlacedTitle": "Order placed successfully",
+    "orderPlacedBody": "Your order has been placed successfully, total amount {{totalAmount}}đ.",
+    "orderCancelledTitle": "Order cancelled",
+    "orderCancelledBody": "Your order has been cancelled successfully.",
+    "paymentCompletedTitle": "Payment successful",
+    "paymentCompletedBody": "Payment of {{amount}}đ via {{method}} was successful.",
+    "paymentFailedTitle": "Payment failed",
+    "paymentFailedBody": "Your order payment failed. Please check and try again."
   },
   "searchPlaceholder": "Search...",
   "myAccount": "My Account",

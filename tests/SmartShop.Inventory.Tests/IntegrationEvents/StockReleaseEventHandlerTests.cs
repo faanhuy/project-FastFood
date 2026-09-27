@@ -18,10 +18,12 @@ public class StockReleaseEventHandlerTests
     // Core ghi payload vào Outbox bằng JsonSerializer.Serialize mặc định (PascalCase) —
     // test dựng payload đúng cách đó để bắt được lệch định dạng giữa 2 service.
     private static string CancelledPayload(Guid orderId) =>
-        JsonSerializer.Serialize(new OrderCancelledIntegrationEvent(orderId, Guid.NewGuid(), DateTime.UtcNow));
+        JsonSerializer.Serialize(new OrderCancelledIntegrationEvent(
+            orderId, Guid.NewGuid(), "user@example.com", "Test User", DateTime.UtcNow));
 
     private static string PaymentFailedPayload(Guid orderId) =>
-        JsonSerializer.Serialize(new PaymentFailedIntegrationEvent(orderId, "Card declined", DateTime.UtcNow));
+        JsonSerializer.Serialize(new PaymentFailedIntegrationEvent(
+            orderId, Guid.NewGuid(), "user@example.com", "Test User", "Card declined", DateTime.UtcNow));
 
     private void VerifyReleased(Guid orderId) =>
         _sender.Verify(

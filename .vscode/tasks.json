@@ -57,6 +57,38 @@
             "problemMatcher": []
         },
         {
+            "label": "build-notification",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/Services/Notification/SmartShop.Notification.API/SmartShop.Notification.API.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            // Container notification-service (docker compose) không map port ra host nhưng dùng chung Kafka
+            // consumer group "notification-service" với bản local → 2 instance cùng lúc sẽ chia sẻ partition
+            // thay vì trùng lặp, dễ gây hiểu nhầm khi debug. Dừng container trước khi F5.
+            "label": "notification-stop-container",
+            "command": "powershell",
+            "type": "process",
+            "args": [
+                "-NoProfile",
+                "-Command",
+                "$id = docker ps -q --filter 'name=^smartshop-notification$'; if ($id) { docker stop $id | Out-Null }; exit 0"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "prepare-notification",
+            "dependsOrder": "sequence",
+            "dependsOn": ["notification-stop-container", "build-notification"],
+            "problemMatcher": []
+        },
+        {
             // Core cần SQL Server local (Server=localhost). Service đã cài mà đang dừng thì dừng F5 ngay với thông báo
             // rõ ràng, thay vì để Core khởi động rồi văng lỗi kết nối DB. Máy không cài SQL Server local thì bỏ qua.
             "label": "check-sqlserver",
@@ -86,7 +118,7 @@
             // Build tuần tự (2 project cùng tham chiếu SmartShop.Contracts, build song song dễ khóa file obj/).
             "label": "prepare-backend",
             "dependsOrder": "sequence",
-            "dependsOn": ["check-sqlserver", "prepare-inventory", "build-webapi"],
+            "dependsOn": ["check-sqlserver", "prepare-inventory", "prepare-notification", "build-webapi"],
             "problemMatcher": []
         },
         {
